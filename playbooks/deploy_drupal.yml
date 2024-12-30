@@ -1,4 +1,3 @@
----
 - name: Deploy Drupal with Ansible
   hosts: all
   become: yes
