@@ -1,4 +1,4 @@
-- name: My first play
+- name: Test localhost
   hosts: localhost
   tasks:
    - name: Ping my hosts
