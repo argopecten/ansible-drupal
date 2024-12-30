@@ -1,0 +1,4 @@
+# Common tasks for all servers
+- name: Update apt cache
+  apt:
+    update_cache: yes
