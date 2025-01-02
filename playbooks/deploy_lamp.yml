@@ -1,0 +1,25 @@
+---
+- name: Deploy LAMP with Ansible
+  hosts: all
+  become: yes
+
+  vars:
+    php_version: "8.3"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Include tasks from common
+      include_role:
+        name: Install utils
+
+    - name: Include tasks from webserver
+      include_role:
+        name: Install Nginx
+
+    - name: Include tasks from php
+      include_role:
+        name: Add PHP repository for Nginx
+        name: Install PHP for CiviCRM

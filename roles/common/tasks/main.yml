@@ -1,4 +1,14 @@
+# A list of tasks that the role provides to the play for execution
+
 # Common tasks for all servers
-- name: Update apt cache
+- name: "Update apt cache"
   apt:
     update_cache: yes
+
+- name: "Install utils"
+    apt:
+      state: present
+      name:
+        - unzip
+        - mc
+        

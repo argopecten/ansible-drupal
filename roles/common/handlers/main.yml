@@ -1,5 +1,1 @@
-# Handlers for common tasks
-- name: Restart apache
-  service:
-    name: apache2
-    state: restarted
+# Handlers that are imported into the parent play for use

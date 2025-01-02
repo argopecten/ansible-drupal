@@ -1,0 +1,20 @@
+# Common tasks for php
+
+- name: "Add PHP repository for Nginx"
+  apt_repository: repo='ppa:ondrej/nginx' update_cache=yes
+
+- name: "Install PHP for CiviCRM"
+  apt:
+    state: present
+    name:
+      - "php{{ php_version }}"
+      - "php{{ php_version }}-fpm"
+      - "php{{ php_version }}-curl"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-mbstring"
+      - "php{{ php_version }}-mysql"
+      - "php{{ php_version }}-xml"
+      - "php{{ php_version }}-zip"
+      - "php{{ php_version }}-bcmath"
+      - "php{{ php_version }}-intl"
+      - "php{{ php_version }}-soap"
