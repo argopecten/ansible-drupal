@@ -1,6 +1,6 @@
 ---
 - name: Deploy LAMP with Ansible
-  hosts: all
+  hosts: localhost
   become: yes
 
   vars:
@@ -13,13 +13,12 @@
 
     - name: Include tasks from common
       include_role:
-        name: Install utils
+        name: common
 
     - name: Include tasks from webserver
       include_role:
-        name: Install Nginx
+        name: webserver
 
     - name: Include tasks from php
       include_role:
-        name: Add PHP repository for Nginx
-        name: Install PHP for CiviCRM
+        name: php

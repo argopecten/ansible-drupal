@@ -6,9 +6,8 @@
     update_cache: yes
 
 - name: "Install utils"
-    apt:
-      state: present
-      name:
-        - unzip
-        - mc
-        
+  apt:
+    state: present
+    name:
+      - unzip
+      - mc

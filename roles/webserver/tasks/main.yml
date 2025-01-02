@@ -1,6 +1,6 @@
 # Common tasks for webservers
 - name: "Install Nginx"
-    apt:
-      state: present
-      name:
-        - nginx
+  apt:
+    state: present
+    name:
+      - nginx
