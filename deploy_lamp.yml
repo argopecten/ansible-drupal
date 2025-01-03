@@ -1,24 +1,24 @@
 ---
 - name: Deploy LAMP with Ansible
   hosts: localhost
-  become: yes
+  become: true
 
   vars:
     php_version: "8.3"
 
   tasks:
     - name: Update apt cache
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
 
     - name: Include tasks from common
-      include_role:
+      ansible.builtin.include_role:
         name: common
 
     - name: Include tasks from webserver
-      include_role:
+      ansible.builtin.include_role:
         name: webserver
 
     - name: Include tasks from php
-      include_role:
+      ansible.builtin.include_role:
         name: php

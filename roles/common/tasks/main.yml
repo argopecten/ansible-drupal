@@ -2,11 +2,11 @@
 
 # Common tasks for all servers
 - name: "Update apt cache"
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: "Install utils"
-  apt:
+  ansible.builtin.apt:
     state: present
     name:
       - unzip

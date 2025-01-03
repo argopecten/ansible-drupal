@@ -1,6 +1,6 @@
 # Common tasks for webservers
 - name: "Install Nginx"
-  apt:
+  ansible.builtin.apt:
     state: present
     name:
       - nginx
