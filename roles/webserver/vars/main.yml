@@ -1,1 +1,2 @@
 # Metadata for webserver role
+nginx_user: "www-data"

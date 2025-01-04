@@ -1,0 +1,28 @@
+server {
+    server_name {{ item.server_name }};
+    root        {{ item.root }};
+    index       {{ item.index | default('index.html index.nginx-debian.html') }};
+
+    # SSL settings
+    listen {{ item.listen | default('80') }};
+    # listen 443 ssl;
+    {% if nginx_listen_ipv6 %}
+    listen [::]:{{ item.listen | default('80') }};
+    # listen [::]:443 ssl;
+    {% endif %}
+
+    # TBD
+    # ssl_certificate        /etc/ssl/certs/DOMAIN.pem;
+    # ssl_certificate_key    /etc/ssl/private/DOMAIN.key;
+
+    # Uncomment for Cloudflare Authenticated Origin Pulls:
+    # ssl_verify_client on;
+    # ssl_client_certificate /etc/ssl/certs/authenticated_origin_pull_ca.pem;
+    
+    {% if item.extra_parameters is defined %}
+    {{ item.extra_parameters | indent(4) }}
+    {% endif %}
+
+    # Include the Drupal specific Nginx configuration
+    include drupal.conf.j2;
+}

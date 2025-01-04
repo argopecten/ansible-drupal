@@ -1,6 +1,8 @@
-# Common tasks for webservers
-- name: "Install Nginx"
-  ansible.builtin.apt:
-    state: present
-    name:
-      - nginx
+# Deploy tasks for webservers
+- name: "Deploy Apache"
+  ansible.builtin.import_tasks: apache2.yml
+  when: apache2 is defined
+
+- name: "Deploy Nginx"
+  ansible.builtin.import_tasks: nginx.yml
+  when: nginx is defined

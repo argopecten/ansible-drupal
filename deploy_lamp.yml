@@ -7,10 +7,6 @@
     php_version: "8.3"
 
   tasks:
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-
     - name: Include tasks from common
       ansible.builtin.include_role:
         name: common

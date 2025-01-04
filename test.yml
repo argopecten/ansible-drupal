@@ -1,0 +1,13 @@
+---
+- name: Deploy LAMP with Ansible
+  hosts: localhost
+  become: true
+
+  vars:
+    php_version: "8.3"
+    nginx: true
+
+  roles:
+    - common
+    - webserver
+    - php
