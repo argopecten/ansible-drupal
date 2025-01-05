@@ -1,4 +1,12 @@
-- name: Deploy Drupal with Ansible
+---
+# This playbook will deploy Drupa 10 on a LEMP stack.
+# It will first setup the LEMP stack using the setup_lemp.yml playbook.
+# Then it will install Drupal on the LEMP stack.
+
+- name: Setup LEMP with Ansible
+  import_playbook: setup_lemp.yml
+
+- name: Install Drupal with Ansible
   hosts: all
   become: true
 

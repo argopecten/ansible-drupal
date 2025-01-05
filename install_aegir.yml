@@ -1,0 +1,52 @@
+---
+# This playbook will deploy Aegir 3.x on a LEMP stack.
+# It will first setup the LEMP stack using the setup_lemp.yml playbook.
+# Then it will install Aegir 3.x on the LEMP stack.
+
+- name: Setup LEMP with Ansible
+  import_playbook: setup_lemp.yml
+
+- name: Install Aegir with Ansible on LEMP stack
+  hosts: localhost
+  become: true
+
+  vars:
+    php_version: "8.3"
+    nginx: true
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - mysql-server
+          - php
+          - php-mysql
+          - php-gd
+          - php-xml
+          - php-mbstring
+          - libapache2-mod-php
+          - unzip
+        state: present
+
+    - name: Enable Apache rewrite module
+      community.general.apache2_module:
+        name: rewrite
+        state: present
+
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
+
+    - name: Download Drupal
+      ansible.builtin.get_url:
+        url: https://www.drupal.org/download-latest/zip
+        dest: /tmp/drupal.zip
+        owner: root
+        group: root
+        mode: '0644'

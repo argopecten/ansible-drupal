@@ -1,5 +1,5 @@
 ---
-- name: Deploy LAMP with Ansible
+- name: Setup LEMP with Ansible
   hosts: localhost
   become: true
 
@@ -11,3 +11,8 @@
     - common
     - webserver
     - php
+    - database
+    - composer
+
+- name: Test localhost
+  import_playbook: test_localhost.yml
