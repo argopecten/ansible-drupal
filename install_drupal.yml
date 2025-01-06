@@ -11,32 +11,6 @@
   become: true
 
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Install required packages
-      apt:
-        name:
-          - apache2
-          - mysql-server
-          - php
-          - php-mysql
-          - php-gd
-          - php-xml
-          - php-mbstring
-          - libapache2-mod-php
-          - unzip
-        state: present
-
-    - name: Enable Apache rewrite module
-      command: a2enmod rewrite
-
-    - name: Restart Apache
-      service:
-        name: apache2
-        state: restarted
-
     - name: Download Drupal
       get_url:
         url: https://www.drupal.org/download-latest/zip

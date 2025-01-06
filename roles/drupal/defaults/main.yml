@@ -1,0 +1,14 @@
+---
+# Drupal repository
+drupal_repo: "https://git.drupalcode.org/project/drupal"
+# Drupal version
+drupal_version: "10.4.0"
+# Drupal docroot directory
+drupal_dir: "/var/www/drupal"
+# Update Drupal content in directory?
+drupal_update: true
+
+# Drupal admin user
+drupal_admin_user: "da"
+# .pub key for Drupal admin user: taken from system user ubuntu
+public_key: "/home/ubuntu/.ssh/authorized_keys"

@@ -1,0 +1,36 @@
+---
+# Deploy Drupal 10 using Composer
+
+- name: Ensure drupal directory exists.
+  ansible.builtin.file:
+    path: "{{ drupal_dir }}"
+    state: directory
+    mode: "0775"
+    owner: "{{ drupal_admin_user }}"
+    group: "{{ drupal_admin_user }}"
+
+- name: Check out Drupal to the docroot.
+  ansible.builtin.git:
+    repo: "{{ drupal_repo }}"
+    version: "{{ drupal_version }}"
+    update: "{{ drupal_update }}"
+    force: true
+    dest: "{{ drupal_dir }}"
+    accept_hostkey: true
+  register: drupal_docroot_updated
+  become: true
+  become_user: "{{ drupal_admin_user }}"
+
+- name: Check if a composer.json file is present.
+  ansible.builtin.stat:
+    path: "{{ drupal_dir }}/composer.json"
+  register: drupal_composer_file
+
+- name: Run composer install if composer.json is present.
+  community.general.composer:
+    command: install
+    working_dir: "{{ drupal_dir }}"
+  when:
+    - drupal_composer_file.stat.exists
+  become: true
+  become_user: "{{ drupal_admin_user }}"

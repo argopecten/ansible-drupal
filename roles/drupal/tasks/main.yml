@@ -1,1 +1,14 @@
-# Common tasks for drupal servers
+---
+# Common tasks for drupal
+
+# Create drupal admin user.
+- name: Create drupal admin user
+  ansible.builtin.include_tasks: create-admin-user.yml
+
+# Deploy Drupal code with composer.
+- name: Deploy Drupal code with composer
+  ansible.builtin.include_tasks: composer-deploy.yml
+
+# Install site if configured.
+# - include_tasks: install-site.yml
+#  when: drupal_install_site

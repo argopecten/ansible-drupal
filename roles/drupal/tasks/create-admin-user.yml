@@ -1,0 +1,33 @@
+---
+# This playbook creates a Drupal admin user with a random password and 
+# adds an SSH key for the user.
+
+# Generate a random password for the Drupal admin user
+- name: Generate a random password
+  ansible.builtin.set_fact:
+    password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+  # The password is generated using the 'ansible.builtin.password' lookup plugin with 
+  # the inventory hostname as the seed.
+
+# Add the Drupal admin user
+- name: (USER) Add Drupal admin user
+  ansible.builtin.user:
+    name: "{{ drupal_admin_user }}"
+    state: present
+    password: "{{ password | password_hash('sha512') }}"
+    update_password: on_create
+    password_lock: true
+    shell: /bin/bash
+    groups: "sudo"
+    append: true
+  # The user is created with the specified name, hashed password, and added to the 'sudo' group.
+  # The password is locked, and the user's shell is set to /bin/bash.
+
+# Add SSH key for the Drupal admin user
+- name: (USER) Add SSH key for Drupal admin user
+  ansible.posix.authorized_key:
+    user: "{{ drupal_admin_user }}"
+    key: "{{ lookup('file', item) }}"
+    state: present
+  with_items: "{{ public_key }}"
+  # The SSH public key(s) specified in the 'public_key' variable are added to the user's authorized_keys file.

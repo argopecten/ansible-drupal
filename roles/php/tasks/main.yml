@@ -23,6 +23,6 @@
 
 - name: "Install global Composer"
   ansible.builtin.get_url:
-    url:  https://getcomposer.org/download/{{ composer_version }}/composer.phar
-    dest:  /usr/bin/composer
-    mode: '0775'
+    url: https://getcomposer.org/download/{{ composer_version }}/composer.phar
+    dest: /usr/bin/composer
+    mode: "0775"
