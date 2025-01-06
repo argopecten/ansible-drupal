@@ -5,7 +5,9 @@
 
   vars:
     php_version: "8.3"
-    nginx: true
+    webserver: "nginx"
+    # webserver: "apache2"
+    database: "mysql"
 
   roles:
     - common
