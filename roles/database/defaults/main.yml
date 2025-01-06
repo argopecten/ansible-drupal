@@ -1,0 +1,17 @@
+---
+# The default root user installed by mysql - almost always root
+mysql_root_user: root
+# mysql_user: mysql
+mysql_bind_address: 127.0.0.1
+mysql_port: 3306
+mysql_data_dir: /var/lib/mysql
+
+# Custom settings
+mysql_custom_settings:
+  # Drupal10: change the MySQL transaction isolation level to READ COMMITTED
+  # https://www.drupal.org/project/drupal/issues/1650930
+  transaction-isolation: READ-COMMITTED
+  #
+  # CiviCRM: allows users to create stored functions and triggers without requiring the SUPER privilege
+  # https://docs.civicrm.org/installation/en/latest/general/requirements/#binary-logging
+  log_bin_trust_function_creators: 1

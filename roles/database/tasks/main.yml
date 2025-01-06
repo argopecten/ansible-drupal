@@ -1,1 +1,9 @@
+---
 # Common tasks for database servers
+- name: "Deploy MariaDB"
+  ansible.builtin.import_tasks: mariadb.yml
+  when: database == "mariadb"
+
+- name: "Deploy MySQL"
+  ansible.builtin.import_tasks: mysql.yml
+  when: database == "mysql"
