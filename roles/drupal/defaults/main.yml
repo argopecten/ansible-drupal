@@ -31,16 +31,15 @@ drupal_db_host: "localhost"
 # Drupal database backend (e.g., mysql, pgsql)
 drupal_db_backend: "mysql"
 
-# Default site directory in web/sites
-site_dir: "default"
-
 # Global Drush configuration
 drush_path: "/usr/bin/drush"
 
 # Drupal installation profile
 drupal_install_profile: "standard"
 # Drupal site name
-drupal_site_name: "My Drupal Site"
+drupal_site_name: "example.com"
+# Default site directory in web/sites
+site_dir: "default"
 
 # Additional arguments for the site-install command
 drupal_site_install_extra_args: []
