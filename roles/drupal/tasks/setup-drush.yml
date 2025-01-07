@@ -6,4 +6,3 @@
   args:
     creates: "{{ drush_path }}"
   become: true
-  

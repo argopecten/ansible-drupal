@@ -14,16 +14,8 @@
     - role: drupal
       vars:
         drupal_version: "10"
-        drupal_download_url: "https://www.drupal.org/download-latest/zip"
-        drupal_dest: "/var/www/html"
-        drupal_owner: "www-data"
-        drupal_group: "www-data"
-        drupal_db_name: "drupal"
-        drupal_db_user: "drupaluser"
-        drupal_db_password: "drupalpass"
-        drupal_db_host: "localhost"
 
   tasks:
     - name: Include Drupal role tasks
-      include_role:
+      ansible.builtin.include_role:
         name: drupal

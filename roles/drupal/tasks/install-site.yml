@@ -14,8 +14,8 @@
 # Write the generated password into a file
 - name: Write Drupal site user password to a file
   ansible.builtin.copy:
-    content: "Password for {{drupal_admin_user}} on {{ drupal_site_name }} site is: {{ drupal_site_pass }}"
-    dest: "{{ drupal_path }}/{{drupal_admin_user}}_password_file.txt"
+    content: "Password for {{ drupal_admin_user }} on {{ drupal_site_name }} site is: {{ drupal_site_pass }}"
+    dest: "{{ drupal_path }}/{{ drupal_admin_user }}_password_file.txt"
     owner: drupal_admin_user
     group: drupal_admin_user
     mode: "0600"
@@ -23,14 +23,14 @@
 
 # Create database user for site
 - name: Create database user for site
-  ansible.builtin.mysql_user:
+  community.mysql.mysql_user:
     name: "{{ drupal_db_user }}"
     password: "{{ drupal_db_password }}"
     host: "{{ drupal_db_host }}"
     state: present
 
 - name: Install Drupal with drush.
-  command: >
+  ansible.builtin.command: >
     {{ drush_path }} --root={{ drupal_path }} site-install {{ drupal_install_profile | default('standard') }} -y
     --site-name="{{ drupal_site_name }}"
     --site-subdir="{{ site_dir }}"
@@ -40,15 +40,16 @@
     {{ drupal_site_install_extra_args | join(" ") }}
   args:
     chdir: "{{ drupal_path }}"
-  # notify: clear opcache
+  notify: Set permissions for site directory
   # when: "'Drupal bootstrap' not in drupal_site_installed.stdout"
   become: false
 
 - name: Install configured modules with drush.
-  command: >
+  ansible.builtin.command: >
     {{ drush_path }} pm-enable -y {{ drupal_enable_modules | join(" ") }}
     --root={{ drupal_path }}
   args:
     chdir: "{{ drupal_path }}"
   when: ('Drupal bootstrap' not in drupal_site_installed.stdout) and drupal_enable_modules
   become: false
+  

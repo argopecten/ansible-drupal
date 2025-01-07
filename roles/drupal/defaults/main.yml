@@ -18,8 +18,6 @@ drupal_site_user: "admin"
 # Default Drupal site password
 drupal_site_password: "drupalpass"
 
-# Default Drupal site name
-drupal_site_name: "Drupal Site"
 # Default Drupal database name
 drupal_db_name: "drupal"
 # Default Drupal database user
