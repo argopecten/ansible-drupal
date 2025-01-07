@@ -1,7 +1,6 @@
 ---
 # The default root user installed by mysql - almost always root
 mysql_root_user: root
-# mysql_user: mysql
 mysql_bind_address: 127.0.0.1
 mysql_port: 3306
 mysql_data_dir: /var/lib/mysql

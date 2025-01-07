@@ -15,7 +15,6 @@
     - webserver
     - php
     - database
-    - drupal
 
 - name: Test localhost
   import_playbook: test_localhost.yml

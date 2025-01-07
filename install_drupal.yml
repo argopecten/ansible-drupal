@@ -10,49 +10,20 @@
   hosts: all
   become: true
 
+  roles:
+    - role: drupal
+      vars:
+        drupal_version: "10"
+        drupal_download_url: "https://www.drupal.org/download-latest/zip"
+        drupal_dest: "/var/www/html"
+        drupal_owner: "www-data"
+        drupal_group: "www-data"
+        drupal_db_name: "drupal"
+        drupal_db_user: "drupaluser"
+        drupal_db_password: "drupalpass"
+        drupal_db_host: "localhost"
+
   tasks:
-    - name: Download Drupal
-      get_url:
-        url: https://www.drupal.org/download-latest/zip
-        dest: /tmp/drupal.zip
-
-    - name: Unzip Drupal
-      unarchive:
-        src: /tmp/drupal.zip
-        dest: /var/www/html
-        extra_opts: [--strip-components=1]
-
-    - name: Set permissions
-      file:
-        path: /var/www/html
-        state: directory
-        owner: www-data
-        group: www-data
-        recurse: yes
-
-    - name: Create Drupal settings file
-      copy:
-        dest: /var/www/html/sites/default/settings.php
-        content: |
-          <?php
-          $databases['default']['default'] = array (
-            'database' => 'drupal',
-            'username' => 'drupaluser',
-            'password' => 'drupalpass',
-            'host' => 'localhost',
-            'port' => '',
-            'driver' => 'mysql',
-            'prefix' => '',
-          );
-
-    - name: Create MySQL database
-      mysql_db:
+    - name: Include Drupal role tasks
+      include_role:
         name: drupal
-        state: present
-
-    - name: Create MySQL user
-      mysql_user:
-        name: drupaluser
-        password: drupalpass
-        priv: 'drupal.*:ALL'
-        state: present

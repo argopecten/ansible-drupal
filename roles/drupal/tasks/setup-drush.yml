@@ -1,0 +1,9 @@
+---
+# Setup global drush
+- name: Setup global drush
+  ansible.builtin.command: >
+    composer global require drush/drush
+  args:
+    creates: "{{ drush_path }}"
+  become: true
+  

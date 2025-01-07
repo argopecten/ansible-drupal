@@ -3,8 +3,8 @@
 drupal_repo: "https://git.drupalcode.org/project/drupal"
 # Drupal version
 drupal_version: "10.4.0"
-# Drupal docroot directory
-drupal_dir: "/var/www/drupal"
+# Path to the Drupal core
+drupal_path: "/var/www/drupal"
 # Update Drupal content in directory?
 drupal_update: true
 
@@ -12,3 +12,38 @@ drupal_update: true
 drupal_admin_user: "da"
 # .pub key for Drupal admin user: taken from system user ubuntu
 public_key: "/home/ubuntu/.ssh/authorized_keys"
+
+# Default Drupal site user
+drupal_site_user: "admin"
+# Default Drupal site password
+drupal_site_password: "drupalpass"
+
+# Default Drupal site name
+drupal_site_name: "Drupal Site"
+# Default Drupal database name
+drupal_db_name: "drupal"
+# Default Drupal database user
+drupal_db_user: "drupaluser"
+# Default Drupal database password
+drupal_db_password: "drupalpass"
+# Default Drupal database host
+drupal_db_host: "localhost"
+# Drupal database backend (e.g., mysql, pgsql)
+drupal_db_backend: "mysql"
+
+# Default site directory in web/sites
+site_dir: "default"
+
+# Global Drush configuration
+drush_path: "/usr/bin/drush"
+
+# Drupal installation profile
+drupal_install_profile: "standard"
+# Drupal site name
+drupal_site_name: "My Drupal Site"
+
+# Additional arguments for the site-install command
+drupal_site_install_extra_args: []
+
+# Modules to enable after installation
+drupal_enable_modules: []

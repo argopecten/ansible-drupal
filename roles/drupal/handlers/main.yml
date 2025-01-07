@@ -1,1 +1,18 @@
 # Handlers for drupal tasks
+
+- name: Set ownership and file permissions for Drupal web directory
+  ansible.builtin.command:
+    cmd: "{{ item.cmd }}"
+  become: true
+  loop: "{{ docroot_permissions }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# Set permissions for web/sites/{{ site_dir }} directory
+- name: Set permissions for site directory
+  ansible.builtin.command:
+    cmd: "{{ item.cmd }}"
+  become: true
+  loop: "{{ sites_permissions }}"
+  loop_control:
+    label: "{{ item.name }}"
