@@ -7,7 +7,7 @@
   import_playbook: setup_lemp.yml
 
 - name: Install Drupal with Ansible
-  hosts: all
+  hosts: localhost
   become: true
 
   roles:

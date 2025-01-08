@@ -5,8 +5,21 @@ drupal_repo: "https://git.drupalcode.org/project/drupal"
 drupal_version: "10.4.0"
 # Path to the Drupal core
 drupal_path: "/var/www/drupal"
+# Path to the Drupal docroot
+drupal_docroot: "{{ drupal_path }}/web"
 # Update Drupal content in directory?
 drupal_update: true
+
+drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
+drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+drupal_site_exists: false
+composer_path: "/usr/bin/composer"
+# drupal_composer_install_dir: "/var/www/drupal" helyett: drupal_path
+# drupal_core_owner: "www-data" helyett: drupal_admin_user
+# drupal_core_path: "/var/www/drupal/web" helyett: drupal_docroot
+drupal_composer_dependencies:
+  - "drush/drush:^12.4"
+#  - "drupal/module2"
 
 # Drupal admin user
 drupal_admin_user: "da"

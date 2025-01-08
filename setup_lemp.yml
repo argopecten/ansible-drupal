@@ -15,6 +15,6 @@
     - webserver
     - php
     - database
-
-- name: Test localhost
+#
+# - name: Test localhost
   import_playbook: test_localhost.yml
