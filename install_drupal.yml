@@ -15,6 +15,10 @@
       vars:
         drupal_version: "10"
 
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "1200"
+    COMPOSER_MEMORY_LIMIT: "-1"
+
   tasks:
     - name: Include Drupal role tasks
       ansible.builtin.include_role:

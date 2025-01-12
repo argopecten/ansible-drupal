@@ -2,46 +2,40 @@
 # Deploy Drupal 10 using Composer
 
 - name: Delete old /tmp/composer-project
-  file:
+  ansible.builtin.file:
     path: "/tmp/composer-project"
     state: absent
   when: not drupal_site_exists
 
-- name: Generate Drupal project with composer package in /tmp/composer-project (this may take a while).
-  command: >
-    {{ composer_path }} create-project
-    {{ drupal_composer_project_package }} /tmp/composer-project
-    {{ drupal_composer_project_options|default('--prefer-dist --no-interaction') }}
+- name: Generate Drupal project with composer package
+  community.general.composer:
+    command: create-project
+    arguments: "{{ drupal_composer_project_package }} /tmp/composer-project {{ drupal_composer_project_options }}"
+    working_dir: "/tmp"
   when: not drupal_site_exists
   become: false
-  environment:
-    COMPOSER_PROCESS_TIMEOUT: 1200
-    COMPOSER_MEMORY_LIMIT: '-1'
-
+  
 - name: Ensure drupal_path directory has proper permissions.
-  file:
+  ansible.builtin.file:
     path: "{{ drupal_path }}"
     state: directory
     owner: "{{ drupal_admin_user }}"
     group: "{{ drupal_admin_user }}"
-    mode: 0775
+    mode: "0775"
   when: not drupal_site_exists
   failed_when: false
 
 - name: Move Drupal project files to drupal_path (this may take a while).
-  command: >
+  ansible.builtin.command: >
     cp -r /tmp/composer-project/. {{ drupal_path }}/
     creates={{ drupal_docroot }}/index.php
   become: false
   when: not drupal_site_exists
 
 - name: Install dependencies with composer require (this may take a while).
-  composer:
+  community.general.composer:
     command: require
     arguments: "{{ item }}"
     working_dir: "{{ drupal_path }}"
   with_items: "{{ drupal_composer_dependencies | default([]) }}"
   become: false
-  environment:
-    COMPOSER_PROCESS_TIMEOUT: 1200
-    COMPOSER_MEMORY_LIMIT: '-1'

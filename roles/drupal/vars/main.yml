@@ -1,7 +1,7 @@
 ---
 # Metadata for the drupal role
 
-# Ownership and permissions for Drupal web directory 
+# Ownership and permissions for Drupal web directory
 docroot_permissions:
   - { name: "Set ownership", cmd: "find {{ drupal_dir }}/web -exec chown {{ drupal_owner }}:{{ nginx_user }} '{}' \\+" }
   - { name: "Set directory permissions", cmd: "find {{ drupal_dir }}/web -type d -exec chmod 750 '{}' \\+" }
