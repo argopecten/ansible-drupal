@@ -6,8 +6,8 @@
   ansible.builtin.include_tasks: create-admin-user.yml
 
 # Setup global drush
-#- name: Setup global drush
-#  ansible.builtin.include_tasks: setup-global-drush.yml
+# - name: Setup global drush
+#   ansible.builtin.include_tasks: setup-global-drush.yml
 
 # Deploy Drupal code with composer.
 - name: Deploy Drupal codebase with Composer

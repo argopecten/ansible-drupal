@@ -13,7 +13,7 @@
   roles:
     - role: drupal
       vars:
-        drupal_version: "10"
+        drupal_version: "10.4.0"
 
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
