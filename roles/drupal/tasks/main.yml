@@ -1,19 +1,19 @@
 ---
-# Common tasks for drupal
+# Tasks for drupal role
 
 # Create drupal admin user.
 - name: Create drupal admin user
   ansible.builtin.include_tasks: create-admin-user.yml
 
-# Setup drush
-- name: Setup drush
-  ansible.builtin.include_tasks: setup-drush.yml
+# Setup global drush
+#- name: Setup global drush
+#  ansible.builtin.include_tasks: setup-global-drush.yml
 
 # Deploy Drupal code with composer.
 - name: Deploy Drupal codebase with Composer
-  ansible.builtin.include_tasks: composer-deploy.yml
+  ansible.builtin.include_tasks: deploy-drupal-composer.yml
 
 # Install Drupal site
 - name: Install Drupal site
-  ansible.builtin.include_tasks: install-site.yml
+  ansible.builtin.include_tasks: install-drupal-site.yml
   #  when: drupal_install_site

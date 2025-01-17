@@ -4,15 +4,25 @@
 # Generate a random password for the Drupal admin user
 - name: Generate a random password
   ansible.builtin.set_fact:
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+    drupal_adminuser_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
   # The password is generated using the 'ansible.builtin.password' lookup plugin with the inventory hostname as the seed.
+
+# Write the generated password into a file
+- name: Write Drupal admin user password to a file
+  ansible.builtin.copy:
+    content: "Password for {{ drupal_admin_user }} site is: {{ drupal_adminuser_password }}"
+    dest: "/root/{{ drupal_admin_user }}_password_file.txt"
+    owner: "{{ drupal_admin_user }}"
+    group: "{{ drupal_admin_user }}"
+    mode: "0600"
+  become: true
 
 # Add the Drupal admin user
 - name: (USER) Add Drupal admin user
   ansible.builtin.user:
     name: "{{ drupal_admin_user }}"
     state: present
-    password: "{{ password | password_hash('sha512') }}"
+    password: "{{ drupal_adminuser_password }}"
     update_password: on_create
     password_lock: true
     shell: /bin/bash

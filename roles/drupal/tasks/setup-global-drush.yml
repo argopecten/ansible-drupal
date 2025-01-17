@@ -1,0 +1,37 @@
+---
+# Setup global Drush
+
+# - name: Check if Drush is already installed
+#   ansible.builtin.command: "{{ drush_path }} --version"
+#   register: drush_version
+#   failed_when: false
+#   changed_when: false
+
+# ez az Aegirhez jó csak!
+# - name: Clone Drush repository
+#   ansible.builtin.git:
+#     repo: "https://github.com/omega8cc/drush"
+#     dest: "/usr/share/drush8"
+#     version: "master"
+#   become: true
+
+# - name: Set ownership for Drush directory
+#   ansible.builtin.file:
+#     path: "/usr/share/drush8"
+#     owner: "root"
+#     group: "{{ drupal_admin_user }}"
+#     mode: "0775"
+#   become: true
+
+# - name: Install Drush dependencies with Composer
+#   ansible.builtin.command: >
+#     composer install --working-dir=/usr/share/drush8 -n
+#   become: true
+#   become_user: "{{ drupal_admin_user }}"
+
+# - name: Create symlink for Drush
+#   ansible.builtin.file:
+#     src: "/usr/share/drush8/drush"
+#     dest: "{{ drush_path}}"
+#     state: link
+#   become: true

@@ -14,20 +14,23 @@
 # Write the generated password into a file
 - name: Write Drupal site user password to a file
   ansible.builtin.copy:
-    content: "Password for {{ drupal_admin_user }} on {{ drupal_site_name }} site is: {{ drupal_site_pass }}"
-    dest: "{{ drupal_path }}/{{ drupal_admin_user }}_password_file.txt"
-    owner: drupal_admin_user
-    group: drupal_admin_user
+    content: "Password for {{ drupal_site_user }} on {{ drupal_site_name }} site is: {{ drupal_site_pass }}"
+    dest: "{{ drupal_path }}/{{ drupal_site_user }}_password_file.txt"
+    owner: "{{ drupal_admin_user }}"
+    group: "{{ drupal_admin_user }}"
     mode: "0600"
   become: true
 
 # Create database user for site
 - name: Create database user for site
   community.mysql.mysql_user:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mysql_unix_socket }}"
     name: "{{ drupal_db_user }}"
     password: "{{ drupal_db_password }}"
     host: "{{ drupal_db_host }}"
     state: present
+  become: true
 
 - name: Install Drupal core with drush.
   ansible.builtin.command: >

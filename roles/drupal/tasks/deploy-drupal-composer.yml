@@ -5,16 +5,32 @@
   ansible.builtin.file:
     path: "/tmp/composer-project"
     state: absent
-  when: not drupal_site_exists
 
 - name: Generate Drupal project with composer package
   community.general.composer:
     command: create-project
     arguments: "{{ drupal_composer_project_package }} /tmp/composer-project {{ drupal_composer_project_options }}"
     working_dir: "/tmp"
+  become: true
+  become_user: "{{ drupal_admin_user }}"
+
+- name: Install dependencies with composer require (this may take a while).
+  community.general.composer:
+    command: require
+    arguments: "{{ item }}"
+    working_dir: "{{ drupal_path }}"
+  with_items: "{{ drupal_composer_dependencies | default([]) }}"
+  become: true
+  become_user: "{{ drupal_admin_user }}"
+
+- name: Move Drupal project files to drupal_path (this may take a while).
+  ansible.builtin.command: >
+    cp -r /tmp/composer-project/. {{ drupal_path }}/
+    creates={{ drupal_docroot }}/index.php
+  become: true
+  become_user: "{{ drupal_admin_user }}"
   when: not drupal_site_exists
-  become: false
-  
+
 - name: Ensure drupal_path directory has proper permissions.
   ansible.builtin.file:
     path: "{{ drupal_path }}"
@@ -23,19 +39,5 @@
     group: "{{ drupal_admin_user }}"
     mode: "0775"
   when: not drupal_site_exists
+  notify: Set ownership and file permissions for Drupal web directory
   failed_when: false
-
-- name: Move Drupal project files to drupal_path (this may take a while).
-  ansible.builtin.command: >
-    cp -r /tmp/composer-project/. {{ drupal_path }}/
-    creates={{ drupal_docroot }}/index.php
-  become: false
-  when: not drupal_site_exists
-
-- name: Install dependencies with composer require (this may take a while).
-  community.general.composer:
-    command: require
-    arguments: "{{ item }}"
-    working_dir: "{{ drupal_path }}"
-  with_items: "{{ drupal_composer_dependencies | default([]) }}"
-  become: false

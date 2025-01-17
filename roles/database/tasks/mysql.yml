@@ -8,7 +8,9 @@
 # Install MySQL.
 - name: "Install MySQL"
   ansible.builtin.apt:
-    name: "mysql-server"
+    name:
+      - mysql-server
+      - python3-pymysql     # Required for Ansible MySQL modules.
     state: present
 
 # Copy MySQL configurations.
