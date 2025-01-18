@@ -14,6 +14,11 @@
     - role: drupal
       vars:
         drupal_version: "10.4.0"
+        nginx_vhosts:
+          - listen: "80"
+              server_name: "example.com"
+              root: "{{ drupal_path }}/web"
+              state: "present"
 
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
