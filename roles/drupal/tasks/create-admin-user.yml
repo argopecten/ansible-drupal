@@ -11,7 +11,7 @@
 - name: Write Drupal admin user password to a file
   ansible.builtin.copy:
     content: "Password for {{ drupal_admin_user }} site is: {{ drupal_adminuser_password }}"
-    dest: "/root/{{ drupal_admin_user }}_password_file.txt"
+    dest: "/root/{{ drupal_admin_user }}_password.txt"
     owner: "{{ drupal_admin_user }}"
     group: "{{ drupal_admin_user }}"
     mode: "0600"

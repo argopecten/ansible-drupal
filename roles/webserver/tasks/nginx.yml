@@ -21,6 +21,16 @@
     mode: '0644'
   notify: Restart Nginx
 
+# Copy Drupal configuration for Nginx.
+- name: Copy Drupal configuration for Nginx
+  ansible.builtin.template:
+    src: drupal.conf.j2
+    dest: "{{ nginx_conf_path }}//drupal.conf"
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart Nginx
+
 # TBC!
 - name: Ensure Nginx is running
   ansible.builtin.service:
@@ -28,4 +38,5 @@
     state: started
 
 # Vhost configuration.
-- import_tasks: vhosts.yml
+- name: Include vhost tasks.
+  ansible.builtin.import_tasks: vhosts.yml
