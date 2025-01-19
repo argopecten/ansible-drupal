@@ -25,7 +25,7 @@
 - name: Copy Drupal configuration for Nginx
   ansible.builtin.template:
     src: drupal.conf.j2
-    dest: "{{ nginx_conf_path }}//drupal.conf"
+    dest: "/usr/local/etc/drupal/nginx/drupal.conf"
     owner: root
     group: "{{ root_group }}"
     mode: '0644'
