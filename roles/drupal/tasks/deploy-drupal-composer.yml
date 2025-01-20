@@ -28,7 +28,6 @@
     creates={{ drupal_docroot }}/index.php
   become: true
   become_user: "{{ drupal_admin_user }}"
-  when: not drupal_site_exists
   notify: Set ownership and file permissions for Drupal web directory
   failed_when: false
 
