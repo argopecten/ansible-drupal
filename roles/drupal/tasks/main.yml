@@ -1,9 +1,20 @@
 ---
 # Tasks for drupal role
 
+- name: Check if Drupal core is already installed
+  ansible.builtin.stat:
+    path: "{{ drupal_path }}"
+  register: drupal_core_installed
+
+- name: Set first install variable
+  ansible.builtin.set_fact:
+    is_first_install: "{{ not drupal_core_installed.stat.exists }}"
+    drupal_core_install: "{{ not drupal_core_installed.stat.exists }}"
+
 # Create drupal admin user.
 - name: Create drupal admin user
   ansible.builtin.include_tasks: create-admin-user.yml
+  when: is_first_install
 
 # Setup global drush
 # - name: Setup global drush
@@ -12,8 +23,9 @@
 # Deploy Drupal code with composer.
 - name: Deploy Drupal codebase with Composer
   ansible.builtin.include_tasks: deploy-drupal-composer.yml
+  when: drupal_core_install
 
 # Install Drupal site
 - name: Install Drupal site
   ansible.builtin.include_tasks: install-drupal-site.yml
-  #  when: drupal_install_site
+  when: drupal_site_install

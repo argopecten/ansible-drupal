@@ -12,7 +12,12 @@ drupal_update: true
 
 drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
 drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
-drupal_site_exists: false
+
+# Drupal project should be installed?
+drupal_core_install: true
+# Drupal site should be installed?
+drupal_site_install: true
+
 composer_path: "/usr/bin/composer"
 # drupal_composer_install_dir: "/var/www/drupal" helyett: drupal_path
 # drupal_core_owner: "www-data" helyett: drupal_admin_user
