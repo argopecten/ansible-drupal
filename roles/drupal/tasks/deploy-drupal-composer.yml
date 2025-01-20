@@ -14,21 +14,20 @@
   become: true
   become_user: "{{ drupal_admin_user }}"
 
-- name: Move Drupal project files to drupal_path
-  ansible.builtin.command: >
-    cp -r /tmp/composer-project/. {{ drupal_path }}/
-    creates={{ drupal_docroot }}/index.php
-  become: true
-  become_user: "{{ drupal_admin_user }}"
-  when: not drupal_site_exists
-
-- name: Ensure drupal_path directory has proper permissions.
+- name: Ensure drupal_path exists and has proper permissions.
   ansible.builtin.file:
     path: "{{ drupal_path }}"
     state: directory
     owner: "{{ drupal_admin_user }}"
     group: "{{ drupal_admin_user }}"
     mode: "0775"
+
+- name: Move Drupal project files to drupal_path
+  ansible.builtin.command: >
+    cp -r /tmp/composer-project/. {{ drupal_path }}/
+    creates={{ drupal_docroot }}/index.php
+  become: true
+  become_user: "{{ drupal_admin_user }}"
   when: not drupal_site_exists
   notify: Set ownership and file permissions for Drupal web directory
   failed_when: false
