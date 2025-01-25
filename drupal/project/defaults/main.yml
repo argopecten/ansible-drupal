@@ -12,7 +12,7 @@ drupal_repo: "https://git.drupalcode.org/project/drupal"
 # Drupal version
 drupal_version: "10.4.0"
 # Path to the Drupal core
-drupal_path: "/var/www/{{ drupal_version }}-{{ date }}"
+drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
 # Path to the Drupal docroot
 drupal_docroot: "{{ drupal_path }}/web"
 
