@@ -9,12 +9,15 @@
   connection: local
   become: true
 
+# Variable setup.
+  vars_files:
+    - defaults/main.yml                  # Include default variables
+    - vars/{{ ansible_os_family }}.yml   # Include OS-specific variables
+
+  handlers:
+    - include: handlers/main.yml  # Include handlers
+
   vars:
-    # Drupal project should be installed?
-    drupal_core_install: true
-    drupal_core_update: false
-    # Drupal site should be installed?
-    drupal_site_install: false
     # Drupal version
     drupal_version: "10.4.0"
     # Path to Drupal project
@@ -28,10 +31,10 @@
 
   tasks:
     - name: Create the drupal user
-      include_tasks: "tasks/create_drupal_user.yml"
+      include_tasks: "tasks/create-drupal-user.yml"
 
     - name: Create the Drupal project
-      include_tasks: "tasks/create_drupal_project.yml"
+      include_tasks: "tasks/create-drupal-project.yml"
 
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
