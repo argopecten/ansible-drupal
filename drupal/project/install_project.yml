@@ -1,0 +1,39 @@
+---
+# This playbook will deploy Drupa 10 on a LEMP stack.
+# - It will first setup the LEMP stack using the setup_lemp.yml playbook.
+# - Then it will install a Drupal project on that LEMP stack.
+# No drupal site will be created, just the project will be installed.
+
+- name: Install Drupal with Ansible
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars:
+    # Drupal project should be installed?
+    drupal_core_install: true
+    drupal_core_update: false
+    # Drupal site should be installed?
+    drupal_site_install: false
+    # Drupal version
+    drupal_version: "10.4.0"
+    # Path to Drupal project
+    drupal_path: "/var/www/drupal"
+    # TBD:
+    # Drupal repository
+    drupal_repo: "https://git.drupalcode.org/project/drupal"
+    drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
+    # Composer project options
+    drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+  tasks:
+    - name: Create the drupal user
+      include_tasks: "tasks/create_drupal_user.yml"
+
+    - name: Create the Drupal project
+      include_tasks: "tasks/create_drupal_project.yml"
+
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "1200"
+    COMPOSER_MEMORY_LIMIT: "-1"
+    COMPOSER_HOME: "{{ drupal_user_home }}/.composer"

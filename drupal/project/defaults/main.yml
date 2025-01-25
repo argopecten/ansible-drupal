@@ -1,0 +1,32 @@
+---
+date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+
+# Drupal user
+drupal_user: "da"
+# .pub key for Drupal admin user: taken from system user ubuntu
+drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
+drupal_user_home: "/home/{{ drupal_user }}"
+
+# Drupal repository
+drupal_repo: "https://git.drupalcode.org/project/drupal"
+# Drupal version
+drupal_version: "10.4.0"
+# Path to the Drupal core
+drupal_path: "/var/www/{{ drupal_version }}-{{ date }}"
+# Path to the Drupal docroot
+drupal_docroot: "{{ drupal_path }}/web"
+
+# Drupal repository
+drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
+drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+# Composer
+composer_path: "/usr/bin/composer"
+drupal_composer_dependencies:
+  - "drush/drush:^13.3"
+#  - "drupal/module2"
+
+# Default Drupal database host
+drupal_db_host: "localhost"
+# Drupal database backend (e.g., mysql, pgsql)
+drupal_db_backend: "mysql"

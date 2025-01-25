@@ -1,6 +1,0 @@
-# Setup tasks for Apache2 webserver
-
-- name: "Install Apache2"
-  ansible.builtin.apt:
-    name: "apache2"
-    state: present
