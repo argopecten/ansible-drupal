@@ -7,8 +7,6 @@ drupal_version: "10.4.0"
 drupal_path: "/var/www/drupal"
 # Path to the Drupal docroot
 drupal_docroot: "{{ drupal_path }}/web"
-# Update Drupal content in directory?
-drupal_update: true
 
 drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
 drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
@@ -17,6 +15,8 @@ drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction
 drupal_core_install: true
 # Drupal site should be installed?
 drupal_site_install: true
+# Update Drupal project directory?
+drupal_core_update: true
 
 composer_path: "/usr/bin/composer"
 # drupal_composer_install_dir: "/var/www/drupal" helyett: drupal_path

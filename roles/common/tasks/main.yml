@@ -11,3 +11,7 @@
     name:
       - unzip
       - mc
+
+# Create drupal admin user.
+- name: Create drupal admin user
+  ansible.builtin.include_tasks: create-admin-user.yml

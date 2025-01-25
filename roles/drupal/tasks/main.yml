@@ -1,31 +1,35 @@
 ---
 # Tasks for drupal role
 
-- name: Check if Drupal core is already installed
-  ansible.builtin.stat:
-    path: "{{ drupal_path }}"
-  register: drupal_core_installed
-
-- name: Set first install variable
-  ansible.builtin.set_fact:
-    is_first_install: "{{ not drupal_core_installed.stat.exists }}"
-    drupal_core_install: "{{ not drupal_core_installed.stat.exists }}"
-
-# Create drupal admin user.
-- name: Create drupal admin user
-  ansible.builtin.include_tasks: create-admin-user.yml
-  when: is_first_install
-
 # Setup global drush
 # - name: Setup global drush
 #   ansible.builtin.include_tasks: setup-global-drush.yml
 
-# Deploy Drupal code with composer.
-- name: Deploy Drupal codebase with Composer
+# Define variables to determine if it's the first install or an update
+- name: Check if Drupal is already installed
+  ansible.builtin.stat:
+    path: "{{ drupal_path }}/web/index.php"
+  register: drupal_core_installed
+
+- name: Set first install variable
+  ansible.builtin.set_fact:
+    is_core_install: "{{ not drupal_core_installed.stat.exists }}"
+
+- name: Set update variable
+  ansible.builtin.set_fact:
+    is_core_update: "{{ drupal_core_installed.stat.exists }}"
+
+# Deploy Drupal codebase with Composer for first install
+- name: Deploy Drupal codebase with Composer (first install)
   ansible.builtin.include_tasks: deploy-drupal-composer.yml
-  when: drupal_core_install
+  when: is_core_install
+
+# Update Drupal codebase with Composer for update
+- name: Update Drupal codebase with Composer (update)
+  ansible.builtin.include_tasks: update-drupal-composer.yml
+  when: is_core_update
 
 # Install Drupal site
 - name: Install Drupal site
   ansible.builtin.include_tasks: install-drupal-site.yml
-  when: drupal_site_install
+  when: drupal_site_install and drupal_core_installed.stat.exists

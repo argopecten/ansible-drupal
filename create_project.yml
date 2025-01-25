@@ -16,6 +16,7 @@
       vars:
         # Drupal project should be installed?
         drupal_core_install: true
+        drupal_core_update: false
         # Drupal site should be installed?
         drupal_site_install: false
         # Drupal version
