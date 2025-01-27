@@ -1,0 +1,41 @@
+# Common tasks for php
+
+# Add the PHP repository for Nginx
+- name: "Add PHP repository for Nginx"
+  ansible.builtin.apt_repository:
+    repo: 'ppa:ondrej/nginx'
+    update_cache: true
+
+# Install PHP and required extensions
+- name: "Install PHP for CiviCRM"
+  ansible.builtin.apt:
+    state: present
+    name:
+      - "php{{ php_version }}"
+      - "php{{ php_version }}-fpm"
+      - "php{{ php_version }}-curl"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-mbstring"
+      - "php{{ php_version }}-mysql"
+      - "php{{ php_version }}-xml"
+      - "php{{ php_version }}-zip"
+      - "php{{ php_version }}-bcmath"
+      - "php{{ php_version }}-intl"
+      - "php{{ php_version }}-soap"
+
+# Apply PHP configuration changes using a loop
+- name: Set PHP configuration values
+  ansible.builtin.lineinfile:
+    path: "/etc/php/{{ php_version }}/{{ item.variant }}/php.ini"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop: "{{ php_configurations }}"
+  notify: Restart PHP-FPM
+
+# Install Composer
+- name: "Install global Composer"
+  ansible.builtin.get_url:
+    url: "https://getcomposer.org/download/{{ composer_version }}/composer.phar"
+    dest: "{{ composer_path }}"
+    mode: "0775"

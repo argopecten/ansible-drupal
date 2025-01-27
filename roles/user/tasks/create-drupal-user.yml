@@ -49,7 +49,7 @@
     system: yes
     home: "{{ drupal_user_home }}"
     group: "{{ drupal_user }}"
-    groups: "{{ aegir_web_group }},sudo"
+    groups: "{{ nginx_user }},sudo"
     password_lock: true
     shell: /bin/bash
     append: yes

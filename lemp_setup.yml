@@ -1,0 +1,33 @@
+---
+- name: Setup LEMP with Ansible
+  hosts: localhost
+  become: true
+
+  vars:
+    php_version: "8.3"
+    webserver: "nginx"
+    # webserver: "apache2"
+    database: "mysql"
+    composer_version: "2.8.4"
+    composer_path: "/usr/bin/composer"
+
+  tasks:
+    - name: Install packages
+      include_role:
+        name: common
+        tasks_from: apt-install-packages
+
+    - name: Install webserver
+      include_role:
+        name: webserver
+        tasks_from: install-webserver
+
+    - name: Install PHP
+      include_role:
+        name: php
+        tasks_from: setup-php
+
+    - name: Install database
+      include_role:
+        name: database
+        tasks_from: setup_dbserver

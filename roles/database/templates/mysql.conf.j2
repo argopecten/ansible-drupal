@@ -1,0 +1,10 @@
+# The MySQL configuration file from Ansible
+
+# * IMPORTANT: Additional settings that can override those from this file!
+#   The files must end with '.cnf', otherwise they'll be ignored.
+
+# The MySQL Client configuration files:
+!includedir /etc/mysql/conf.d/
+
+# The MySQL Server configuration files:
+!includedir /etc/mysql/mysql.conf.d/

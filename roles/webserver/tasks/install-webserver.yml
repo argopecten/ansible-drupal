@@ -1,0 +1,8 @@
+# Deploy tasks for webservers
+- name: "Deploy Apache"
+  ansible.builtin.import_tasks: apache2.yml
+  when: webserver == "apache2"
+
+- name: "Deploy Nginx"
+  ansible.builtin.import_tasks: nginx.yml
+  when: webserver == "nginx"

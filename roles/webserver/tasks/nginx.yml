@@ -1,0 +1,42 @@
+---
+# Setup tasks for Nginx webserver
+
+# Variable setup.
+- name: Include OS-specific variables.
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+
+# Install Nginx.
+- name: "Install Nginx"
+  ansible.builtin.apt:
+    name: "nginx"
+    state: present
+
+# Copy Nginx configuration.
+- name: Copy Nginx configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_file_path }}"
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart Nginx
+
+# Copy Drupal configuration for Nginx.
+- name: Copy Drupal configuration for Nginx
+  ansible.builtin.template:
+    src: drupal.conf.j2
+    dest: "/usr/local/etc/drupal/nginx/drupal.conf"
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart Nginx
+
+# TBC!
+- name: Ensure Nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
+# Vhost configuration.
+- name: Include vhost tasks.
+  ansible.builtin.import_tasks: vhosts.yml

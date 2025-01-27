@@ -1,0 +1,13 @@
+# A list of tasks that the role provides to the play for execution
+
+# Common tasks for all servers
+- name: "Update apt cache"
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: "Install utils"
+  ansible.builtin.apt:
+    state: present
+    name:
+      - unzip
+      - mc

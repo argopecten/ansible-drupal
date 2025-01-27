@@ -4,18 +4,13 @@
 # - Then it will install a Drupal project on that LEMP stack.
 # No drupal site will be created, just the project will be installed.
 
-- name: Install Drupal with Ansible
+- name: Install Drupal project
   hosts: localhost
   connection: local
   become: true
 
-# Variable setup.
   vars_files:
-    - defaults/main.yml                  # Include default variables
-    - vars/{{ ansible_os_family }}.yml   # Include OS-specific variables
-
-  handlers:
-    - include: handlers/main.yml  # Include handlers
+    - roles/drupal-project/vars/{{ ansible_os_family }}.yml   # Include OS-specific variables
 
   vars:
     # Drupal version
@@ -31,11 +26,15 @@
 
   tasks:
     - name: Create the drupal user
-      include_tasks: "tasks/create-drupal-user.yml"
+      include_role:
+        name: user
+        tasks_from: create-drupal-user
 
-    - name: Create the Drupal project
-      include_tasks: "tasks/create-drupal-project.yml"
-
+    - name: Install Drupal project
+      include_role:
+        name: composer
+        tasks_from: install-composer-project
+        
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
     COMPOSER_MEMORY_LIMIT: "-1"
