@@ -21,11 +21,20 @@
     mode: '0644'
   notify: Restart Nginx
 
+# Ensure the destination directory exists
+- name: Create destination directory for Nginx configuration
+  ansible.builtin.file:
+    path: "{{ nginx_drupal_config_path }}"
+    state: directory
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0755'
+
 # Copy Drupal configuration for Nginx.
 - name: Copy Drupal configuration for Nginx
   ansible.builtin.template:
     src: drupal.conf.j2
-    dest: "/usr/local/etc/drupal/nginx/drupal.conf"
+    dest: "{{ nginx_drupal_config_path }}/drupal.conf"
     owner: root
     group: "{{ root_group }}"
     mode: '0644'

@@ -1,0 +1,22 @@
+---
+date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+
+# Drupal version
+drupal_version: "10.4.0"
+
+# Path to the Drupal core
+drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
+# Path to the Drupal docroot
+drupal_docroot: "{{ drupal_path }}/web"
+
+# Drupal repository
+# TBD
+drupal_repo: "https://git.drupalcode.org/project/drupal"
+drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
+drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+# Composer
+composer_path: "/usr/bin/composer"
+drupal_composer_dependencies:
+  - "drush/drush:^13.3"
+#  - "drupal/module2"

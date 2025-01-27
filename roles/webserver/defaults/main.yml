@@ -12,6 +12,7 @@ nginx_package_name: "nginx"
 nginx_service_state: started
 nginx_service_enabled: true
 
+nginx_drupal_config_path: "/usr/local/etc/drupal/nginx"
 nginx_conf_template: "nginx.conf.j2"
 nginx_vhost_template: "vhost.j2"
 
