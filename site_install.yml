@@ -7,26 +7,8 @@
   connection: local
   become: true
 
-  vars:
-    drupal_version: "10.4.0"
-    drupal_path: "/var/www/drupal-{{ drupal_version }}"
-    drupal_site_name: "example.com"
-
-  # All the main.yml files from each role will be included by default
-  # Needed for defaults, variables, handlers, etc.
-  roles:
-    - role: drupal-project
-    - role: drupal-site
-    - role: user
-    - role: webserver
-      vars:
-        nginx_vhosts:
-          - listen: "80"
-            server_name: "{{ drupal_site_name }}"
-            root: "{{ drupal_path }}/web"
-            state: "present"
-    - role: database
-    - role: composer
+  vars_files:
+    - vars/main.yml
 
   # Tasks from roles to run
   tasks:

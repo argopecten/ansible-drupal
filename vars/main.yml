@@ -38,7 +38,7 @@ drupal_db_host: "localhost"
 drupal_db_name: "drupaldb"
 
 # Drush Configuration
-drush_path: "/usr/local/bin/drush"
+drush_path_site: "{{ drupal_path}}/vendor/bin/drush"
 
 # Webserver Configuration
 nginx_vhosts:
