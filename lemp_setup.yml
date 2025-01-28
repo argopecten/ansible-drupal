@@ -26,3 +26,8 @@
       include_role:
         name: database
         tasks_from: setup_dbserver
+
+    - name: Install composer
+      include_role:
+        name: composer
+        tasks_from: install-global-composer
