@@ -22,6 +22,12 @@
         name: user
         tasks_from: create-drupal-user
 
+    # Add drupal.conf to webserver
+    - name: Add Drupal configuration to webserver
+      include_role:
+        name: webserver
+        tasks_from: webserver-drupal-config
+
     # Check if any Drupal site has been installed within the drupal_path
     - name: Find installed drupal site(s)
       ansible.builtin.find:

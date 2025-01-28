@@ -1,0 +1,16 @@
+---
+
+# Create login URL with Drush
+- name: Create login URL with Drush
+  ansible.builtin.command: >
+    {{ drush_path_site }} user:login -y --name={{ drupal_site_user }} --uri={{ drupal_site_name }}
+    --root={{ drupal_path }}
+  args:
+    chdir: "{{ drupal_path }}"
+  register: login_url_output
+  become: false
+
+# Present login URL in log
+- name: Present login URL in log
+  ansible.builtin.debug:
+    msg: "Login URL: {{ login_url_output.stdout }}"
