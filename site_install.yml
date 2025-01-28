@@ -1,30 +1,55 @@
 ---
-# This playbook will deploy Drupa 10 on a LEMP stack.
-# It will first setup the LEMP stack using the setup_lemp.yml playbook.
-# Then it will install Drupal on the LEMP stack.
+# This playbook will install a Drupal 10+ site into a Drupal project deployed by project_install.yml playbook.
 
-- name: Setup LEMP with Ansible
-  import_playbook: setup_lemp.yml
-
-- name: Install Drupal with Ansible
+# Install Drupal site
+- name: Install Drupal site
   hosts: localhost
+  connection: local
   become: true
 
+  vars:
+    drupal_version: "10.4.0"
+    drupal_path: "/var/www/drupal-{{ drupal_version }}"
+    drupal_site_name: "example.com"
+
+  # All the main.yml files from each role will be included by default
+  # Needed for defaults, variables, handlers, etc.
   roles:
-    - role: drupal
+    - role: drupal-project
+    - role: drupal-site
+    - role: user
+    - role: webserver
       vars:
-        drupal_version: "10.4.0"
         nginx_vhosts:
           - listen: "80"
-            server_name: "example.com"
+            server_name: "{{ drupal_site_name }}"
             root: "{{ drupal_path }}/web"
             state: "present"
+    - role: database
+    - role: composer
 
-  environment:
-    COMPOSER_PROCESS_TIMEOUT: "1200"
-    COMPOSER_MEMORY_LIMIT: "-1"
-
+  # Tasks from roles to run
   tasks:
-    - name: Include Drupal role tasks
-      ansible.builtin.include_role:
-        name: drupal
+    # Create the database user for the drupal site
+    - name: Create database user for the site
+      include_role:
+        name: database
+        tasks_from: create_db_user
+
+    # Create the admin user of the site
+    - name: Create admin user of the site
+      include_role:
+        name: drupal-site
+        tasks_from: create-first-user
+
+    # Install the Drupal site
+    - name: Install the Drupal site
+      include_role:
+        name: drupal-site
+        tasks_from: install-drupal-site
+
+    # Add site to the webserver
+    - name: Add site to the webserver
+      include_role:
+        name: webserver
+        tasks_from: add-site

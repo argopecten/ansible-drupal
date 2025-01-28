@@ -1,0 +1,7 @@
+---
+# This file contains the default variables for the common role.
+# Overwrite them in /vars/main.yml or /host_vars/localhost.yml
+
+apt_packages:
+  - unzip
+  - mc

@@ -1,1 +1,22 @@
-# Handlers that are imported into the parent play for use
+---
+# Common handlers
+
+# Restart services
+- name: Restart services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - apache2
+    - mysql
+  become: true
+  become_user: root
+
+# Clean up apt packages
+- name: Clean up apt packages
+  ansible.builtin.apt:
+    autoclean: yes
+    autoremove: yes
+  become: true
+  become_user: root
+  when: ansible_os_family == 'Debian'

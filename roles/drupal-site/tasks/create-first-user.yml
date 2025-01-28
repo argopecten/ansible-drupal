@@ -1,0 +1,17 @@
+---
+# Create the first user (site admin) for the Drupal site
+
+# Generate a random password for the Drupal site user
+- name: Generate a random password for the Drupal site user
+  ansible.builtin.set_fact:
+    drupal_site_pass: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+
+# Write the generated password into a file
+- name: Write Drupal site user password to a file
+  ansible.builtin.copy:
+    content: "Password for {{ drupal_site_user }} on {{ drupal_site_name }} site is: {{ drupal_site_pass }}"
+    dest: "{{ drupal_path }}/{{ drupal_site_user }}_password_file.txt"
+    owner: "{{ drupal_admin_user }}"
+    group: "{{ drupal_admin_user }}"
+    mode: "0600"
+  become: true

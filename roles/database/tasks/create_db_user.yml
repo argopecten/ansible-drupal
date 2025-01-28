@@ -1,0 +1,29 @@
+---
+# Create a database user for Drupal sites
+
+# Generate a random password for the Drupal database user
+- name: Generate a random password for the Drupal database user
+  ansible.builtin.set_fact:
+    drupal_db_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+
+# Write the generated password into a file
+- name: Write the password of Drupal database user to a file
+  ansible.builtin.copy:
+    content: "Password for drupal db user {{ drupal_db_user }} on {{ drupal_db_host }} site is: {{ drupal_db_password }}"
+    dest: "{{ drupal_path }}/{{ drupal_db_user }}_password_file.txt"
+    owner: "{{ drupal_admin_user }}"
+    group: "{{ drupal_admin_user }}"
+    mode: "0600"
+  become: true
+
+# Create database user for site
+- name: Create database user for site
+  community.mysql.mysql_user:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mysql_unix_socket }}"
+    name: "{{ drupal_db_user }}"
+    password: "{{ drupal_db_password }}"
+    priv: "*.*:ALL,GRANT"
+    host: "{{ drupal_db_host }}"
+    state: present
+  become: true

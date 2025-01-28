@@ -8,6 +8,5 @@
 - name: "Install utils"
   ansible.builtin.apt:
     state: present
-    name:
-      - unzip
-      - mc
+    name: "{{ apt_packages }}"
+  notify: Clean up apt packages

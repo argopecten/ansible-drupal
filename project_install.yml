@@ -1,45 +1,50 @@
 ---
-# This playbook will deploy Drupa 10 on a LEMP stack.
-# - It will first setup the LEMP stack using the setup_lemp.yml playbook.
-# - Then it will install a Drupal project on that LEMP stack.
-# No drupal site will be created, just the project will be installed.
+# This playbook will deploy Drupal 10+ on a LEMP stack, deployed by lemp_setup.yml playbook.
+# It will install a Drupal project, but no drupal site will be created, see: site_install.yml
 
+# Install Drupal project
 - name: Install Drupal project
   hosts: localhost
   connection: local
   become: true
 
-  vars:
-    # Drupal version
-    drupal_version: "10.4.0"
-    # Path to Drupal project
-    drupal_path: "/var/www/drupal-{{ drupal_version }}"
-    # TBD:
-    # Drupal repository
-    drupal_repo: "https://git.drupalcode.org/project/drupal"
-    drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
-    # Composer project options
-    drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+  vars_files:
+    - vars/main.yml
 
   # All the main.yml files from each role will be included by default
-  #   from defaults, variables, tasks and handlers
-  roles:
-    - role: drupal-project
-    - role: user
-    - role: composer
-    - role: webserver
+  # Needed for defaults, variables, handlers, etc.
 
   # Tasks from roles to run
   tasks:
+    # Create the drupal user if it does not exist
     - name: Create the drupal user
       include_role:
         name: user
         tasks_from: create-drupal-user
 
+    # Check if any Drupal site has been installed within the drupal_path
+    - name: Find installed drupal site(s)
+      ansible.builtin.find:
+        paths: "{{ drupal_path }}/web/sites"
+        patterns: "settings.php"
+        recurse: yes
+        use_regex: yes
+        excludes: "default"
+      register: drupal_site_installed
+
+    # Install the Drupal project only if sites have not been installed
     - name: Install Drupal project
       include_role:
-        name: composer
+        name: drupal-project
         tasks_from: install-drupal-project
+      when: drupal_site_installed.matched == 0
+
+    # Add composer requirements to project
+    - name: Add composer requirements
+      include_role:
+        name: composer
+        tasks_from: add-composer-requirements
+      when: drupal_site_installed.matched == 0
 
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"

@@ -1,4 +1,9 @@
 ---
+###  Default variables for the database role
+# database: mysql or mariadb
+database: "mysql"
+# database: "mariadb"
+
 # The default root user installed by mysql - almost always root
 mysql_root_user: root
 mysql_bind_address: 127.0.0.1

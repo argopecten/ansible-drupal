@@ -1,0 +1,87 @@
+---
+
+# Variables can be used in any playbooks or roles
+date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+
+# Drupal Version and Path
+drupal_version: "10.4.0"
+
+### project-install
+drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
+
+# Drupal application user in OS
+drupal_user: "da"
+drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
+drupal_user_home: "/home/{{ drupal_user }}"
+
+# Ubuntu and Debian specific variables for Nginx
+nginx_conf_path: /etc/nginx/conf.d
+nginx_conf_file_path: /etc/nginx/nginx.conf
+nginx_mime_file_path: /etc/nginx/mime.types
+nginx_pidfile: /run/nginx.pid
+nginx_vhost_path: /etc/nginx/sites-enabled
+nginx_default_vhost_path: /etc/nginx/sites-enabled/default
+nginx_user: "www-data"
+
+
+
+# Drupal Site Configuration
+drupal_site_name: "example.com"
+drupal_site_user: "admin"
+drupal_site_pass: "password"
+
+# Database Configuration
+drupal_db_backend: "mysql"
+drupal_db_user: "dbuser"
+drupal_db_password: "dbpassword"
+drupal_db_host: "localhost"
+drupal_db_name: "drupaldb"
+
+# Drush Configuration
+drush_path: "/usr/local/bin/drush"
+
+# Webserver Configuration
+nginx_vhosts:
+  - listen: "80"
+    server_name: "{{ drupal_site_name }}"
+    root: "{{ drupal_path }}/web"
+    state: "present"
+
+# ??? Admin User Configuration
+drupal_admin_user: "root"
+
+root_group: root
+
+
+# Composer Configuration
+composer_version: "2.8.4"
+composer_path: "/usr/bin/composer"
+# TBC
+drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }}"
+drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+# Composer Requirements
+drupal_composer_dependencies:
+  - "drush/drush:^13.3"
+
+####### lemp_setup.yml:
+#
+### Variables for the common role
+# OS packages to install
+apt_packages:
+  - unzip
+  - mc
+
+### Variables for the webserver role
+# webserver: ningx or apache2
+webserver: nginx
+# webserver: apache2
+
+###  Variables for the PHP role
+# Define the PHP version to be used
+php_version: "8.3"
+
+###  Variables for the database role
+# database: mysql or mariadb
+database: "mysql"
+# database: "mariadb"

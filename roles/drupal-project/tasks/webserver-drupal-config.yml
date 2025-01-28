@@ -1,0 +1,32 @@
+---
+
+# TBD!
+
+# Ensure the destination directory exists
+- name: Create destination directory for Nginx configuration
+  ansible.builtin.file:
+    path: "{{ nginx_drupal_config_path }}"
+    state: directory
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0755'
+
+# Copy Drupal configuration for Nginx.
+- name: Copy Drupal configuration for Nginx
+  ansible.builtin.template:
+    src: drupal.conf.j2
+    dest: "{{ nginx_drupal_config_path }}/drupal.conf"
+    owner: root
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart Nginx
+
+# TBC!
+- name: Ensure Nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
+# Vhost configuration.
+- name: Include vhost tasks.
+  ansible.builtin.import_tasks: vhosts.yml
