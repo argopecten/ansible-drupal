@@ -1,9 +1,11 @@
 # Handlers for drupal tasks
 
-- name: Set ownership and file permissions for Drupal web directory
-  ansible.builtin.command:
-    cmd: "{{ item.cmd }}"
+- name: Set ownership and file permissions for a Drupal project
+  ansible.builtin.command: >
+    /usr/local/bin/project-ownership-permissions.sh
+    --root="{{ drupal_path }}"
+    --user="{{ drupal_user }}"
+    --group="{{ drupal_user }}"
+  args:
+    chdir: "{{ drupal_path }}"
   become: true
-  loop: "{{ docroot_permissions }}"
-  loop_control:
-    label: "{{ item.name }}"

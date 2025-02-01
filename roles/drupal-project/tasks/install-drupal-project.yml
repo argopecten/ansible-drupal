@@ -14,19 +14,19 @@
   become: true
   become_user: "{{ drupal_user }}"
 
-- name: Ensure drupal_path exists and has proper permissions.
+- name: Ensure project root exists and has proper permissions.
   ansible.builtin.file:
     path: "{{ drupal_path }}"
     state: directory
     owner: "{{ drupal_user }}"
     group: "{{ drupal_user }}"
-    mode: "0775"
+    mode: "{{ project_root_permissions }}"
 
-- name: Move Drupal project files to drupal_path
+- name: Move Drupal project files to project root
   ansible.builtin.command: >
     cp -r /tmp/composer-project/. {{ drupal_path }}/
     creates={{ drupal_docroot }}/index.php
   become: true
   become_user: "{{ drupal_user }}"
-  notify: Set ownership and file permissions for Drupal web directory
+  notify: Set ownership and file permissions for a Drupal project
   failed_when: false
