@@ -24,3 +24,11 @@
     name: nginx
     state: reloaded
   when: "{{ nginx_service_state == 'started' }}"
+
+# Add web server user to the Drupal user group
+- name: "Add web server user to the Drupal user group"
+  ansible.builtin.user:
+    name: "{{ nginx_user }}"
+    groups: "{{ drupal_user }}"
+    append: yes
+  become: true

@@ -3,6 +3,9 @@
 # 
 # Change the default user variable {{ drupal_user }} in the playbook to have dedicated user for the project.
 
+- roles:
+    - role: webserver
+
 # Check if the password file already exists
 - name: Check if password file exists
   ansible.builtin.stat:
@@ -53,6 +56,7 @@
     password_lock: true
     shell: /bin/bash
     append: yes
+  notify: Add web server user to the Drupal user group
 - name: Create user home
   ansible.builtin.file:
     path: "{{ drupal_user_home }}"

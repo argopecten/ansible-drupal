@@ -1,4 +1,4 @@
-# Handlers for drupal tasks
+# Handlers for drupal-project tasks
 
 - name: Set ownership and file permissions for a Drupal project
   ansible.builtin.command: >

@@ -55,7 +55,7 @@ if [ -z "$PROJECT_ROOT" ]; then
   echo "Usage: (sudo) ${0##*/} --root=PATH --user=USER --group=GROUP"
   exit 1
 fi
-if [ ! -d "${PROJECT_ROOT}/web" ] && [ ! -d "${PROJECT_ROOT}/vendor" ]; then
+if [ ! -d "${PROJECT_ROOT}/web" ] || [ ! -d "${PROJECT_ROOT}/vendor" ]; then
   printf "Error: Please provide a valid Drupal project directory.\n"
   exit 1
 fi
@@ -68,47 +68,46 @@ fi
 
 cd "${PROJECT_ROOT}"
 
-printf "Changing ownership of all contents of "${PROJECT_ROOT}":\n user => "${USER}" \t group => "${GROUP}"\n"
-# list only files and directories that are not owned by the user and group
-find ./web \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -print0 | xargs -r -0 -L20 ls -la
+### Set ownership and permissions for code directories and files
+# - scope is /vendor and /web, except /web/sites
+# - Code is owned by the drupal user and by its group.
+# - Webserver user should be in the drupal users group, so can read and execute
+# - Drupal user can write, group only read, other users have no access and permissions.
+# - No need for unified permissions in the /vendor folder.
 
+code_dir_perms='u=rwx,g=rx,o=' # Code folders: 0750
+code_file_perms='u=rw,g=r,o='  # Code files in /web: 0640
+vendor_code_file_perms='o-rwx' # Code files in /vendor: 0**0
 
-find . \( -path "./sites" -prune \) -exec chown ${USER}:${GROUP} '{}' \+
-
-
-printf "Changing ownership inside "${WEB_ROOT}", except /sites directory:\n user => "${USER}" \t group => "${GROUP}"\n"
-# Set the correct ownership for directories and files
-# find . \( -path "./sites" -prune \) -exec chown "${USER}":"${GROUP}" '{}' \+
+# Set ownership for code files and directories
+printf "Changing ownership of all contents of ${PROJECT_ROOT}:\n user => ${USER} \t group => ${GROUP}\n"
+# works only on files and directories that are not yet owned by the ${USER} and ${GROUP}
 # https://stackoverflow.com/questions/4210042/how-do-i-exclude-a-directory-when-using-find
-find ./web -not -path "./sites/*" -exec chown "${USER}":"${GROUP}" '{}' \+
+find . -path ./web/sites -prune -o \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -exec chown ${USER}:${GROUP} '{}' \+
 
-# Set the correct permissions for directories and files
-printf "Changing permissions of all directories inside "${WEB_ROOT}", except /sites directory, to "750"...\n"
-find . \( -path "./sites" -prune \) -type d -exec chmod 750 '{}' \+
+# Set permissions for code directories
+printf "Changing permissions of all directories inside ${PROJECT_ROOT} to ${code_dir_perms} ...\n"
+# find directories that are not having the correct permissions and change them, except the web/sites directory
+find . -path "./web/sites" -prune -o -type d ! -perm "${code_dir_perms}" -exec chmod "${code_dir_perms}" '{}' \+
 
-printf "Changing permissions of all files inside "${WEB_ROOT}", except /sites directory, to "640"...\n"
-find . \( -path "./sites" -prune \) -type f -exec chmod 640 '{}' \+
+# Set permissions for code files
+printf "Changing permissions of all files inside ${PROJECT_ROOT} to ${code_file_perms} ...\n"
+# find files that are not having the correct permissions and change them, except the web/sites directory
+find . -path "./web/sites" -prune -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+find ./vendor -type f ! -perm "${vendor_code_file_perms}" -exec chmod "${vendor_code_file_perms}" '{}' \+
 
-# site/sites.php file should have 440 permissions
-if [ -f ./sites/site.php ]; then
-  chown "${USER}":"${GROUP}" ./sites/sites.php
-  find ./sites/site.php -type f -exec chmod 440 '{}' \+
+# /web/sites/sites.php file should have 440 permissions
+if [ -f ./web/sites/site.php ]; then
+  chown "${USER}":"${GROUP}" ./web/sites/sites.php
+  find ./web/sites/sites.php -type f -exec chmod 440 '{}' \+
 fi
 
-# list only files and directories that are not owned by the user and group
-find ./web \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -print0 | xargs -r -0 -L20 ls -la
-
-# list only files and directories that are not having the correct permissions
-find ./web -type d ! -perm $3 -print0 | xargs -r -0 -L20 chmod $3
-find ./web -type d ! -perm "u=rwx,g=rwxs,o=" -print0 | xargs -r -0 -L20 ls -la
-
-find ./web -type d \( -path /sites/\*/files -prune \) -print0 | xargs -r -0 -L20 ls -la
-find ./web \( -path ./web/sites/\*/files -prune \) -o \( -type $2 ! -perm $3 -print0 \) | xargs -r -0 -L4 chmod $3
-find web -type d \( -path web/core -prune \) -o -print0 | xargs -r -0 -L20 ls -la
-find web -type d \( -path web/core -prune \) -o ! -perm "u=rwx,g=rwxs,o=" -print0 | xargs -r -0 -L20 ls -la
-
-
-# TBD: sites/all
-# chown -R ${USER}:${GROUP} ./sites/all
+# code inside /web/sites directory
+printf "Changing permissions of all files inside ${PROJECT_ROOT}/web/sites/all to ${code_file_perms} ...\n"
+if [ -d ./web/sites/all ]; then
+  chown "${USER}":"${GROUP}" ./web/sites/all
+  find ./web/sites/all \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -print0 | xargs -r -0 -L20 -exec chown ${USER}:${GROUP} '{}' \+
+  find ./web/sites/all -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+fi
 
 echo "Done setting proper ownership and permissions for files and directories of the drupal project."
