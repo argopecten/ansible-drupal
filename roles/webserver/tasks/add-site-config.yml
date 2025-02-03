@@ -6,8 +6,7 @@
   ansible.builtin.file:
     path: "{{ nginx_default_vhost_path }}"
     state: absent
-  when: "{{ nginx_remove_default_vhost | bool }}"
-  notify: Restart nginx
+  notify: Reload nginx
 
 # Ensure vhost path exists.
 - name: Ensure nginx_vhost_path exists.
@@ -23,22 +22,8 @@
     src: site.conf.j2
     dest: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
     force: true
-    owner: root
+    owner: "{{ root_user }}"
     group: "{{ root_group }}"
-    mode: '0644'
-  when: "{{ item.state|default('present') != 'absent' }}"
+    mode: "0644"
   with_items: "{{ nginx_vhosts }}"
   notify: Reload nginx
-  tags:
-    - skip_ansible_lint
-
-# Remove vhost config files.
-- name: Remove managed vhost config files.
-  ansible.builtin.file:
-    path: "{{ nginx_vhost_path }}/{{ item.filename|default(item.server_name.split(' ')[0] ~ '.conf') }}"
-    state: absent
-  when: "{{ item.state|default('present') == 'absent' }}"
-  with_items: "{{ nginx_vhosts }}"
-  notify: Reload nginx
-  tags:
-    - skip_ansible_lint

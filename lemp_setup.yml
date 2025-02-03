@@ -12,6 +12,11 @@
         name: common
         tasks_from: apt-install-packages
 
+    - name: Install scripts
+      include_role:
+        name: common
+        tasks_from: install-scripts
+
     - name: Install webserver
       include_role:
         name: webserver

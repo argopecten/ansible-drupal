@@ -5,7 +5,7 @@
   ansible.builtin.file:
     path: "{{ nginx_drupal_config_path }}"
     state: directory
-    owner: root
+    owner: "{{ root_user }}"
     group: "{{ root_group }}"
     mode: '0755'
 
@@ -14,7 +14,8 @@
   ansible.builtin.template:
     src: drupal.conf.j2
     dest: "{{ nginx_drupal_config_path }}/drupal.conf"
-    owner: root
+    owner: "{{ root_user }}"
     group: "{{ root_group }}"
     mode: '0644'
   notify: Restart Nginx
+ 

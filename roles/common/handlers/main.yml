@@ -6,9 +6,7 @@
   ansible.builtin.service:
     name: "{{ item }}"
     state: restarted
-  with_items:
-    - apache2
-    - mysql
+  with_items: "{{ services_to_restart }}"
   become: true
   become_user: root
 

@@ -38,8 +38,14 @@
         name: drupal-site
         tasks_from: install-drupal-site
 
+    # Update settings.php file
+    - name: Update settings.php file
+      include_role:
+        name: drupal-site
+        tasks_from: update-settings
+
     # Add site to the webserver
     - name: Add site to the webserver
       include_role:
         name: webserver
-        tasks_from: add-site
+        tasks_from: add-site-config

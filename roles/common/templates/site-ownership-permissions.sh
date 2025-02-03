@@ -94,12 +94,11 @@ find . \( -path ./files -o -path ./private -prune \) -o -type d ! -perm "${code_
 # Set permissions for code files
 printf "Changing permissions of all files inside ${SITE_ROOT} to ${code_file_perms} ...\n"
 # find files that are not having the correct permissions and change them, except the web/sites directory
-find . -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+find . \( -path ./files -o -path ./private -prune \) -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
 find ./vendor -type f ! -perm "${vendor_code_file_perms}" -exec chmod "${vendor_code_file_perms}" '{}' \+
 
 # settings files should have 440 permissions
 if [ -f ./settings.php ]; then
-  chown "${USER}":"${GROUP}" ./settings.php
   find . -type f -name '*settings.php' -exec chmod 440 '{}' \;
 fi
 
@@ -111,9 +110,9 @@ fi
 # - TBD: sticky bit for group permissions!
 # - TBC: js and css directories in the files directory
 
-# Content folders 	u=rwx,g=rwx,o= 	2770 	rwxrwx---
+# Content folders 	u=rwx,g=rwx,g+s,o= 	2770 	rwxrws---
 # Content files 	ug=rw,o= 	0660 	rw-rw----
-content_dir_perms="u=rwx,g=rws,o="
+content_dir_perms="u=rwx,g=rwx,g+s,o="
 content_file_perms='ug=rw,o='
 
 # Set permissions for content directories

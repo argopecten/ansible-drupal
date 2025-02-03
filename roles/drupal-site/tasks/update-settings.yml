@@ -1,0 +1,20 @@
+---
+
+# update settings.php file
+
+# settings files should have 640 permissions
+- name: Add write permissions to settings.php
+  ansible.builtin.file:
+    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}/settings.php"
+    mode: "0640"
+
+- name: Add trusted host patterns
+  ansible.builtin.lineinfile:
+    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}/settings.php"
+    regexp: "^# \\$settings\\['trusted_host_patterns'\\] = \\[\\];$"
+    line: |
+      $settings['trusted_host_patterns'] = [
+        '^{{ drupal_site_name }}$',
+      ];
+    state: present
+  notify: Apply 440 permissions to settings.php

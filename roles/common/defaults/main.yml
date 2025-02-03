@@ -5,3 +5,8 @@
 apt_packages:
   - unzip
   - mc
+
+services_to_restart:
+  - {{ webserver }}
+  - php{{ php_version }}
+  - {{ database }}

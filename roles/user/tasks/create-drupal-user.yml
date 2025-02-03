@@ -4,33 +4,24 @@
 # Check if the password file already exists
 - name: Check if password file exists
   ansible.builtin.stat:
-    path: "/root/{{ drupal_user }}_password.txt"
+    path: "{{ root_home }}/password_for_{{ drupal_user }}.txt"
   register: password_file
 
 # Set the {{ drupal_user_pwd }} from the password file if it exists
-- name: Read password from file
+- name: Read hashed password from file
   ansible.builtin.slurp:
-    path: "/root/{{ drupal_user }}_password.txt"
+    src: "{{ root_home }}/password_for_{{ drupal_user }}.txt"
   register: password_content
   when: password_file.stat.exists
 - name: Set password fact from file content
   ansible.builtin.set_fact:
-    drupal_user_pwd: "{{ password_content.content | b64decode | regex_search('Password for .* site is: (.*)', '\\1') }}"
+    drupal_user_pwd: "{{ password_content.content | b64decode }}"
   when: password_file.stat.exists
 
 # Generate and write into a file a random password for the Drupal admin user
-- name: Generate a random password
+- name: Generate a unique password for the Drupal user
   ansible.builtin.set_fact:
-    drupal_user_pwd: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
-  when: not password_file.stat.exists
-- name: Write Drupal admin user password to a file
-  ansible.builtin.copy:
-    content: "{{ drupal_user_pwd }}"
-    dest: "/root/{{ drupal_user }}_password.txt"
-    owner: "root"
-    group: "root"
-    mode: "0600"
-  become: true
+    drupal_user_pwd: "{{ lookup('ansible.builtin.password', '{{ root_home }}/password_for_{{ drupal_user }}.txt', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
   when: not password_file.stat.exists
 
 # Create the Drupal user, its group, and home directory

@@ -16,7 +16,7 @@
   ansible.builtin.template:
     src: nginx.conf.j2
     dest: "{{ nginx_conf_file_path }}"
-    owner: root
+    owner: "{{ root_user }}"
     group: "{{ root_group }}"
     mode: '0644'
   notify: Restart Nginx
