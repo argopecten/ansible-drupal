@@ -26,12 +26,6 @@
         name: database
         tasks_from: create_db_user
 
-    # Create the admin user of the site
-    - name: Create admin user of the site
-      include_role:
-        name: drupal-site
-        tasks_from: create-first-user
-
     # Install the Drupal site
     - name: Install the Drupal site
       include_role:

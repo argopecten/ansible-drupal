@@ -1,6 +1,11 @@
 ---
 # Install Drupal site
 
+# Generate a random password for the Drupal site user
+- name: Generate a random password for the Drupal site user
+  ansible.builtin.set_fact:
+    drupal_site_pass: "{{ lookup('ansible.builtin.password', '/dev/null', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
+
 # Install Drupal core with drush
 - name: Install Drupal core with drush.
   ansible.builtin.command: >

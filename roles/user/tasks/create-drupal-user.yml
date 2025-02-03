@@ -1,5 +1,5 @@
 ---
-# This playbook creates a Drupal admin user with a random password and adds an SSH key for the user.
+# This playbook creates a Drupal user with a random password and adds an SSH key for the user.
 
 # Check if the password file already exists
 - name: Check if password file exists
@@ -8,7 +8,7 @@
   register: password_file
 
 # Set the {{ drupal_user_pwd }} from the password file if it exists
-- name: Read hashed password from file
+- name: Read password from file
   ansible.builtin.slurp:
     src: "{{ root_home }}/password_for_{{ drupal_user }}.txt"
   register: password_content
@@ -18,7 +18,7 @@
     drupal_user_pwd: "{{ password_content.content | b64decode }}"
   when: password_file.stat.exists
 
-# Generate and write into a file a random password for the Drupal admin user
+# Generate and write into a file a random password for the Drupal  user
 - name: Generate a unique password for the Drupal user
   ansible.builtin.set_fact:
     drupal_user_pwd: "{{ lookup('ansible.builtin.password', '{{ root_home }}/password_for_{{ drupal_user }}.txt', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
@@ -34,7 +34,7 @@
   ansible.builtin.user:
     name: "{{ drupal_user }}"
     state: present
-    password: "{{ drupal_user_pwd }}"
+    password: "{{ drupal_user_pwd | password_hash('sha512') }}"
     system: yes
     home: "{{ drupal_user_home }}"
     group: "{{ drupal_user }}"

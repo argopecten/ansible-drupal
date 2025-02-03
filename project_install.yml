@@ -13,6 +13,8 @@
 
   # All the main.yml files from each role will be included by default
   # Needed for defaults, variables, handlers, etc.
+  roles:
+  - role: webserver
 
   # Tasks from roles to run
   tasks:
