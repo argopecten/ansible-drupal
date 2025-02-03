@@ -1,6 +1,9 @@
 ---
 # This playbook will install a Drupal 10+ site into a Drupal project deployed by project_install.yml playbook.
 
+# Usage:
+# ansible-playbook site_install.yml --extra-vars "drupal_site_name=d1.example.com drupal_path=/path/to/drupal"
+
 # Install Drupal site
 - name: Install Drupal site
   hosts: localhost
@@ -9,6 +12,11 @@
 
   vars_files:
     - vars/main.yml
+
+  # Variables to pass to the role from command line
+  vars:
+    drupal_path: "{{ drupal_path }}"
+    drupal_site_name: "{{ drupal_site_name }}"
 
   # Tasks from roles to run
   tasks:

@@ -1,10 +1,5 @@
 ---
 # This playbook creates a Drupal admin user with a random password and adds an SSH key for the user.
-# 
-# Change the default user variable {{ drupal_user }} in the playbook to have dedicated user for the project.
-
-- roles:
-    - role: webserver
 
 # Check if the password file already exists
 - name: Check if password file exists

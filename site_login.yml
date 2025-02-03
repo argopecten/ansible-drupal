@@ -1,6 +1,9 @@
 ---
 # This playbook will create the login URL for a Drupal 10+ site.
 
+# Usage:
+# ansible-playbook site_login.yml --extra-vars "drupal_site_name=d1.example.com drupal_path=/path/to/drupal"
+
 # Create site login URL
 - name: Create site login URL
   hosts: localhost
@@ -9,6 +12,11 @@
 
   vars_files:
     - vars/main.yml
+  
+  # Variables to pass to the role from command line
+  vars:
+    drupal_path: "{{ drupal_path }}"
+    drupal_site_name: "{{ drupal_site_name }}"
 
   # Tasks from roles to run
   tasks:

@@ -89,11 +89,13 @@ find . -path ./web/sites -prune -o \( ! -user ${USER} -o ! -group ${GROUP} \) \(
 printf "Changing permissions of all directories inside ${PROJECT_ROOT} to ${code_dir_perms} ...\n"
 # find directories that are not having the correct permissions and change them, except the web/sites directory
 find . -path "./web/sites" -prune -o -type d ! -perm "${code_dir_perms}" -exec chmod "${code_dir_perms}" '{}' \+
+# Set the same permissions for the /web/sites directory
+chmod "${code_dir_perms}" ./web/sites
 
 # Set permissions for code files
 printf "Changing permissions of all files inside ${PROJECT_ROOT} to ${code_file_perms} ...\n"
 # find files that are not having the correct permissions and change them, except the web/sites directory
-find . -path "./web/sites" -prune -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+find . \( -path "./web/sites" -o -path "./vendor" -prune \) -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
 find ./vendor -type f ! -perm "${vendor_code_file_perms}" -exec chmod "${vendor_code_file_perms}" '{}' \+
 
 # /web/sites/sites.php file should have 440 permissions

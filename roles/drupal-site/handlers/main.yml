@@ -1,10 +1,12 @@
-# Handlers for drupal tasks
+---
+# Handlers for drupal-site tasks
 
-# Set permissions for web/sites/{{ site_dir }} directory
 - name: Set permissions for site directory
-  ansible.builtin.command:
-    cmd: "{{ item.cmd }}"
+  ansible.builtin.command: >
+    /usr/local/bin/site-ownership-permissions.sh
+    --root="{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
+    --user="{{ drupal_user }}"
+    --group="{{ nginx_user }}"
+  args:
+    chdir: "{{ drupal_path }}"
   become: true
-  loop: "{{ sites_permissions }}"
-  loop_control:
-    label: "{{ item.name }}"

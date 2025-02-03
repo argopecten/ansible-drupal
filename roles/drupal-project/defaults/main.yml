@@ -18,4 +18,4 @@ drupal_composer_project_package: "drupal/recommended-project:{{ drupal_version }
 drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction"
 
 # Permissions for the Drupal directory
-project_root_permissions: "0755"
+project_root_permissions: "0750"
