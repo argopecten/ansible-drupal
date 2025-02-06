@@ -1,12 +1,21 @@
 ---
 # Install Drupal site
 
-# Generate a random password for the Drupal site user
-- name: Generate a random password for the Drupal site user
-  ansible.builtin.set_fact:
-    drupal_site_pass: "{{ lookup('ansible.builtin.password', '/dev/null', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
+# Check if any Drupal site has been installed within the drupal_path
+- name: Find installed drupal site(s)
+  ansible.builtin.find:
+    paths: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
+    patterns: "settings.php"
+    use_regex: yes
+  register: site_installed
 
-# Install Drupal core with drush
+# Generate a random password for the Drupal site user
+- name: Create a password
+  ansible.builtin.set_fact:
+    drupal_site_pass: "{{ lookup('ansible.builtin.password', length=20 + (5 | random), chars=['ascii_letters', 'digits', '!+-_']) }}"
+  no_log: true
+
+# Install Drupal core with drush only if sites have not been installed
 - name: Install Drupal core with drush.
   ansible.builtin.command: >
     {{ drush_path_site }} --root={{ drupal_path }} site-install {{ drupal_install_profile | default('standard') }} -y
@@ -19,7 +28,7 @@
   args:
     chdir: "{{ drupal_path }}"
   notify: Set permissions for site directory
-  # TBD: when: "'Drupal bootstrap' not in drupal_site_installed.stdout"
+  when: site_installed.matched == 0
   become: true
   become_user: "{{ drupal_user }}"
 
