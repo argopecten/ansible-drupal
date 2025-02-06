@@ -99,7 +99,7 @@ find . \( -path "./web/sites" -o -path "./vendor" -prune \) -o -type f ! -perm "
 find ./vendor -type f ! -perm "${vendor_code_file_perms}" -exec chmod "${vendor_code_file_perms}" '{}' \+
 
 # /web/sites/sites.php file should have 440 permissions
-if [ -f ./web/sites/site.php ]; then
+if [ -f ./web/sites/sites.php ]; then
   chown "${USER}":"${GROUP}" ./web/sites/sites.php
   find ./web/sites/sites.php -type f -exec chmod 440 '{}' \+
 fi

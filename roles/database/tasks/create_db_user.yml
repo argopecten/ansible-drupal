@@ -2,9 +2,12 @@
 # Create a database user for Drupal sites
 
 # Generate a random password for the Drupal database user
-- name: Generate a random password for the Drupal database user
+- name: Generate a random MySQL 8-compliant password for the database user
   ansible.builtin.set_fact:
-    drupal_db_password: "{{ lookup('ansible.builtin.password', '/dev/null', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
+    drupal_db_password: "{{ lookup('ansible.builtin.password',
+                      '/dev/null',
+                      length=12,
+                      chars=['ascii_letters', 'digits', '!+-.:<=>_|']) }}"
 
 # Create database user for site
 - name: Create database user for site

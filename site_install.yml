@@ -20,17 +20,25 @@
 
   # Tasks from roles to run
   tasks:
-    # Create the database user for the drupal site
-    - name: Create database user for the site
-      include_role:
-        name: database
-        tasks_from: create_db_user
+    # Check if the directory for the Drupal site exists
+    - name: Check if Drupal site directory exists
+      ansible.builtin.stat:
+        path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
+      register: site_directory
 
-    # Install the Drupal site
-    - name: Install the Drupal site
-      include_role:
-        name: drupal-site
-        tasks_from: install-drupal-site
+    # Create the database user for the drupal site and install the Drupal site
+    - name: Create database user and install Drupal site
+      block:
+        - name: Create database user for the site
+          include_role:
+            name: database
+            tasks_from: create_db_user
+
+        - name: Install the Drupal site
+          include_role:
+            name: drupal-site
+            tasks_from: install-drupal-site
+      when: site_directory.stat.exists == False
 
     # Update settings.php file
     - name: Update settings.php file
