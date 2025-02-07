@@ -8,5 +8,5 @@ apt_packages:
 
 services_to_restart:
   - "{{ webserver }}"
-  - "php{{ php_version }}"
+  - "php{{ php_version }}-fpm"
   - "{{ database }}"

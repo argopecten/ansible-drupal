@@ -10,6 +10,9 @@
   connection: local
   become: true
 
+  roles:
+    - common
+
   vars_files:
     - vars/main.yml
 

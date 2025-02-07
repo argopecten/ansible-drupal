@@ -26,4 +26,4 @@
     group: "{{ root_group }}"
     mode: "0644"
   with_items: "{{ nginx_vhosts }}"
-  notify: Reload nginx
+  notify: Restart services
