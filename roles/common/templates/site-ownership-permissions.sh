@@ -76,9 +76,9 @@ cd "${SITE_ROOT}"
 # - Webserver user should be in the drupal users group, so can read and execute
 # - No need for unified permissions in the /vendor folder.
 
-code_dir_perms='u=rwx,g=rxs,o=' # Code folders: 2750
-code_file_perms='u=rw,g=r,o='  # Code files in /web: 0640
-vendor_code_file_perms='o-rwx' # Code files in /vendor: 0**0
+DIR_PERM='u=rwx,g=rxs,o=' # Code folders: 2750
+FILE_PERM='u=rw,g=r,o='  # Code files in /web: 0640
+FILE_PERM_VENDOR='o-rwx' # Code files in /vendor: remove all permissions for others
 
 # Set ownership for code files and directories
 printf "Changing ownership of all contents of ${SITE_ROOT}:\n user => ${USER} \t group => ${GROUP}\n"
@@ -87,15 +87,17 @@ printf "Changing ownership of all contents of ${SITE_ROOT}:\n user => ${USER} \t
 find . \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -exec chown ${USER}:${GROUP} '{}' \+
 
 # Set permissions for code directories
-printf "Changing permissions of all directories inside ${SITE_ROOT} to ${code_dir_perms} ...\n"
-# find directories that are not having the correct permissions and change them, except the web/sites directory
-find . \( -path ./files -o -path ./private -prune \) -o -type d ! -perm "${code_dir_perms}" -exec chmod "${code_dir_perms}" '{}' \+
+printf "Changing permissions of all directories inside ${SITE_ROOT} to ${DIR_PERM} ...\n"
+# find directories that are not having the correct permissions and change them, except the files and private directories
+find . \( -path ./files -o -path ./private -prune \) -o -type d ! -perm "${DIR_PERM}" -exec chmod "${DIR_PERM}" '{}' \+
 
 # Set permissions for code files
-printf "Changing permissions of all files inside ${SITE_ROOT} to ${code_file_perms} ...\n"
+printf "Changing permissions of all files inside ${SITE_ROOT} to ${FILE_PERM} ...\n"
 # find files that are not having the correct permissions and change them, except the web/sites directory
-find . \( -path ./files -o -path ./private -prune \) -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
-find ./vendor -type f ! -perm "${vendor_code_file_perms}" -exec chmod "${vendor_code_file_perms}" '{}' \+
+find . \( -path ./files -o -path ./private -prune \) -o -type f ! -perm "${FILE_PERM}" -exec chmod "${FILE_PERM}" '{}' \+
+if [ -d "./vendor" ]; then
+  find ./vendor -type f ! -perm "${FILE_PERM_VENDOR}" -exec chmod "${FILE_PERM_VENDOR}" '{}' \+
+fi
 
 # settings files should have 440 permissions
 if [ -f ./settings.php ]; then
@@ -107,21 +109,31 @@ fi
 # - Code is owned by the drupal user and by its group.
 # - Drupal user and group can write, other users have no access and permissions.
 # - Webserver user should be in the drupal users group, so can read, write and execute
-# - TBD: sticky bit for group permissions!
-# - TBC: js and css directories in the files directory
 
-# Content folders 	u=rwx,g=rwx,g+s,o= 	2770 	rwxrws---
-# Content files 	ug=rw,o= 	0660 	rw-rw----
-content_dir_perms="u=rwx,g=rwx,g+s,o="
-content_file_perms='ug=rw,o='
+# List of content directories to process
+DIRECTORIES=("files" "private")
 
-# Set permissions for content directories
-printf "Changing permissions for ./files and ./private directories inside ${SITE_ROOT} to ${content_file_perms} ...\n"
-find ./files   -type d ! -perm "${content_dir_perms}" -exec chmod "${content_dir_perms}" '{}' \+
-find ./private -type d ! -perm "${content_dir_perms}" -exec chmod "${content_dir_perms}" '{}' \+
+# Permission settings for content directories and files
+DIR_PERM="u=rwx,g=rwx,g+s,o="  # 2770 or rwxrws---
+FILE_PERM="ug=rw,o=" # 0660 or rw-rw----
 
-# Set permissions for content files
-find ./files -type f ! -perm "${content_file_perms}" -exec chmod "${content_file_perms}" '{}' \+
-find ./private -type f ! -perm "${content_file_perms}" -exec chmod "${content_file_perms}" '{}' \+
+for dir in "${DIRECTORIES[@]}"; do
+    if [ -d "./$dir" ]; then
+        echo "Processing directory: ./$dir"
 
-echo "Done setting proper ownership and permissions for files and directories of a drupal site."
+        # Set directory permissions (including setgid bit)
+        chmod "$DIR_PERM" "./$dir"
+
+        # Process files
+        find "./$dir" -type f ! -perm "${FILE_PERM}" -exec chmod "${FILE_PERM}" '{}' \+
+
+        # Process subdirectories (maintain setgid)
+        find "./$dir" -type d ! -perm "${DIR_PERM}" -exec chmod "${DIR_PERM}" '{}' \+
+
+        echo "Permissions set for ./$dir and its contents"
+    else
+        echo "Info: ./$dir directory not found, skipping"
+    fi
+done
+
+echo "Done setting proper ownership and permissions for files and directories."
