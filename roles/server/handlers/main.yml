@@ -1,0 +1,6 @@
+---
+# Include handlers from database.yml
+- include_tasks: database.yml
+
+# Include handlers from common.yml
+- include_tasks: common.yml

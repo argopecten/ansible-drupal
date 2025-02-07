@@ -1,0 +1,6 @@
+---
+# Include default variables from composer.yml
+- include_vars: composer.yml
+
+# Include default variables from common.yml
+- include_vars: common.yml

@@ -1,0 +1,20 @@
+---
+- name: Main playbook orchestrating multiple components
+  hosts: localhost
+
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Validate environment
+      debug:
+        msg: "Starting multi-playbook execution"
+
+- import_playbook: lemp.yml
+  vars:
+    root_user: root
+    root_group: root
+    webserver: nginx
+    php_version: "8.3"
+
+- import_playbook: project_install.yml

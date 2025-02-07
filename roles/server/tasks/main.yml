@@ -1,0 +1,18 @@
+---
+- name: Install packages
+  include_tasks: common/apt-install-packages.yml
+
+- name: Install scripts
+  include_tasks: common/install-scripts.yml
+
+- name: Install webserver
+  include_tasks: webserver/install-webserver.yml
+
+- name: Install database
+  include_tasks: database/setup_dbserver.yml
+
+- name: Install PHP
+  include_tasks: php/setup-php.yml
+
+- name: Install composer
+  include_tasks: php/install-global-composer.yml
