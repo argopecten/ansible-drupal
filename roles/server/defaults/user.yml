@@ -1,8 +1,0 @@
----
-date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
-
-# Drupal user
-drupal_user: "da"
-# .pub key for Drupal admin user: taken from system user ubuntu
-drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
-drupal_user_home: "/home/{{ drupal_user }}"

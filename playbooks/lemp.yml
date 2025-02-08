@@ -3,11 +3,11 @@
   hosts: localhost
   become: true
 
-  vars:
-    root_user: "{{ root_user }}"
-    root_group: "{{ root_group }}"
+  vars_files:
+    - vars/main.yml
 
   tasks:
     - name: Setup LEMP stack
       include_role:
         name: server
+ 
