@@ -9,8 +9,15 @@ drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
 # Path to the Drupal docroot
 drupal_docroot: "{{ drupal_path }}/web"
 
-# Drupal user
+# Defaults for the root user in OS
+root_user: "root"
+root_group: "root"
+root_home: "/root"
+
+# Drupal application user in OS
 drupal_user: "da"
+drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
+drupal_user_home: "/home/{{ drupal_user }}"
 
 # Drupal repository
 drupal_repo: "https://git.drupalcode.org/project/drupal"
@@ -19,3 +26,8 @@ drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction
 
 # Permissions for the Drupal directory
 project_root_permissions: "0750"
+
+### Defined in roles/server/defaults/main.yml
+# Path to the Drupal nginx configuration
+nginx_drupal_config_path: "/usr/local/etc/drupal/nginx"
+php_version: "8.3"

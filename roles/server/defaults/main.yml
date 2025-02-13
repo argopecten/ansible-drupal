@@ -3,6 +3,8 @@
 apt_packages:
   - unzip
   - mc
+  - acl # Ansible requires setfacl from this package to manage temporary file permissions when switching users.
+
 services_to_restart:
   - "{{ webserver }}"
   - "php{{ php_version }}-fpm"

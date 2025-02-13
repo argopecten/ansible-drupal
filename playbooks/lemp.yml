@@ -1,4 +1,6 @@
 ---
+# This playbook sets up a LEMP stack using Ansible
+
 - name: Setup LEMP with Ansible
   hosts: localhost
   become: true
@@ -10,4 +12,3 @@
     - name: Setup LEMP stack
       include_role:
         name: server
- 

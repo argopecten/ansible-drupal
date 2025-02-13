@@ -1,4 +1,6 @@
 ---
+# This file contains the main tasks for setting up the server
+
 - name: Install packages
   include_tasks: common/apt-install-packages.yml
 

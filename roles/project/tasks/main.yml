@@ -1,0 +1,40 @@
+---
+# This role will setup a Drupal project, without any site created.
+
+# Create the drupal user if it does not exist
+- name: Create the drupal user
+  include_tasks: create-drupal-user.yml
+
+# Add drupal.conf to webserver
+- name: Add Drupal configuration to webserver
+  include_tasks: add-project-config.yml
+
+# Check if {{ drupal_path }} exists
+- name: Check if drupal_path exists
+  ansible.builtin.stat:
+    path: "{{ drupal_path }}"
+  register: drupal_path_exists
+
+# Check if any Drupal site has been installed within the drupal_path
+- name: Find installed drupal site(s)
+  ansible.builtin.find:
+    paths: "{{ drupal_path }}/web/sites"
+    patterns: "settings.php"
+    recurse: yes
+    use_regex: yes
+    excludes: "default"
+  register: drupal_site_installed
+  when: drupal_path_exists.stat.exists
+
+# Log the drupal_site_installed variable
+- name: Log drupal_site_installed
+  ansible.builtin.debug:
+    var: drupal_site_installed
+
+# Install the Drupal project and add composer requirements only if sites have not been installed
+- block:
+    - name: Install Drupal project
+      include_tasks: install-drupal-project.yml
+    - name: Add composer requirements
+      include_tasks: add-composer-requirements.yml
+  when: drupal_site_installed.matched | default(0) == 0 and not drupal_path_exists.stat.exists

@@ -11,6 +11,7 @@
     command: create-project
     arguments: "{{ drupal_composer_project_package }} /tmp/composer-project {{ drupal_composer_project_options }}"
     working_dir: "/tmp"
+    optimize_autoloader: yes
   become: true
   become_user: "{{ drupal_user }}"
 

@@ -23,7 +23,10 @@ nginx_vhost_path: /etc/nginx/sites-enabled
 nginx_default_vhost_path: /etc/nginx/sites-enabled/default
 nginx_user: "www-data"
 
-
+# Admin User in OS
+root_user: "root"
+root_group: "root"
+root_home: "/root"
 
 # Drupal Site Configuration
 drupal_site_name: "example.com"
@@ -46,11 +49,6 @@ nginx_vhosts:
     server_name: "{{ drupal_site_name }}"
     root: "{{ drupal_path }}/web"
     state: "present"
-
-# Admin User in OS
-root_user: "root"
-root_group: "root"
-root_home: "/root"
 
 # Composer Configuration
 composer_version: "2.8.4"
