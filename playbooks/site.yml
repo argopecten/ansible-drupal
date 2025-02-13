@@ -1,0 +1,29 @@
+---
+
+# Usage:
+# ansible-playbook site.yml --extra-vars "drupal_site_name=d1.example.com drupal_path=/path/to/drupal"
+
+- name: Setup a Drupal site with Ansible
+  hosts: localhost
+  become: true
+
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+    - name: Setup LEMP stack
+      include_role:
+        name: server
+
+    - name: Setup Drupal project
+      include_role:
+        name: project
+
+    - name: Setup Drupal site
+      include_role:
+        name: site
+
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "1200"
+    COMPOSER_MEMORY_LIMIT: "-1"
+    COMPOSER_HOME: "{{ drupal_user_home }}/.composer"

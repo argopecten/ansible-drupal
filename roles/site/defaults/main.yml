@@ -6,15 +6,11 @@ public_key: "/home/ubuntu/.ssh/authorized_keys"
 
 # Default Drupal site user
 drupal_site_user: "admin"
-# Default Drupal site password
-drupal_site_password: "drupalpass"
 
 # Default Drupal database name
 drupal_db_name: "drupal"
 # Default Drupal database user
 drupal_db_user: "drupaldbuser"
-# Default Drupal database password
-drupal_db_password: "drupaldbpass"
 
 # Drupal installation profile
 drupal_install_profile: "standard"

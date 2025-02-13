@@ -26,11 +26,6 @@
   register: drupal_site_installed
   when: drupal_path_exists.stat.exists
 
-# Log the drupal_site_installed variable
-- name: Log drupal_site_installed
-  ansible.builtin.debug:
-    var: drupal_site_installed
-
 # Install the Drupal project and add composer requirements only if sites have not been installed
 - block:
     - name: Install Drupal project

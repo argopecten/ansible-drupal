@@ -32,4 +32,6 @@
     --root={{ drupal_path }}
   args:
     chdir: "{{ drupal_path }}"
-  become: false
+  become: true
+  become_user: "{{ drupal_user }}"
+  

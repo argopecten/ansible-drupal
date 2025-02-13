@@ -1,0 +1,32 @@
+---
+# This role will setup a Drupal site, within a Drupal project.
+
+# Variables to pass to the role from command line
+# vars:
+#  drupal_path: "{{ drupal_path }}"
+#  drupal_site_name: "{{ drupal_site_name }}"
+
+# Check if the directory for the Drupal site exists
+- name: Check if Drupal site directory exists
+  ansible.builtin.stat:
+    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
+  register: site_directory
+
+# Create the database user for the drupal site and install the Drupal site
+- name: Create database user and install Drupal site
+  block:
+    # Create database user for the site
+    - name: Create database user for the site
+      include_tasks: create_db_user.yml
+    # Install the Drupal site
+    - name: Install the Drupal site
+      include_tasks: install-drupal-site.yml
+  when: site_directory.stat.exists == False
+
+# Update the settings.php file
+- name: Update settings.php file
+  include_tasks: update-settings.yml
+
+# Add site to the webserver
+- name: Add site to the webserver
+  include_tasks: add-site-config.yml

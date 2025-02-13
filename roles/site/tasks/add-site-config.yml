@@ -16,6 +16,12 @@
     mode: "0755"
   notify: Reload nginx
 
+# Check if the directory for the Drupal site exists
+- name: Check if Drupal site directory exists
+  ansible.builtin.stat:
+    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
+  register: site_directory
+
 # Add vhost config files.
 - name: Add managed vhost config files.
   ansible.builtin.template:
@@ -27,3 +33,4 @@
     mode: "0644"
   with_items: "{{ nginx_vhosts }}"
   notify: Restart services
+  when: site_directory.stat.exists == True
