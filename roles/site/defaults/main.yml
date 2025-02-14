@@ -24,3 +24,7 @@ drupal_site_install_extra_args: []
 
 # Modules to enable after installation
 drupal_enable_modules: []
+
+# TBC
+mysql_unix_socket: /var/run/mysqld/mysqld.sock
+nginx_listen_ipv6: true

@@ -32,5 +32,5 @@
     group: "{{ root_group }}"
     mode: "0644"
   with_items: "{{ nginx_vhosts }}"
-  notify: Restart services
+  notify: Reload nginx
   when: site_directory.stat.exists == True
