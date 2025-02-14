@@ -16,10 +16,3 @@
   ansible.builtin.file:
     path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}/settings.php"
     mode: "0440"
-
-# Reload Nginx
-- name: "Reload nginx"
-  ansible.builtin.service:
-    name: nginx
-    state: reloaded
-  become: true

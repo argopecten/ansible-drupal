@@ -1,6 +1,58 @@
 ---
-# Include handlers from database.yml
-- include_tasks: database.yml
+####################################################################################################
+# Handlers for server tasks
+####################################################################################################
 
-# Include handlers from common.yml
-- include_tasks: common.yml
+### Common handlers
+# Restart services
+- name: Restart services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ services_to_restart }}"
+  become: true
+  become_user: root
+# Clean up apt packages
+- name: Clean up apt packages
+  ansible.builtin.apt:
+    autoclean: yes
+    autoremove: yes
+  become: true
+  become_user: root
+  when: ansible_os_family == 'Debian'
+
+
+### Handlers for database tasks
+# Restart MySQL
+- name: "Restart MySQL"
+  ansible.builtin.service:
+    name: mysql
+    state: restarted
+
+
+### Handlers for webserver tasks
+# Restart Nginx
+- name: "Restart Nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+
+# Validate Nginx configuration
+- name: "Validate nginx configuration"
+  ansible.builtin.command: nginx -t -c /etc/nginx/nginx.conf
+  changed_when: false
+
+# Reload Nginx
+- name: "Reload nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  become: true
+
+
+### Handlers for php tasks
+# Handler to restart PHP-FPM
+- name: Restart PHP-FPM
+  ansible.builtin.service:
+    name: "php{{ php_version }}-fpm"
+    state: restarted

@@ -1,7 +1,0 @@
-# Handlers for php tasks
-
-# Handler to restart PHP-FPM
-- name: Restart PHP-FPM
-  ansible.builtin.service:
-    name: "php{{ php_version }}-fpm"
-    state: restarted
