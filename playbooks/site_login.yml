@@ -11,7 +11,7 @@
   become: true
 
   vars_files:
-    - vars/main.yml
+    - ../vars/main.yml
   
   # Variables to pass to the role from command line
   vars:
@@ -20,8 +20,18 @@
 
   # Tasks from roles to run
   tasks:
+    # Log drupal site name
+    - name: Log drupal site name
+      ansible.builtin.debug:
+        msg: "Drupal site name: {{ drupal_site_name }}"
+
+    # Log drupal path
+    - name: Log drupal path
+      ansible.builtin.debug:
+        msg: "Drupal path: {{ drupal_path }}"
+        
     # Create the database user for the drupal site
     - name: Get site login URL
       include_role:
-        name: drupal-site
+        name: site
         tasks_from: create-login-url

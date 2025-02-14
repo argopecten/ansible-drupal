@@ -9,7 +9,13 @@
 
   vars_files:
     - ../vars/main.yml
-
+  
+  # Variables to pass to the role from command line
+  vars:
+    drupal_path: "{{ drupal_path }}"
+    drupal_site_name: "{{ drupal_site_name }}"
+    drupal_user: "{{ drupal_user }}"
+    
   tasks:
     - name: Setup LEMP stack
       include_role:
