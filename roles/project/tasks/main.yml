@@ -32,4 +32,4 @@
       include_tasks: install-drupal-project.yml
     - name: Add composer requirements
       include_tasks: add-composer-requirements.yml
-  when: drupal_site_installed.matched | default(0) == 0 and not drupal_path_exists.stat.exists
+  when: (drupal_site_installed.matched | default(0) == 0) or (not drupal_path_exists.stat.exists)

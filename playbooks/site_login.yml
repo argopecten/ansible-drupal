@@ -2,7 +2,7 @@
 # This playbook will create the login URL for a Drupal 10+ site.
 
 # Usage:
-# ansible-playbook site_login.yml --extra-vars "drupal_site_name=d1.example.com drupal_path=/path/to/drupal"
+# ansible-playbook site_login.yml --extra-vars "drupal_project_name=drupal10 drupal_site_name=d1.example.com"
 
 # Create site login URL
 - name: Create site login URL
@@ -15,21 +15,15 @@
   
   # Variables to pass to the role from command line
   vars:
-    drupal_path: "{{ drupal_path }}"
-    drupal_site_name: "{{ drupal_site_name }}"
+    drupal_site_name: "{{ drupal_site_name }}"         # Used as directory name /var/www/drupla10/web/sites/d1.example.com, e.g. d1.example.com
+    drupal_project_name: "{{ drupal_project_name }}"   # Used as directory name /var/www/drupla10, e.g. drupal10
 
   # Tasks from roles to run
   tasks:
-    # Log drupal site name
-    - name: Log drupal site name
-      ansible.builtin.debug:
-        msg: "Drupal site name: {{ drupal_site_name }}"
-
-    # Log drupal path
-    - name: Log drupal path
-      ansible.builtin.debug:
-        msg: "Drupal path: {{ drupal_path }}"
-        
+    # set drupal_path based on the project name
+    - set_fact:
+        drupal_path: "/var/www/{{ drupal_project_name }}"
+       
     # Create the database user for the drupal site
     - name: Get site login URL
       include_role:

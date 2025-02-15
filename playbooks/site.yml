@@ -1,7 +1,10 @@
 ---
-
+######
+# 
+# This Ansible playbook is designed to set up a Drupal site on a local machine.
+#
 # Usage:
-# ansible-playbook site.yml --extra-vars "drupal_site_name=d1.example.com drupal_path=/path/to/drupal"
+# ansible-playbook site.yml --extra-vars "drupal_project_name=drupal10 drupal_site_name=d1.example.com"
 
 - name: Setup a Drupal site with Ansible
   hosts: localhost
@@ -10,13 +13,16 @@
   vars_files:
     - ../vars/main.yml
   
-  # Variables to pass to the role from command line
+  # Variables to pass to the playbook from command line
   vars:
-    drupal_path: "{{ drupal_path }}"
-    drupal_site_name: "{{ drupal_site_name }}"
-    drupal_user: "{{ drupal_user }}"
+    drupal_site_name: "{{ drupal_site_name }}"         # Used as directory name /var/www/drupla10/web/sites/d1.example.com, e.g. d1.example.com
+    drupal_project_name: "{{ drupal_project_name }}"   # Used as directory name /var/www/drupla10, e.g. drupal10
     
   tasks:
+    # set drupal_path to the path to the Drupal core
+    - set_fact:
+        drupal_path: "/var/www/{{ drupal_project_name }}"
+
     - name: Setup LEMP stack
       include_role:
         name: server

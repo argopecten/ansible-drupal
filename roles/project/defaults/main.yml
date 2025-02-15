@@ -3,8 +3,10 @@ date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
 
 # Drupal version
 drupal_version: "10.4.0"
+# Drupal project name
+drupal_project_name: "drupal-{{ drupal_version }}-{{ date }}"
 # Path to the Drupal core
-drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
+drupal_path: "/var/www/{{ drupal_project_name }}"
 
 # Path to the Drupal docroot
 drupal_docroot: "{{ drupal_path }}/web"
@@ -27,7 +29,7 @@ drupal_composer_project_options: "--prefer-dist --stability dev --no-interaction
 # Permissions for the Drupal directory
 project_root_permissions: "0750"
 
-### Defined in roles/server/defaults/main.yml
+### TBC: Defined in roles/server/defaults/main.yml
 # Path to the Drupal nginx configuration
 nginx_drupal_config_path: "/usr/local/etc/drupal/nginx"
 php_version: "8.3"
