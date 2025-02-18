@@ -4,19 +4,11 @@
 # This Ansible playbook is designed to set up a new Drupal project on a local machine.
 #
 # Usage:
-# ansible-playbook project.yml --extra-vars "drupal_project_name=drupal10 drupal_user=da"
+# ansible-playbook project.yml --extra-vars "drupal_project_name=drupal10 project_user=pu"
 
 - name: Setup Drupal project with Ansible
-  hosts: localhost
+  hosts: drupal
   become: true
-
-  vars_files:
-    - ../vars/main.yml
-  
-  # Variables to pass to the playbook from command line
-  vars:
-    drupal_project_name: "{{ drupal_project_name }}"   # Used as directory name /var/www/drupla10, e.g. drupal10
-    drupal_user: "{{ drupal_user }}"                   # OS user for this project, e.g. drupal
 
   tasks:
     # set drupal_path to the path to the Drupal core
@@ -36,4 +28,4 @@
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
     COMPOSER_MEMORY_LIMIT: "-1"
-    COMPOSER_HOME: "{{ drupal_user_home }}/.composer"
+    COMPOSER_HOME: "{{ project_user_home }}/.composer"

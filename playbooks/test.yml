@@ -1,5 +1,6 @@
-- name: Test localhost
-  hosts: localhost
+- name: Test connection to managed servers
+  hosts: managed
+  
   tasks:
     - name: Ping my hosts
       ansible.builtin.ping:

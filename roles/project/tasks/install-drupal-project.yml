@@ -5,6 +5,7 @@
   ansible.builtin.file:
     path: "/tmp/composer-project"
     state: absent
+  become: true
 
 - name: Generate Drupal project with composer package
   community.general.composer:
@@ -12,9 +13,16 @@
     arguments: "{{ drupal_composer_project_package }} /tmp/composer-project {{ drupal_composer_project_options }}"
     working_dir: "/tmp"
     optimize_autoloader: yes
-  become: true
-  become_user: "{{ drupal_user }}"
+  become_user: "{{ ansible_user }}"
 
+- name: Install dependencies with composer require
+  community.general.composer:
+    command: require
+    arguments: "{{ item }}"
+    working_dir: "/tmp/composer-project"
+  with_items: "{{ drupal_composer_dependencies | default([]) }}"
+  become_user: "{{ ansible_user }}"
+  
 - name: Delete project root if it exists
   ansible.builtin.file:
     path: "{{ drupal_path }}"
@@ -25,15 +33,15 @@
   ansible.builtin.file:
     path: "{{ drupal_path }}"
     state: directory
-    owner: "{{ drupal_user }}"
-    group: "{{ drupal_user }}"
+    owner: "{{ project_user }}"
+    group: "{{ project_user }}"
     mode: "{{ project_root_permissions }}"
-
+  become: true
+  
 - name: Move Drupal project files to project root
   ansible.builtin.command: >
     cp -r /tmp/composer-project/. {{ drupal_path }}/
     creates={{ drupal_docroot }}/index.php
   become: true
-  become_user: "{{ drupal_user }}"
   notify: Set ownership and file permissions for a Drupal project
   failed_when: false

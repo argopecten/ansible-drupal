@@ -1,0 +1,60 @@
+---
+# This playbook creates a project user with a random password and adds an SSH key for the user.
+
+# Check if the password file already exists
+- name: Check if password file exists
+  ansible.builtin.stat:
+    path: "/home/{{ ansible_user }}/password_for_{{ project_user }}.txt"
+  register: password_file
+
+# Set the {{ project_user_pwd }} from the password file if it exists
+- block:
+    - name: Read password from file
+      ansible.builtin.slurp:
+        src: "/home/{{ ansible_user }}/password_for_{{ project_user }}.txt"
+      register: password_content
+    - name: Set password fact from file content
+      ansible.builtin.set_fact:
+        project_user_pwd: "{{ password_content.content | b64decode }}"
+  when: password_file.stat.exists
+
+# Generate and write into a file a random password for the project user
+- name: Generate a unique password for the project user
+  ansible.builtin.set_fact:
+    project_user_pwd: "{{ lookup('ansible.builtin.password', '/home/{{ ansible_user }}/password_for_{{ project_user }}.txt', length=16, chars=['ascii_letters', 'digits', 'punctuation']) }}"
+  when: not password_file.stat.exists
+
+# Create the project user, its group, and home directory
+- name: Create user group
+  ansible.builtin.group:
+    name: "{{ project_user }}"
+    system: yes
+    state: present
+- name: Add project user
+  ansible.builtin.user:
+    name: "{{ project_user }}"
+    state: present
+    password: "{{ project_user_pwd | password_hash('sha512') }}"
+    system: yes
+    home: "{{ project_user_home }}"
+    group: "{{ project_user }}"
+    groups: "sudo"
+    password_lock: true
+    shell: /bin/bash
+    append: yes
+  notify: Add web server user to the project user group
+- name: Create user home
+  ansible.builtin.file:
+    path: "{{ project_user_home }}"
+    state: directory
+    owner: "{{ project_user }}"
+    group: "{{ project_user }}"
+
+# TBC: Add SSH key for the project admin user
+#- name: (USER) Add SSH key for project admin user
+#  ansible.posix.authorized_key:
+#    user: "{{ project_user }}"
+#    key: "{{ lookup('file', item) }}"
+#    state: present
+#  with_items: "{{ project_user_pkey }}"
+# The SSH public key(s) specified in the 'public_key' variable are added to the user's authorized_keys file.

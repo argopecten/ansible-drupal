@@ -1,19 +1,19 @@
-# Handlers for drupal-project tasks
+# Handlers for the project tasks
 
 - name: Set ownership and file permissions for a Drupal project
   ansible.builtin.command: >
     /usr/local/bin/project-ownership-permissions.sh
     --root="{{ drupal_path }}"
-    --user="{{ drupal_user }}"
-    --group="{{ drupal_user }}"
+    --user="{{ project_user }}"
+    --group="{{ project_user }}"
   args:
     chdir: "{{ drupal_path }}"
   become: true
 
-  # Add web server user to the Drupal user group
-- name: "Add web server user to the Drupal user group"
+  # Add web server user to the project user group
+- name: "Add web server user to the project user group"
   ansible.builtin.user:
     name: "{{ nginx_user }}"
-    groups: "{{ drupal_user }}"
+    groups: "{{ project_user }}"
     append: yes
   become: true

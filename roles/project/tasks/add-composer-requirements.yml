@@ -7,4 +7,4 @@
     working_dir: "{{ drupal_path }}"
   with_items: "{{ drupal_composer_dependencies | default([]) }}"
   become: true
-  become_user: "{{ drupal_user }}"
+  become_user: "{{ project_user }}"

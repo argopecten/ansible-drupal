@@ -57,4 +57,4 @@
   environment:
     COMPOSER_PROCESS_TIMEOUT: "1200"
     COMPOSER_MEMORY_LIMIT: "-1"
-    COMPOSER_HOME: "{{ drupal_user_home }}/.composer"
+    COMPOSER_HOME: "{{ project_user_home }}/.composer"

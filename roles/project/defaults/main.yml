@@ -17,9 +17,9 @@ root_group: "root"
 root_home: "/root"
 
 # Drupal application user in OS
-drupal_user: "da"
-drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
-drupal_user_home: "/home/{{ drupal_user }}"
+project_user: "pu"
+project_user_pkey: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+project_user_home: "/home/{{ project_user }}"
 
 # Drupal repository
 drupal_repo: "https://git.drupalcode.org/project/drupal"

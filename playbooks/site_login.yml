@@ -6,13 +6,13 @@
 
 # Create site login URL
 - name: Create site login URL
-  hosts: localhost
+  hosts: drupal
   connection: local
   become: true
 
   vars_files:
     - ../vars/main.yml
-  
+
   # Variables to pass to the role from command line
   vars:
     drupal_site_name: "{{ drupal_site_name }}"         # Used as directory name /var/www/drupla10/web/sites/d1.example.com, e.g. d1.example.com
@@ -23,7 +23,7 @@
     # set drupal_path based on the project name
     - set_fact:
         drupal_path: "/var/www/{{ drupal_project_name }}"
-       
+
     # Create the database user for the drupal site
     - name: Get site login URL
       include_role:

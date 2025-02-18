@@ -1,9 +1,9 @@
 ---
 # This role will setup a Drupal project, without any site created.
 
-# Create the drupal user if it does not exist
-- name: Create the drupal user
-  include_tasks: create-drupal-user.yml
+# Create the project user if it does not exist
+- name: Create the project user
+  include_tasks: create-project-user.yml
 
 # Add drupal.conf to webserver
 - name: Add Drupal configuration to webserver
@@ -27,9 +27,6 @@
   when: drupal_path_exists.stat.exists
 
 # Install the Drupal project and add composer requirements only if sites have not been installed
-- block:
-    - name: Install Drupal project
-      include_tasks: install-drupal-project.yml
-    - name: Add composer requirements
-      include_tasks: add-composer-requirements.yml
+- name: Install Drupal project
+  include_tasks: install-drupal-project.yml
   when: (drupal_site_installed.matched | default(0) == 0) or (not drupal_path_exists.stat.exists)

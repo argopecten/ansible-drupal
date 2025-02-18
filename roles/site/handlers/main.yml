@@ -5,8 +5,8 @@
   ansible.builtin.command: >
     /usr/local/bin/site-ownership-permissions.sh
     --root="{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
-    --user="{{ drupal_user }}"
-    --group="{{ drupal_user }}"
+    --user="{{ project_user }}"
+    --group="{{ project_user }}"
   args:
     chdir: "{{ drupal_path }}"
   become: true

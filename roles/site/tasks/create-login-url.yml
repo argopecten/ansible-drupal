@@ -9,7 +9,7 @@
     chdir: "{{ drupal_path }}"
   register: login_url_output
   become: true
-  become_user: "{{ drupal_user }}"
+  become_user: "{{ project_user }}"
 
 # Present login URL in log
 - name: Present login URL in log

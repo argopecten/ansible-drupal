@@ -23,7 +23,7 @@
     chdir: "{{ drupal_path }}"
   notify: Set permissions for site directory
   become: true
-  become_user: "{{ drupal_user }}"
+  become_user: "{{ project_user }}"
 
 # Install Drupal modules with drush
 - name: Install Drupal modules with drush.
@@ -33,5 +33,5 @@
   args:
     chdir: "{{ drupal_path }}"
   become: true
-  become_user: "{{ drupal_user }}"
+  become_user: "{{ project_user }}"
   

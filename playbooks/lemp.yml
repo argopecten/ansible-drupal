@@ -2,11 +2,8 @@
 # This playbook sets up a LEMP stack using Ansible
 
 - name: Setup LEMP with Ansible
-  hosts: localhost
+  hosts: lemp
   become: true
-
-  vars_files:
-    - vars/main.yml
 
   tasks:
     - name: Setup LEMP stack

@@ -1,5 +1,7 @@
 ---
 # Common variables
+date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+
 apt_packages:
   - unzip
   - mc
@@ -10,37 +12,16 @@ services_to_restart:
   - "php{{ php_version }}-fpm"
   - "{{ database }}"
 
+# Admin User in OS
 root_user: "root"
 root_group: "root"
 root_home: "/root"
 
-date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
-
-# Drupal user
-drupal_user: "da"
-# .pub key for Drupal admin user: taken from system user ubuntu
-drupal_user_pkey: "/home/ubuntu/.ssh/authorized_keys"
-drupal_user_home: "/home/{{ drupal_user }}"
-
-
 ### Variables for composer
-# Drupal version
-drupal_version: "10.4.0"
-# Path to the Drupal core
-drupal_path: "/var/www/drupal-{{ drupal_version }}-{{ date }}"
-
-# composer requirements added to Drupal project
-# TBD: change name of the variable
-drupal_composer_dependencies:
-  - "drush/drush:^13.3"
-
 # Global (system-wide) Composer
 composer_version: "2.8.4" 
 composer_path: "/usr/bin/composer"
 
-
-###  Default variables for database
-# db_root_password: "root"
 
 # database: mysql or mariadb
 database: "mysql"   # database: "mariadb"
