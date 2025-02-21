@@ -1,10 +1,10 @@
 ---
 ######
 # 
-# This Ansible playbook is designed to set up a new Drupal project on a local machine.
+# This Ansible playbook is designed to set up a new Drupal project.
 #
 # Usage:
-# ansible-playbook project.yml --extra-vars "drupal_project_name=drupal10 project_user=pu"
+# ansible-playbook project.yml --extra-vars "drupal_project_name=drupal10 project_user=da"
 
 - name: Setup Drupal project with Ansible
   hosts: drupal

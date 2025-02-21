@@ -2,7 +2,7 @@
 # Variables for the m2 server
 
 # Drupal project user in OS
-project_user: "da"
+project_user: "da2"
 project_user_pkey: "/home/{{ ansible_user }}/.ssh/authorized_keys"
 project_user_home: "/home/{{ project_user }}"
 

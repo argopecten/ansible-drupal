@@ -104,6 +104,12 @@ if [ -f ./settings.php ]; then
   find . -type f -name '*settings.php' -exec chmod 440 '{}' \;
 fi
 
+# /web/sites/sites.php file should have 440 permissions
+if [ -f ./../sites.php ]; then
+  chown "${USER}":"${GROUP}" "./../sites.php"
+  chmod 440 "./../sites.php"
+fi
+
 ### Set ownership and permissions for content directories and files
 # - scope is ./files and ./private directories
 # - Code is owned by the drupal user and by its group.
