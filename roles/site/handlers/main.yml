@@ -1,0 +1,18 @@
+---
+# Handlers for drupal-site tasks
+
+- name: Set permissions for site directory
+  ansible.builtin.command: >
+    /usr/local/bin/site-ownership-permissions.sh
+    --root="{{ platform_path }}/web/sites/{{ site_name }}"
+    --user="{{ platform_user }}"
+    --group="{{ platform_group }}"
+  args:
+    chdir: "{{ platform_path }}"
+  become: true
+
+# Settings files should have 440 permissions
+- name: Apply 440 permissions to settings.php
+  ansible.builtin.file:
+    path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
+    mode: "0440"

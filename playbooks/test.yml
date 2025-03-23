@@ -1,0 +1,14 @@
+- name: Test connection to all servers
+  # hosts: all
+  hosts: 
+    - lts2404
+  become: true
+  
+  tasks:
+    - name: Print message
+      ansible.builtin.debug:
+        msg: Hello world
+
+    - name: Log all variables for current host
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]

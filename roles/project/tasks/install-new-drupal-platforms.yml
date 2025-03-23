@@ -1,0 +1,56 @@
+---
+# Deploy Drupal using Composer
+
+- name: Delete tmp directory
+  ansible.builtin.file:
+    path: "/tmp/{{ item.key }}"
+    state: absent
+  become: true
+
+- name: Generate Drupal project with composer package
+  community.general.composer:
+    command: create-project
+    arguments: "drupal/recommended-project:{{ item.value.version }} /tmp/{{ item.key }} {{ composer_project_options }}"
+    working_dir: "/tmp"
+    optimize_autoloader: yes
+  become_user: "{{ ansible_user }}"
+
+- name: Install dependencies with composer require
+  community.general.composer:
+    command: require
+    arguments: "{{ dependencies }}"
+    working_dir: "/tmp/{{ item.key }}"
+  become_user: "{{ ansible_user }}"
+  when: not ansible_check_mode
+  loop: "{{ item.value.dependencies | default([]) }}"
+  loop_control:
+    label: "{{ dependencies }}"
+    loop_var: dependencies
+
+- name: Check if project root exists
+  ansible.builtin.stat:
+    path: "{{ item.value.path }}/{{ item.value.name }}"
+  register: project_root_stat
+
+- name: Delete project root if it exists
+  ansible.builtin.file:
+    path: "{{ item.value.path }}/{{ item.value.name }}"
+    state: absent
+  when: project_root_stat.stat.exists
+
+- name: Ensure new project root exists and has proper permissions.
+  ansible.builtin.file:
+    path: "{{ item.value.path }}/{{ item.value.name }}"
+    state: directory
+    owner: "{{ item.value.user }}"
+    group: "{{ item.value.group }}"
+    mode: "{{ drupal_root_permissions }}"
+  become: true
+  when: not ansible_check_mode
+
+- name: Move Drupal project files to project root
+  ansible.builtin.command: >
+    cp -r /tmp/{{ item.key }}/. {{ item.value.path }}/{{ item.value.name }}/
+    creates={{ item.value.path }}/{{ item.value.name }}/web/index.php
+  become: true
+  notify: Set ownership and file permissions for a Drupal project

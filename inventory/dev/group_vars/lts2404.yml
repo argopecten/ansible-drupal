@@ -1,0 +1,17 @@
+---
+# Variables for Ubuntu 24.04 LTS servers
+server_os: "Ubuntu 24.04 LTS"
+
+# Global variables: variables can be used in any playbooks or roles
+# date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+
+# Admin User in OS
+root_user: "root"
+root_group: "root"
+root_home: "/root"
+
+# Packages to install
+common_packages:
+  - unzip
+  - mc
+  - acl # Ansible requires setfacl from this package to manage temporary file permissions when switching users.

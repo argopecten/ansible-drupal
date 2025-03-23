@@ -1,0 +1,47 @@
+---
+# This role manages Drupal platforms on webservers.
+
+# Setup platform users if they do not exist
+- block:
+    - name: Setup the platform users
+      include_tasks: setup-platform-users.yml
+      # with_items: "{{ platforms | dict2items }}"
+      loop: "{{ platforms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  tags:
+  - never  # This tag is used to prevent running the task without a tag
+  - install
+  # for test only - verify
+
+# Install new Drupal platforms with composer requirements
+# This task will overwrite existing platforms, use with caution!
+- block:
+    - name: Install new Drupal platforms
+      include_tasks: install-new-drupal-platforms.yml
+      # with_items: "{{ platforms | dict2items }}"
+      loop: "{{ platforms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  tags:
+  - install
+  - never  # This tag is used to prevent running the task without a tag
+
+# Verify configurations for each platform defined in variables
+- block:
+    - name: Verify platform user configurations
+      include_tasks: setup-platform-users.yml
+      # with_items: "{{ platforms | dict2items }}"
+      loop: "{{ platforms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+    - name: Verify configurations for all platforms
+      include_tasks: verify-platform-configurations.yml
+      # with_items: "{{ platforms | dict2items }}"
+      loop: "{{ platforms | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  tags:
+  - never  # This tag is used to prevent running the task without a tag
+  - verify
+  - install

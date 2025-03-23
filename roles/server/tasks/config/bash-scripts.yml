@@ -1,0 +1,14 @@
+---
+
+# Install scripts from templates
+- name: Install scripts from templates
+  ansible.builtin.template:
+    src: "{{ item.name }}"
+    dest: "/usr/local/bin/{{ item.name }}"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    force: true
+    mode: "755"
+  loop:
+    - { name: "project-ownership-permissions.sh" }
+    - { name: "site-ownership-permissions.sh" }

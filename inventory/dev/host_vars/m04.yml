@@ -1,0 +1,3 @@
+---
+# Host Variable for this particular host
+ansible_host: 192.168.64.249

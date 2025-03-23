@@ -1,0 +1,41 @@
+---
+####################################################################################################
+# Handlers for server tasks
+####################################################################################################
+
+### Common handlers
+
+### Handlers for database tasks
+# Restart MySQL
+- name: "Restart MySQL"
+  ansible.builtin.service:
+    name: mysql
+    state: restarted
+
+
+### Handlers for webserver tasks
+# Restart Nginx
+- name: "Restart Nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+
+# Validate Nginx configuration
+- name: "Validate nginx configuration"
+  ansible.builtin.command: nginx -t -c /etc/nginx/nginx.conf
+  changed_when: false
+
+# Reload Nginx
+- name: "Reload nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  become: true
+
+
+### Handlers for php tasks
+# Handler to restart PHP-FPM
+- name: Restart PHP-FPM
+  ansible.builtin.service:
+    name: "php{{ php_version }}-fpm"
+    state: restarted

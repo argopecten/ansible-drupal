@@ -1,0 +1,37 @@
+---
+######
+# 
+# This Ansible playbook is designed to set manage Drupal projects (platforms) on webservers.
+# 
+# It does the following:
+# - creates new platforms:                         --tags install
+# - verifies configuration for platforms           --tags verify
+# - updates codebase for existing platforms        --tags update
+# - deletes platforms                              --tags delete
+#
+# Usage:
+#   Use on of the tags to run specific operation:
+#   ansible-playbook playbooks/platforms.yml --tags install
+#   ansible-playbook playbooks/platforms.yml --tags verify
+#   ansible-playbook playbooks/platforms.yml --tags update
+#   ansible-playbook playbooks/platforms.yml --tags delete
+
+- name: Manages Drupal projects with Ansible
+  hosts: 
+    - webservers
+  become: true
+
+  tasks:
+    # Run tasks of the project role as defined by tags
+    - name: Drupal platform operations
+      include_role:
+        name: project
+      tags: 
+        - install
+        - verify
+        - never  # This tag is used to prevent running the task without a tag
+
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "1200"
+    COMPOSER_MEMORY_LIMIT: "-1"
+    COMPOSER_HOME: "/home/{{ ansible_user }}/.composer"
