@@ -1,15 +1,22 @@
 ---
 
+# Set variables for the Drupal site
+- name: Set variables for the new Drupal site
+  ansible.builtin.set_fact:
+    drush_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}/vendor/bin/drush"
+    site_user: "{{ sites[item.key].user | default('admin') }}"
+    site_name: "{{ site | default(sites[item.key].name) }}"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+
 # Create login URL with Drush
 - name: Create login URL with Drush
   ansible.builtin.command: >
-    {{ drush_path_site }} user:login -y --name={{ drupal_site_user }} --uri={{ drupal_site_name }}
-    --root={{ drupal_path }}
+    {{ drush_path }} user:login -y --name={{ site_user }} --uri={{ site_name }}
+    --root={{ platform_path }}
   args:
-    chdir: "{{ drupal_path }}"
+    chdir: "{{ platform_path }}"
   register: login_url_output
   become: true
-  become_user: "{{ project_user }}"
 
 # Present login URL in log
 - name: Present login URL in log

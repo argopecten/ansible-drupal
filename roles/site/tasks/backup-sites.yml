@@ -1,0 +1,52 @@
+---
+
+# Backup sites specified in command line or all sites
+# ansible-playbook playbooks/sites.yml --tags backup --extra-vars "site=c1.example.com"
+
+# - backup database for site
+# - backup site directory
+
+# Set variables for the Drupal site
+- name: Set variables for the Drupal site
+  ansible.builtin.set_fact:
+    drush_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}/vendor/bin/drush"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+    site_name: "{{ site | default(sites[item.key].name, true) }}"
+    db_name: "{{ sites[item.key].name | regex_replace('[^a-zA-Z0-9]', '') }}"
+    backup_dir: "/home/{{ platforms[ sites[item.key].platform ].user }}/backup/{{ platforms[ sites[item.key].platform ].name }}/{{ sites[item.key].name }}-{{ date }}"
+
+# create backup directory for the site
+- name: Create backup directory for the site
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: "{{ platforms[ sites[item.key].platform ].user }}"
+    group: "{{ platforms[ sites[item.key].platform ].group }}"
+    mode: "0750"
+  become: true
+  when: not ansible_check_mode
+
+# Backup database for site
+# https://www.drush.org/13.x/commands/sql_dump/#options
+- name: Backup database for site
+  ansible.builtin.command: >
+    {{ drush_path }} sql:dump --uri={{ site_name }} --root={{ platform_path }} 
+    --result-file={{ backup_dir }}/database.sql
+  vars:
+    ansible_become: true
+    ansible_become_user: "{{ platforms[ sites[item.key].platform ].user }}"
+    ansible_become_method: "sudo"
+  become: true
+  args:
+    chdir: "{{ platform_path }}"
+  when: not ansible_check_mode
+
+# Backup files from sites directory only
+- name: Backup site directory
+  ansible.builtin.archive:
+    path: "{{ platform_path }}/web/sites/{{ site_name }}"
+    dest: "{{ backup_dir }}/files.tar.gz"
+    owner: "{{ platforms[ sites[item.key].platform ].user }}"
+    group: "{{ platforms[ sites[item.key].platform ].group }}"
+  become: true
+  when: not ansible_check_mode

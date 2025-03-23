@@ -1,0 +1,59 @@
+# Setup tasks for Nginx webserver
+
+# Copy Nginx configuration.
+- name: Copy Nginx main configuration file
+  ansible.builtin.template:
+    src: nginx-main.conf.j2
+    dest: "{{ nginx_conf_file }}"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart Nginx
+
+# Ensure Drupal configuration directory for Nginx exists.
+- name: Ensure Drupal configuration directory for Nginx exists
+  ansible.builtin.file:
+    path: "{{ nginx_drupal_config_directory }}"
+    state: directory
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0755'
+
+# Copy Drupal configuration for Nginx.
+- name: Copy Drupal configuration for Nginx
+  ansible.builtin.template:
+    src: nginx-drupal.conf.j2
+    dest: "{{ nginx_drupal_config_directory }}/drupal.conf"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+
+# Check if default site config exists.
+- name: Check if default site config exists
+  ansible.builtin.stat:
+    path: "{{ nginx_default_site_config }}"
+  register: default_site_config
+
+# Update default site config.
+- name: Update default site config file.
+  ansible.builtin.lineinfile:
+    path: "{{ nginx_default_site_config }}"
+    regexp: "index index.html index.htm index.nginx-debian.html;"
+    line: "        index index.nginx-debian.html;"
+    state: present
+  when: default_site_config.stat.exists
+
+# Ensure vhost path exists.
+- name: Ensure nginx_vhost_path exists.
+  ansible.builtin.file:
+    path: "{{ nginx_vhost_path }}"
+    state: directory
+    mode: "0755"
+  notify: Reload nginx
+
+
+# TBC!
+#- name: Ensure Nginx is running
+#  ansible.builtin.service:
+#    name: nginx
+#    state: started

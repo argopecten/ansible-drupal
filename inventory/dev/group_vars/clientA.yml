@@ -1,0 +1,18 @@
+---
+# Variables for client sites
+
+client: "clientA"
+
+sites:
+  c1_example_com:
+    name: "c1.example.com"
+    server: m01
+    platform: drupal10
+    modules:
+      - "admin_toolbar"
+      - "pathauto"
+  c3_example_com:
+    name: "c3.example.com"
+    server: m03
+    platform: drupal11
+    modules: []

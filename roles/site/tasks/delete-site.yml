@@ -1,0 +1,65 @@
+---
+
+# Delete site defined in command line
+# ansible-playbook playbooks/sites.yml --tags delete --extra-vars "site=c1.example.com"
+
+# - delete database user for site
+# - delete database for site
+# - delete site directory
+# - remove vhost configuration file
+# - reload nginx
+
+# Set variables for the Drupal site
+- name: Set variables for the Drupal site 1
+  ansible.builtin.set_fact:
+    drush_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}/vendor/bin/drush"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+    site_name: "{{ sites[item.key].name }}"
+    db_user: "{{ sites[item.key].name | regex_replace('[^a-zA-Z0-9]', '') }}"  # Remove special characters
+    db_name: "{{ sites[item.key].name | regex_replace('[^a-zA-Z0-9]', '') }}"
+    db_host: "localhost"
+
+# - log message
+- name: Delete sites
+  ansible.builtin.debug:
+    msg: "Deleting site {{ site_name }}"
+
+# - delete database user for site
+- name: Delete database user for site
+  community.mysql.mysql_user:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mysql_unix_socket }}"
+    name: "{{ db_user }}"
+    host: "{{ db_host }}"
+    state: absent
+  become: true
+
+# - delete database for site
+- name: Delete database for site
+  community.mysql.mysql_db:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mysql_unix_socket }}"
+    name: "{{ db_name }}"
+    state: absent
+  become: true
+
+# - delete site directory
+- name: Delete site directory
+  ansible.builtin.file:
+    dest: "{{ platform_path }}/web/sites/{{ site_name }}"
+    state: absent
+  become: true
+
+# - remove vhost configuration file
+- name: Remove vhost configuration file
+  ansible.builtin.file:
+    dest: "{{ nginx_vhost_path }}/{{ site_name }}.conf"
+    state: absent
+  become: true
+
+# - reload nginx
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  become: true

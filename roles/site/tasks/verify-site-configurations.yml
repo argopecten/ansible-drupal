@@ -1,0 +1,68 @@
+---
+# Verify site configurations
+
+- name: Set variables for the Drupal site
+  ansible.builtin.set_fact:
+    client: "{{ client }}"
+    site_name: "{{ sites[item.key].name }}"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+    platform_user: "{{ platforms[ sites[item.key].platform ].user }}"
+    platform_group: "{{ platforms[ sites[item.key].platform ].group }}"
+
+- name: Verify site configurations
+  ansible.builtin.debug:
+    msg: 
+      - "Verifying site configurations for:"
+      - "- Client: {{ client }}"
+      - "- Platform path: {{ platform_path }}"
+      - "- Site name: {{ site_name }}"  
+
+- name: Set permissions for site directory
+  ansible.builtin.command: >
+    /usr/local/bin/site-ownership-permissions.sh
+    --root="{{ platform_path }}/web/sites/{{ site_name }}"
+    --user="{{ platform_user }}"
+    --group="{{ platform_group }}"
+  args:
+    chdir: "{{ platform_path }}"
+  become: true
+
+# settings files should have 640 permissions
+- name: Add write permissions to settings.php
+  ansible.builtin.file:
+    path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
+    mode: "0640"
+
+- name: Add trusted host patterns
+  ansible.builtin.lineinfile:
+    path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
+    regexp: "^# \\$settings\\['trusted_host_patterns'\\] = \\[\\];$"
+    line: |
+      $settings['trusted_host_patterns'] = [
+        '^{{ site_name }}$',
+      ];
+    state: present
+  notify: Apply 440 permissions to settings.php
+
+# Remove default vhost config file.
+- name: Remove default nginx vhost config file (if configured).
+  ansible.builtin.file:
+    path: "{{ nginx_default_site_config }}"
+    state: absent
+
+# Add vhost config files.
+- name: Add managed vhost config files for {{ site_name }}.
+  ansible.builtin.template:
+    src: nginx-site.conf.j2
+    dest: "{{ nginx_vhost_path }}/{{ site_name }}.conf"
+    force: true
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: "0644"
+
+# Reload Nginx
+- name: "Reload nginx"
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  become: true

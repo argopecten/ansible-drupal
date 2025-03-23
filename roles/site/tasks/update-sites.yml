@@ -1,0 +1,56 @@
+---
+
+# Update specified site:
+# - no code update on site, it is done on the platform level with composer
+# - set maintenance mode on
+# - update database
+# - opt: update configuration
+# - clear cache
+# - set maintenance mode off
+
+# Set variables for the Drupal site
+- name: Set variables for the Drupal site
+  ansible.builtin.set_fact:
+    drush_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}/vendor/bin/drush"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+    site_name: "{{ sites[item.key].name }}"
+
+# Set maintenance mode on
+- name: Set maintenance mode on
+  ansible.builtin.command: >
+    {{ drush_path }} state:set system.maintenance_mode 1 --uri={{ site_name }} --root={{ platform_path }} -y
+  args:
+    chdir: "{{ platform_path }}"
+  become: true
+
+# Update database
+- name: Update database
+  ansible.builtin.command: >
+    {{ drush_path }} updatedb --uri={{ site_name }} --root={{ platform_path }} -y
+  args:
+    chdir: "{{ platform_path }}"
+  become: true
+
+# Update configuration
+#- name: Update configuration
+#  ansible.builtin.command: >
+#    {{ drush_path }} config:import --uri={{ site_name }} --root={{ platform_path }} -y
+#  args:
+#    chdir: "{{ platform_path }}"
+#  become: true
+
+# Clear cache
+- name: Clear cache
+  ansible.builtin.command: >
+    {{ drush_path }} cache-rebuild --uri={{ site_name }} --root={{ platform_path }} -y
+  args:
+    chdir: "{{ platform_path }}"
+  become: true
+
+# Set maintenance mode off
+- name: Set maintenance mode off
+  ansible.builtin.command: >
+    {{ drush_path }} state:set system.maintenance_mode 0 --uri={{ site_name }} --root={{ platform_path }} -y
+  args:
+    chdir: "{{ platform_path }}"
+  become: true

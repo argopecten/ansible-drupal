@@ -1,8 +1,0 @@
----
-
-# Install Composer system-wide
-- name: "Install global Composer"
-  ansible.builtin.get_url:
-    url: "https://getcomposer.org/download/{{ composer_version }}/composer.phar"
-    dest: "{{ composer_path }}"
-    mode: "0775"

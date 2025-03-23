@@ -4,15 +4,15 @@
 - name: Set permissions for site directory
   ansible.builtin.command: >
     /usr/local/bin/site-ownership-permissions.sh
-    --root="{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
-    --user="{{ project_user }}"
-    --group="{{ project_user }}"
+    --root="{{ platform_path }}/web/sites/{{ site_name }}"
+    --user="{{ platform_user }}"
+    --group="{{ platform_group }}"
   args:
-    chdir: "{{ drupal_path }}"
+    chdir: "{{ platform_path }}"
   become: true
 
 # Settings files should have 440 permissions
 - name: Apply 440 permissions to settings.php
   ansible.builtin.file:
-    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}/settings.php"
+    path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
     mode: "0440"

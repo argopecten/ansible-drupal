@@ -1,10 +1,14 @@
-- name: Test connection to managed servers
-  hosts: managed
+- name: Test connection to all servers
+  # hosts: all
+  hosts: 
+    - lts2404
+  become: true
   
   tasks:
-    - name: Ping my hosts
-      ansible.builtin.ping:
-
     - name: Print message
       ansible.builtin.debug:
         msg: Hello world
+
+    - name: Log all variables for current host
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]

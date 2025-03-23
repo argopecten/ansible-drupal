@@ -1,32 +1,143 @@
 ---
-# This role will setup a Drupal site, within a Drupal project.
+#
+### This role is about Drupal 10/11 site management.
+# 
+# It does the following:
+# - creates new sites if they do not exist
+# - verifies configuration for existing sites
+# - updates code and database for existing sites
+# - deletes sites that are no longer needed
+# - backs up and restores sites
+# - runs cron jobs for sites (??? - not sure if this is needed)
+# - migrates sites to new platforms
+#
 
-# Variables to pass to the role from command line
-# vars:
-#  drupal_path: "{{ drupal_path }}"
-#  drupal_site_name: "{{ drupal_site_name }}"
+# Create site for the site name defined in command line
+- block:
+    - name: Create new site
+      include_tasks: create-site.yml
+      # with_items: "{{ sites | dict2items }}"
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - site is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+  - never 
+  - install
 
-# Check if the directory for the Drupal site exists
-- name: Check if Drupal site directory exists
-  ansible.builtin.stat:
-    path: "{{ drupal_path }}/web/sites/{{ drupal_site_name }}"
-  register: site_directory
+# Verify configuration for the site defined in command line or all sites
+- block:
+    - name: Verify configurations for the site
+      include_tasks: verify-site-configurations.yml
+      # with_items: "{{ sites | dict2items }}"
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - verify
+  - install
 
-# Create the database user for the drupal site and install the Drupal site
-- name: Create database user and install Drupal site
-  block:
-    # Create database user for the site
-    - name: Create database user for the site
-      include_tasks: create_db_user.yml
-    # Install the Drupal site
-    - name: Install the Drupal site
-      include_tasks: install-drupal-site.yml
-  when: site_directory.stat.exists == False
+# Create login URL for the site defined in command line
+# ansible-playbook playbooks/sites.yml --tags reset-password --extra-vars "site=c1.example.com"
+- block:
+    - name: Create login URL for the site
+      include_tasks: create-login-url.yml
+      # with_items: "{{ sites | dict2items }}"
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - site is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+    - never
+    - reset-password
 
-# Update the settings.php file
-- name: Update settings.php file
-  include_tasks: update-settings.yml
+# Delete site defined in command line 
+# ansible-playbook playbooks/sites.yml --tags delete --extra-vars "site=c1.example.com"
+- block:
+    - name: Delete site
+      include_tasks: delete-site.yml
+      # with_items: "{{ sites | dict2items }}"
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - site is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+  - never
+  - delete
 
-# Add site to the webserver
-- name: Add site to the webserver
-  include_tasks: add-site-config.yml
+# Update site defined in command line or all sites
+# ansible-playbook playbooks/sites.yml --tags update --extra-vars "site=c1.example.com"
+- block:
+    - name: Update site
+      include_tasks: update-sites.yml
+      # with_items: "{{ sites | dict2items }}"
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) 
+      or 
+      (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - update
+
+# Backup site defined in command line or all sites
+# ansible-playbook playbooks/sites.yml --tags backup --extra-vars "site=c1.example.com"
+- block:
+    - name: Backup site
+      include_tasks: backup-sites.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - backup
+
+# Restore site defined in command line 
+# ansible-playbook playbooks/sites.yml --tags resore --extra-vars "site=c1.example.com"
+- block:
+    - name: Restore site
+      include_tasks: restore-site.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - site is defined
+    - arch is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+  - never
+  - restore
+
+# Migrate site defined in command line to a new platform
+# ansible-playbook playbooks/sites.yml --tags migrate --extra-vars "site=c1.example.com target=drupal11"
+- block:
+    - name: Migrate site
+      include_tasks: migrate-site.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: 
+    - site is defined
+    - target is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+  - never
+  - migrate

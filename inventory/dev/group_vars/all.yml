@@ -1,3 +1,0 @@
----
-# Global variables: variables can be used in any playbooks or roles
-date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"

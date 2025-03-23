@@ -1,0 +1,32 @@
+---
+######
+# 
+# This Ansible playbook is designed to manage servers to host Drupal sites.
+#
+# It does the following:
+# - installs and configures LEMP stack on servers: --tags install
+# - verifies the configuration of the servers:     --tags verify
+# - updates servers                                --tags update
+# - deletes servers: won't be implemented
+#
+# Usage:
+#   Use on of the tags to run specific operation:
+#   ansible-playbook playbooks/servers.yml --tags install
+#   ansible-playbook playbooks/servers.yml --tags verify
+#   ansible-playbook playbooks/servers.yml --tags update
+
+- name: Manages LEMP servers for Drupal with Ansible
+  hosts: 
+    - webservers
+    - dbservers
+  become: true
+
+  tasks:
+    # Run tasks of the server role as defined by tags
+    - name: LEMP server operations
+      include_role:
+        name: server
+      tags: 
+        - install
+        - verify
+        - never  # This tag is used to prevent running the task without a tag
