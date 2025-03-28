@@ -109,7 +109,7 @@
   - backup
 
 # Restore site defined in command line 
-# ansible-playbook playbooks/sites.yml --tags resore --extra-vars "site=c1.example.com"
+# ansible-playbook playbooks/sites.yml --tags restore --extra-vars "site=c1.example.com arch=250322"
 - block:
     - name: Restore site
       include_tasks: restore-site.yml
@@ -141,3 +141,17 @@
   tags:
   - never
   - migrate
+
+# Setup certificate for the site defined in command line or all sites
+# ansible-playbook playbooks/sites.yml --tags ssl --extra-vars "site=c1.example.com"
+- block:
+    - name: Setup SSL certificate
+      include_tasks: ssl-certificates.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - ssl

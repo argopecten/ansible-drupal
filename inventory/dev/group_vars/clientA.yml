@@ -4,15 +4,28 @@
 client: "clientA"
 
 sites:
-  c1_example_com:
-    name: "c1.example.com"
+  civilcrm_hu:
+    name: "civilcrm.hu"
     server: m01
     platform: drupal10
     modules:
       - "admin_toolbar"
       - "pathauto"
+    # from vault file, encrypted with ansible-vault
+    cf:
+      zone_id: "{{ civilcrm.zone_id | default('dummy') }}"
+      email: "{{ civilcrm.email | default('dummy') }}"
+      api_key: "{{ civilcrm.api_key | default('dummy') }}"
+      private_key: "{{ civilcrm.key | default('dummy') }}"
+
   c3_example_com:
     name: "c3.example.com"
     server: m03
     platform: drupal11
     modules: []
+    # from vault file, encrypted with ansible-vault
+    cf:
+      zone_id: "{{ c3.zone_id | default('dummy') }}"
+      email: "{{ c3.email | default('dummy') }}"
+      api_key: "{{ c3.api_key | default('dummy') }}"
+      private_key: "{{ c3.key | default('dummy') }}"

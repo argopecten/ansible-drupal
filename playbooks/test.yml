@@ -1,14 +1,26 @@
 - name: Test connection to all servers
   # hosts: all
   hosts: 
-    - lts2404
+    - 'clientA'
+
   become: true
-  
+
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
+
   tasks:
     - name: Print message
       ansible.builtin.debug:
         msg: Hello world
 
-    - name: Log all variables for current host
+    - name: Print variables from vaultvars.yml
       ansible.builtin.debug:
-        var: hostvars[inventory_hostname]
+        var: cf
+
+    - name: Log site variables
+      ansible.builtin.debug:
+        var: sites
+
+#   - name: Log all variables for current host
+#      ansible.builtin.debug:
+#        var: hostvars[inventory_hostname]

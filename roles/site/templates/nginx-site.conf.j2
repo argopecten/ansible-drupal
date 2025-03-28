@@ -5,15 +5,15 @@ server {
 
     # SSL settings
     listen {{ item.listen | default('80') }};
-    # listen 443 ssl;
+    listen 443 ssl;
     {% if nginx_listen_ipv6 %}
     listen [::]:{{ item.listen | default('80') }};
-    # listen [::]:443 ssl;
+    listen [::]:443 ssl;
     {% endif %}
 
-    # TBD
-    # ssl_certificate        /etc/ssl/certs/DOMAIN.pem;
-    # ssl_certificate_key    /etc/ssl/private/DOMAIN.key;
+    # SSL
+    ssl_certificate        /etc/ssl/certs/{{ site_name }}.pem;
+    ssl_certificate_key    /etc/ssl/private/{{ site_name }}.key;
 
     # Uncomment for Cloudflare Authenticated Origin Pulls:
     # ssl_verify_client on;

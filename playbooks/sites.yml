@@ -11,6 +11,7 @@
 # - updates code and database for existing sites                --tags update
 # - backs up specified site                                     --tags backup
 # - restores specified site for a date                          --tags restore
+# - setup ssl certificate for a site                            --tags ssl
 # TBD:
 # - runs cron jobs for sites (??? - not sure if this is needed) --tags cron
 # - migrates/clones site to an other platform                   --tags migrate or clone ?
@@ -20,13 +21,17 @@
 #   ansible-playbook playbooks/sites.yml --tags reset-password --extra-vars "site=c1.example.com"
 #   ansible-playbook playbooks/sites.yml --tags delete         --extra-vars "site=c1.example.com"
 #   ansible-playbook playbooks/sites.yml --tags restore        --extra-vars "site=c1.example.com arch=250322"
-
+#   ansible-playbook playbooks/sites.yml --tags ssl            --extra-vars "site=c1.example.com"
 
 - name: Drupal sites operations
   hosts: 
     - clientA
     - clientB
   become: true
+
+  # Encrypted variables, like cloudflare API key, ...
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
 
   # Variables to pass to the role from command line
   vars:
@@ -48,4 +53,5 @@
         - backup
         - restore
         - migrate
+        - ssl
         - never  # This tag is used to prevent running the task without a tag

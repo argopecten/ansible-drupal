@@ -1,0 +1,20 @@
+---
+
+# This is a playbook to setup the control server only.
+
+- name: Setup the control server as localhost
+  hosts: 
+    - localhost
+  become: true
+
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
+
+  tasks:
+    - name: Print message
+      ansible.builtin.debug:
+        msg: Hello world
+
+    - name: Log site variables
+      ansible.builtin.debug:
+        var: sites
