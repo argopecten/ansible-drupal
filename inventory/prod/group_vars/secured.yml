@@ -1,0 +1,87 @@
+---
+### Security hardening configurations
+
+# Set variable on secured servers only
+secured_server: true
+
+# Packages to install
+secured_packages:
+  - openssh-server
+  - openssh-client
+  - ufw
+  - fail2ban
+
+
+### SSHD configuration ###
+# These file contain the configuration for SSHD (Secure Shell Daemon) settings.
+sshd_main_config_file: "/etc/ssh/sshd_config"
+sshd_hardened_config_file: "/etc/ssh/sshd_config.d/60-ansible_hardened-sshd.conf"
+
+# Variables for SSHD configuration
+ssh_users:
+  - "{{ ansible_user }}"
+ssh_port: "{{ ansible_port }}"
+ssh_maxauthtries: 3
+ssh_login_gracetime: 30   # in seconds
+
+
+### UFW firewall configuration ###
+ufw_enabled: "yes"                     # enable UFW
+
+# configuration for /etc/default/ufw
+ufw_ipv6: "yes"                         # enable IPv6 support
+ufw_default_input_policy: DROP          # any incoming network traffic is blocked by default
+ufw_default_output_policy: ACCEPT       # any outgoing network traffic is allowed by default
+ufw_default_forward_policy: DROP        # any forwarded network traffic is blocked by default
+ufw_default_application_policy: SKIP    # SKIP: relies solely on the specific rules provided. ENFORCE, or REJECT
+
+# Variables for UFW configuration
+ufw_logging: low     # set logging level to off, low, medium, high, or full
+# ufw_logging_limit: "yes"  # limit logging to prevent flooding
+
+# UFW user rules
+# Comments in these form are mandatory for UFW to work properly
+# The form: "### tuple ### allow tcp <port> <source> any <destination> in"
+ufw_rules:
+  - port: "{{ ssh_port }}"
+    proto: tcp
+    comment: "### tuple ### allow tcp {{ ssh_port }} 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 80
+    proto: tcp
+    comment: "### tuple ### allow tcp 80 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 443
+    proto: tcp
+    comment: "### tuple ### allow tcp 443 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 443
+    proto: udp           # for HTTP/3 QUIC support
+    comment: "### tuple ### allow udp 443 0.0.0.0/0 any 0.0.0.0/0 in"
+
+
+### Fail2ban configuration ###
+# These file contain the configuration for fail2ban settings.
+fail2ban_config_file: "/etc/fail2ban/jail.local"
+
+# Variables for fail2ban configuration
+
+fail2ban_loglevel: INFO
+fail2ban_logtarget: /var/log/fail2ban.log
+
+fail2ban_ignoreself: "true"
+fail2ban_ignoreips:
+  - "127.0.0.1/8 ::1"
+
+fail2ban_bantime: 1h
+# fail2ban_bantime: 600     # In seconds
+
+fail2ban_findtime: 10m
+# fail2ban_findtime: 600    # In seconds 
+
+fail2ban_maxretry: 5
+fail2ban_banaction: iptables-multiport
+fail2ban_destemail: "{{ ansible_user }}@localhost"
+fail2ban_sender: "{{ ansible_user }}@{{ ansible_fqdn }}"
+
+fail2ban_sshd_maxretry: 3
+fail2ban_sshd_findtime: 10m
+fail2ban_sshd_bantime: 1h
+fail2ban_sshd_action: iptables-multiport[name=SSH, port={{ ssh_port }}, protocol=tcp]

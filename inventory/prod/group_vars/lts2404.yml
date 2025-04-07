@@ -1,0 +1,17 @@
+---
+# Variables for Ubuntu 24.04 LTS servers
+server_os: "Ubuntu 24.04 LTS"
+
+# Environment: dev or prod, used in inventory
+env: "prod" # dev or prod
+
+# Admin User in OS
+root_user: "root"
+root_group: "root"
+root_home: "/root"
+
+# Packages to install
+common_packages:
+  - unzip
+  - mc
+  - acl # Ansible requires setfacl from this package to manage temporary file permissions when switching users.

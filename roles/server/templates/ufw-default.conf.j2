@@ -1,0 +1,35 @@
+# /etc/default/ufw
+# {{ ansible_managed }}
+# UFW default configuration for {{ inventory_hostname }} generated: {{ ansible_date_time.date }}
+#
+# This file contains high-level configuration settings for UFW, including:
+# - IPv6 support configuration
+# - Default policies
+# - iptables backend configuration: config file, modules
+
+# IPv6 support configuration
+# - "no" means only IPv6 on loopback accepted
+# - "yes" applies rules to support IPv6
+IPV6={{ ufw_ipv6 | default('yes') }}
+
+# Default policies
+DEFAULT_INPUT_POLICY="{{ ufw_default_input_policy | default('DROP') }}"
+DEFAULT_OUTPUT_POLICY="{{ ufw_default_output_policy | default('ACCEPT') }}"
+DEFAULT_FORWARD_POLICY="{{ ufw_default_forward_policy | default('DROP') }}"
+DEFAULT_APPLICATION_POLICY="{{ ufw_default_application_policy | default('SKIP') }}"
+
+# ufw only touches its own chains, system-level rules applied directly 
+# to the iptables built-in chains remain intact.
+MANAGE_BUILTINS=no
+
+#
+# IPT backend
+#
+# Sysctl configuration file path
+# only enable if using iptables backend
+IPT_SYSCTL=/etc/ufw/sysctl.conf
+
+# Kernel modules to load
+# Extra connection tracking modules to load. IPT_MODULES should typically be
+# empty for new installations and modules added only as needed.
+IPT_MODULES=""

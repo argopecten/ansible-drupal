@@ -39,3 +39,33 @@
   ansible.builtin.service:
     name: "php{{ php_version }}-fpm"
     state: restarted
+
+
+### Handlers for SSH tasks
+# Restart SSH service
+- name: Restart SSH service
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  become: true
+  become_user: "{{ root_user }}"
+  when: ansible_os_family == "Debian"
+
+### Handlers for fail2ban tasks
+# Restart fail2ban service
+- name: Restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+  become: true
+  become_user: "{{ root_user }}"
+  when: ansible_os_family == "Debian"
+
+### Handlers for firewall tasks
+# Reload UFW
+- name: Reload UFW
+  ansible.builtin.command: ufw reload
+  changed_when: false
+  become: true
+  become_user: "{{ root_user }}"
+  when: ansible_os_family == "Debian"

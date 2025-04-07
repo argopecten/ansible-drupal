@@ -2,9 +2,9 @@
   # hosts: all
   hosts: 
     - 'clientA'
-
   become: true
 
+  # Encrypted variables, like IPs, cloudflare API key, ...
   vars_files:
     - "../inventory/{{ env }}/group_vars/vaultvars.yml"
 
@@ -15,12 +15,12 @@
 
     - name: Print variables from vaultvars.yml
       ansible.builtin.debug:
-        var: cf
+        var: "{{ inventory_hostname}}"
 
-    - name: Log site variables
-      ansible.builtin.debug:
-        var: sites
-
-#   - name: Log all variables for current host
+#    - name: Log site variables
 #      ansible.builtin.debug:
-#        var: hostvars[inventory_hostname]
+#        var: sites
+
+    - name: Log all variables for current host
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]

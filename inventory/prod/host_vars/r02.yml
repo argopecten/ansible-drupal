@@ -1,0 +1,4 @@
+---
+# Host Variable for this particular host
+ansible_host: "{{ r02.ip }}"
+ansible_port: "{{ ssh.port }}"

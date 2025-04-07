@@ -1,0 +1,24 @@
+---
+# Harden SSH Configuration
+# This playbook configures SSH settings to enhance security on the server.
+
+# SSH main configuration.
+- name: Copy SSH main configuration file
+  ansible.builtin.template:
+    src: sshd-main.conf.j2
+    dest: "{{ sshd_main_config_file }}"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+  notify: Restart SSH service
+
+# SSH hardened configuration.
+- name: Copy SSH hardened configuration file
+  ansible.builtin.template:
+    src: sshd-hardened.conf.j2
+    dest: "{{ sshd_hardened_config_file }}"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    # force: yes
+  notify: Restart SSH service

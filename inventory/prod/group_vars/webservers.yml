@@ -1,0 +1,159 @@
+---
+# Variables for Nginx webservers
+
+#############
+# Drupal platforms on the webservers
+platforms:
+  drupal10:
+    version: "10.4.0"
+    profile: "standard"
+    path: "/var/www/"
+    name: "drupal10"
+    user: "d10user"
+    group: "d10user"
+    # Composer Requirements
+    dependencies:
+      - "drush/drush:^13.3"
+      - "drupal/admin_toolbar:^3.0"
+      - "drupal/pathauto:^1.8"
+  drupal11:
+    version: "11.1"
+    profile: "standard"
+    path: "/var/www/"
+    name: "drupal11"
+    user: "d11user"
+    group: "d11user"
+    # Composer Requirements
+    dependencies:
+      - "drush/drush:^13.3"
+
+# Drush Configuration
+drush_path_site: "{{ drupal_path}}/vendor/bin/drush"
+
+# Additional arguments for the site-install command
+drupal_site_install_extra_args: []
+
+# Drupal repository
+# TBC drupal_repo: "https://git.drupalcode.org/project/drupal"
+composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+# Permissions for the Drupal directory
+drupal_root_permissions: "0750"
+#####################
+
+### Variables for composer
+# Global (system-wide) Composer
+composer_version: "2.8.4" 
+composer_path: "/usr/bin/composer"
+
+
+###  Variables for the PHP role
+php_version: "8.3"                # Define the PHP version to be used
+
+# PHP Compatibility Matrix
+php_extensions: [fpm, curl, gd, mbstring, mysql, xml, zip, bcmath, intl, soap]
+
+# Define the PHP repositories
+php_repositories:
+  - { repo: 'ppa:ondrej/php' }      # the main PHP repository
+  - { repo: 'ppa:ondrej/nginx' }    # the Nginx repository
+
+
+# Define the PHP configuration file path
+php_ini_path: "/etc/php/{{ php_version }}/fpm/php.ini" # Define default PHP configuration settings
+
+# Define the list of PHP configuration changes using variables
+php_date_timezone:             "Europe/Budapest"  # Set the default timezone for PHP
+php_max_execution_time:        240           # Set the maximum execution time for PHP scripts (in seconds)
+php_max_input_time:            120               # Set the maximum input time for PHP scripts (in seconds)
+php_post_max_size:             "50M"              # Set the maximum size of POST data that PHP will accept
+php_upload_max_filesize:       "50M"        # Set the maximum size of uploaded files that PHP will accept
+
+# Define the list of PHP configuration changes using variables
+php_configurations:
+  - { regexp: '^;date.timezone =', line: 'date.timezone = {{ php_date_timezone }}' }
+  - { regexp: '^max_execution_time =', line: 'max_execution_time = {{ php_max_execution_time }}' }
+  - { regexp: '^max_input_time =', line: 'max_input_time = {{ php_max_input_time }}' }
+  - { regexp: '^post_max_size =', line: 'post_max_size = {{ php_post_max_size }}' }
+  - { regexp: '^upload_max_filesize =', line: 'upload_max_filesize = {{ php_upload_max_filesize }}' }
+
+
+###  Variables for the Nginx webserver
+# Apt packages to install
+nginx_packages:
+  - nginx
+
+# OS-specific variables for Nginx
+nginx_conf_path: /etc/nginx/conf.d
+nginx_conf_file: /etc/nginx/nginx.conf
+nginx_mime_file: /etc/nginx/mime.types
+nginx_pidfile: /run/nginx.pid
+nginx_vhost_path: /etc/nginx/sites-enabled
+nginx_default_site_config: /etc/nginx/sites-enabled/default
+nginx_user: "www-data"
+
+# TBC
+# Path to the Drupal nginx configuration
+nginx_drupal_config_directory: /usr/local/etc/drupal/nginx
+nginx_conf_template: "nginx-main.conf.j2"
+nginx_vhost_template: "vhost.j2"
+
+nginx_worker_processes: >-
+  "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+nginx_worker_connections: "1024"
+nginx_multi_accept: "off"
+
+nginx_error_log: "/var/log/nginx/error.log warn"
+nginx_access_log: "/var/log/nginx/access.log main buffer=16k flush=2m"
+
+nginx_sendfile: "on"
+nginx_tcp_nopush: "on"
+nginx_tcp_nodelay: "on"
+nginx_keepalive_timeout: "75"
+nginx_keepalive_requests: "600"
+nginx_server_tokens: "on"
+nginx_client_max_body_size: "64m"
+nginx_server_names_hash_bucket_size: "64"
+nginx_proxy_cache_path: ""
+
+nginx_extra_conf_options: ""
+# Example extra main options, used within the main nginx's context:
+#   nginx_extra_conf_options: |
+#     env VARIABLE;
+#     include /etc/nginx/main.d/*.conf;
+
+nginx_extra_http_options: ""
+# Example extra http options, printed inside the main server http config:
+#    nginx_extra_http_options: |
+#      proxy_buffering    off;
+#      proxy_set_header   X-Real-IP $remote_addr;
+#      proxy_set_header   X-Scheme $scheme;
+#      proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+#      proxy_set_header   Host $http_host;
+
+nginx_remove_default_vhost: false
+
+# Listen on IPv6 (default: true)
+nginx_listen_ipv6: true
+
+nginx_vhosts: []
+# Example vhost below, showing all available options:
+# - listen: "80" # default: "80"
+#   server_name: "example.com" # default: N/A
+#   root: "/var/www/example.com" # default: N/A
+#   index: "index.html index.htm" # default: "index.html index.htm"
+#   filename: "example.com.conf" # Can be used to set the vhost filename.
+#
+#   # Properties that are only added if defined:
+#   server_name_redirect: "www.example.com" # default: N/A
+#   error_page: ""
+#   access_log: ""
+#   error_log: ""
+#   extra_parameters: "" # Can be used to add extra config blocks (multiline).
+#   template: "" # Can be used to override the `nginx_vhost_template` per host.
+#   state: "absent" # To remove the vhost configuration.
+
+nginx_log_format: |-
+  '$remote_addr - $remote_user [$time_local] "$request" '
+  '$status $body_bytes_sent "$http_referer" '
+  '"$http_user_agent" "$http_x_forwarded_for"'
