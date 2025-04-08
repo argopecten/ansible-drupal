@@ -1,7 +1,5 @@
 - name: Test connection to all servers
-  # hosts: all
-  hosts: 
-    - 'clientA'
+  hosts: all
   become: true
 
   # Encrypted variables, like IPs, cloudflare API key, ...
@@ -9,18 +7,15 @@
     - "../inventory/{{ env }}/group_vars/vaultvars.yml"
 
   tasks:
-    - name: Print message
-      ansible.builtin.debug:
-        msg: Hello world
+
+#    - name: Log all variables for current host
+#      ansible.builtin.debug:
+#        var: hostvars[inventory_hostname]
 
     - name: Print variables from vaultvars.yml
       ansible.builtin.debug:
         var: "{{ inventory_hostname}}"
 
-#    - name: Log site variables
-#      ansible.builtin.debug:
-#        var: sites
-
-    - name: Log all variables for current host
+    - name: Print message with variable
       ansible.builtin.debug:
-        var: hostvars[inventory_hostname]
+        msg: "Hello {{ inventory_hostname }}"
