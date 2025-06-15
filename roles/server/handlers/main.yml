@@ -26,7 +26,7 @@
   changed_when: false
 
 # Reload Nginx
-- name: "Reload nginx"
+- name: Reload Nginx
   ansible.builtin.service:
     name: nginx
     state: reloaded
@@ -42,13 +42,12 @@
 
 
 ### Handlers for SSH tasks
-# Restart SSH service
-- name: Restart SSH service
+# Reload SSH service
+- name: Reload SSH service
   ansible.builtin.service:
     name: ssh
-    state: restarted
+    state: reloaded
   become: true
-  become_user: "{{ root_user }}"
   when: ansible_os_family == "Debian"
 
 ### Handlers for fail2ban tasks
@@ -58,7 +57,6 @@
     name: fail2ban
     state: restarted
   become: true
-  become_user: "{{ root_user }}"
   when: ansible_os_family == "Debian"
 
 ### Handlers for firewall tasks
@@ -67,5 +65,4 @@
   ansible.builtin.command: ufw reload
   changed_when: false
   become: true
-  become_user: "{{ root_user }}"
   when: ansible_os_family == "Debian"

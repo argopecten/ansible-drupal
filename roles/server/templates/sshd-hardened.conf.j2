@@ -37,9 +37,9 @@ LogLevel INFO
 
 # Disable SSH Agent Forwarding
 AllowAgentForwarding no
-Match User {{ ssh_users | join(' ') }}
-    AllowAgentForwarding yes
-Match all
+# Match User {{ ssh_users | join(' ') }}
+#    AllowAgentForwarding yes
+# Match all
 
 # Set a short grace period for authentication
 LoginGraceTime {{ ssh_login_gracetime }}s

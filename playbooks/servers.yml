@@ -12,9 +12,9 @@
 #
 # Usage:
 #   Use on of the tags to run specific operation:
-#   ansible-playbook playbooks/servers.yml --tags install
-#   ansible-playbook playbooks/servers.yml --tags verify
-#   ansible-playbook playbooks/servers.yml --tags secure --ask-vault-pass
+#   ansible-playbook playbooks/servers.yml --tags secure  --ask-vault-pass
+#   ansible-playbook playbooks/servers.yml --tags install --ask-vault-pass
+#   ansible-playbook playbooks/servers.yml --tags verify  --ask-vault-pass
 #   TBD: ansible-playbook playbooks/servers.yml --tags update
 
 - name: Manages LEMP servers for Drupal with Ansible

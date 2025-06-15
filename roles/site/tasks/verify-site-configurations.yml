@@ -34,6 +34,7 @@
     mode: "0640"
 
 - name: Add trusted host patterns
+# for subdomains:         '^.+\.{{ site_name }}$',
   ansible.builtin.lineinfile:
     path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
     regexp: "^# \\$settings\\['trusted_host_patterns'\\] = \\[\\];$"
@@ -47,7 +48,7 @@
 # Remove default vhost config file.
 - name: Remove default nginx vhost config file (if configured).
   ansible.builtin.file:
-    path: "{{ nginx_default_site_config }}"
+    path: "{{ nginx_vhost_path }}/default"
     state: absent
 
 # Add vhost config files.
@@ -64,5 +65,12 @@
 - name: "Reload nginx"
   ansible.builtin.service:
     name: nginx
+    state: reloaded
+  become: true
+
+# Reload PHP-FPM
+- name: "Reload PHP-FPM"
+  ansible.builtin.service:
+    name: "php{{ php_version }}-fpm"
     state: reloaded
   become: true

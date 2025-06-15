@@ -27,8 +27,6 @@
   loop:
     - "/etc/ssl/certs/{{ ssl_name }}.pem"
     - "/etc/ssl/private/{{ ssl_name }}.key"
-    - "/etc/ssl/certs/ssl-cert-snakeoil.pem"
-    - "/etc/ssl/private/ssl-cert-snakeoil.key"
     - "/etc/ssl/certs/cloudflare.pem"
   loop_control:
     loop_var: cert

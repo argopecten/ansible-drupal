@@ -11,7 +11,15 @@
   loop:
     - "export EDITOR=nano"
     - "export VISUAL=nano"
-    
+
+# Allow release info change for apt
+- name: Allow release info change for apt
+  become: yes
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/99allow-releaseinfo-change
+    content: 'Acquire::AllowReleaseInfoChange "true";'
+    mode: '0644'
+
 # Update all installed packages and clean up
 - name: Update all installed packages and clean up
   become: yes

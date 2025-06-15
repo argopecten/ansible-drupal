@@ -17,11 +17,12 @@
 # - migrates/clones site to an other platform                   --tags migrate or clone ?
 #
 # Use tags to run specific operation:
-#   ansible-playbook playbooks/sites.yml --tags verify
-#   ansible-playbook playbooks/sites.yml --tags reset-password --extra-vars "site=c1.example.com"
-#   ansible-playbook playbooks/sites.yml --tags delete         --extra-vars "site=c1.example.com"
-#   ansible-playbook playbooks/sites.yml --tags restore        --extra-vars "site=c1.example.com arch=250322"
-#   ansible-playbook playbooks/sites.yml --tags ssl            --extra-vars "site=c1.example.com"
+#   ansible-playbook playbooks/sites.yml --tags install        --extra-vars "site=c1.example.com" --ask-vault-pass
+#   ansible-playbook playbooks/sites.yml --tags verify         --extra-vars "site=c1.example.com" --ask-vault-pass
+#   ansible-playbook playbooks/sites.yml --tags reset-password --extra-vars "site=c1.example.com" --ask-vault-pass
+#   ansible-playbook playbooks/sites.yml --tags delete         --extra-vars "site=c1.example.com" --ask-vault-pass
+#   ansible-playbook playbooks/sites.yml --tags restore        --extra-vars "site=c1.example.com arch=250322" --ask-vault-pass
+#   ansible-playbook playbooks/sites.yml --tags ssl            --extra-vars "site=c1.example.com" --ask-vault-pass
 
 - name: Drupal sites operations
   hosts: 

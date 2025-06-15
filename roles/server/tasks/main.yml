@@ -38,8 +38,6 @@
       include_tasks: config/secured-firewall.yml
     - name: Secure fail2ban
       include_tasks: config/secured-fail2ban.yml
-    # - name: Secure SSL certificates
-    #   include_tasks: config/ssl-certificates.yml
   when: secured_server | default(false)  # Only run on servers listed in the secured group
   tags:
   - secure

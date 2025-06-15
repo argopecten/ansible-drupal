@@ -26,6 +26,16 @@ platforms:
     # Composer Requirements
     dependencies:
       - "drush/drush:^13.3"
+  drupal11min:
+    version: "11.1"
+    profile: "minimal"
+    path: "/var/www/"
+    name: "drupal11min"
+    user: "d11user"      # should be d11minuser
+    group: "d11user"
+    # Composer Requirements
+    dependencies:
+      - "drush/drush:^13.3"
 
 # Drush Configuration
 drush_path_site: "{{ drupal_path}}/vendor/bin/drush"
@@ -84,43 +94,108 @@ nginx_packages:
   - nginx
 
 # OS-specific variables for Nginx
-nginx_conf_path: /etc/nginx/conf.d
-nginx_conf_file: /etc/nginx/nginx.conf
-nginx_mime_file: /etc/nginx/mime.types
-nginx_pidfile: /run/nginx.pid
+nginx_main_conf_file: /etc/nginx/nginx.conf       # main configuration file
+nginx_conf_path: /etc/nginx/conf.d                # configuration directory
+nginx_snippets_path: /etc/nginx/snippets          # snippets directory
 nginx_vhost_path: /etc/nginx/sites-enabled
-nginx_default_site_config: /etc/nginx/sites-enabled/default
+
+nginx_deny_files:
+  - .htpasswd
+  - .htaccess
+  - .git
+  - .env
+  - .DS_Store
+
+### Variables used within the main nginx's context
+
+# Listen on IPv6 (default: true)
+# TBD: nginx_listen_ipv6: true
+
+# Nginx basic options
 nginx_user: "www-data"
-
-# TBC
-# Path to the Drupal nginx configuration
-nginx_drupal_config_directory: /usr/local/etc/drupal/nginx
-nginx_conf_template: "nginx-main.conf.j2"
-nginx_vhost_template: "vhost.j2"
-
 nginx_worker_processes: >-
   "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+nginx_pidfile: /run/nginx.pid
+
+# Extra main options
+nginx_extra_conf_options: |
+  include           /etc/nginx/modules-enabled/*.conf;
+
+# Events options
 nginx_worker_connections: "1024"
 nginx_multi_accept: "off"
 
-nginx_error_log: "/var/log/nginx/error.log warn"
+# HTTP options
+nginx_sendfile: "on"                     # enable transfer static files directly from disk
+nginx_tcp_nopush: "on"                   # sending out partial packets in one go
+nginx_tcp_nodelay: "on"                  # enable TCP_NODELAY: packets are sent immediately
+nginx_types_hash_max_size: 2048          # maximum size of the hash table for types
+nginx_keepalive_timeout: 75              # keep-alive timeout in seconds
+nginx_keepalive_requests: 600            # maximum number of keep-alive requests
+nginx_server_tokens: "off"               # hide nginx version
+nginx_server_names_hash_bucket_size: 64  # size of the hash bucket for server names
+nginx_server_name_in_redirect: "off"     # disable server name in redirects
+nginx_client_max_body_size: "64m"        # maximum allowed request body size in megabytes
+
+# SSL options
+nginx_ssl_protocols: "TLSv1.2 TLSv1.3"   # supported SSL protocols
+nginx_ssl_prefer_server_ciphers: "on"    # prefer server ciphers over client ciphers
+nginx_ssl_ciphers: >-                    # supported SSL ciphers from Cloudflare's primary recommendations
+  ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:
+  ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:
+  ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305
+
+# logging
 nginx_access_log: "/var/log/nginx/access.log main buffer=16k flush=2m"
+nginx_error_log: "/var/log/nginx/error.log warn"
+nginx_log_format: |-
+  '$remote_addr - $remote_user [$time_local] "$request" '
+  '$status $body_bytes_sent "$http_referer" '
+  '"$http_user_agent" "$http_x_forwarded_for"'
+nginx_log_format_aegir: |-
+  '"$proxy_add_x_forwarded_for" $host [$time_local] '
+  '"$request" $status $body_bytes_sent '
+  '$request_length $bytes_sent "$http_referer" '
+  '"$http_user_agent" $request_time "$gzip_ratio"'
+nginx_log_format_json: |-
+  '{ "time": "$time_iso8601", '
+  '"remote_addr": "$remote_addr", '
+  '"remote_user": "$remote_user", '
+  '"request": "$request", '
+  '"status": "$status", '
+  '"body_bytes_sent": "$body_bytes_sent", '
+  '"http_referer": "$http_referer", '
+  '"http_user_agent": "$http_user_agent", '
+  '"http_x_forwarded_for": "$http_x_forwarded_for" }'
 
-nginx_sendfile: "on"
-nginx_tcp_nopush: "on"
-nginx_tcp_nodelay: "on"
-nginx_keepalive_timeout: "75"
-nginx_keepalive_requests: "600"
-nginx_server_tokens: "on"
-nginx_client_max_body_size: "64m"
-nginx_server_names_hash_bucket_size: "64"
-nginx_proxy_cache_path: ""
-
-nginx_extra_conf_options: ""
-# Example extra main options, used within the main nginx's context:
-#   nginx_extra_conf_options: |
-#     env VARIABLE;
-#     include /etc/nginx/main.d/*.conf;
+# gzip options
+nginx_gzip:              "on"       # enable gzip compression
+nginx_gzip_static:       "on"       # serve pre-compressed files if they exist
+nginx_gzip_vary:         "on"       # enable the "Vary: Accept-Encoding" header to responses
+nginx_gzip_proxied:      "any"      # enable gzip for proxied requests
+nginx_gzip_buffers:      "16 8k"    # number and size of buffers for gzip
+nginx_gzip_comp_level:   8          # compression level (1-9)
+nginx_gzip_http_version: 1.1        # minimum HTTP version to use gzip
+nginx_gzip_min_length:   50         # minimum length of response to compress in bytes
+nginx_gzip_types: >-                # MIME types to compress
+  application/atom+xml
+  application/javascript
+  application/json
+  application/rss+xml
+  application/vnd.ms-fontobject
+  application/x-font-opentype
+  application/x-font-ttf
+  application/x-javascript
+  application/xhtml+xml
+  application/xml
+  application/xml+rss
+  font/opentype
+  image/svg+xml
+  image/x-icon
+  text/css
+  text/javascript
+  text/plain
+  text/xml
 
 nginx_extra_http_options: ""
 # Example extra http options, printed inside the main server http config:
@@ -131,29 +206,5 @@ nginx_extra_http_options: ""
 #      proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
 #      proxy_set_header   Host $http_host;
 
-nginx_remove_default_vhost: false
-
-# Listen on IPv6 (default: true)
-nginx_listen_ipv6: true
-
-nginx_vhosts: []
-# Example vhost below, showing all available options:
-# - listen: "80" # default: "80"
-#   server_name: "example.com" # default: N/A
-#   root: "/var/www/example.com" # default: N/A
-#   index: "index.html index.htm" # default: "index.html index.htm"
-#   filename: "example.com.conf" # Can be used to set the vhost filename.
-#
-#   # Properties that are only added if defined:
-#   server_name_redirect: "www.example.com" # default: N/A
-#   error_page: ""
-#   access_log: ""
-#   error_log: ""
-#   extra_parameters: "" # Can be used to add extra config blocks (multiline).
-#   template: "" # Can be used to override the `nginx_vhost_template` per host.
-#   state: "absent" # To remove the vhost configuration.
-
-nginx_log_format: |-
-  '$remote_addr - $remote_user [$time_local] "$request" '
-  '$status $body_bytes_sent "$http_referer" '
-  '"$http_user_agent" "$http_x_forwarded_for"'
+# includes
+nginx_mime_file: /etc/nginx/mime.types
