@@ -113,6 +113,7 @@ nginx_deny_files:
 
 # Nginx basic options
 nginx_user: "www-data"
+nginx_group: "www-data"
 nginx_worker_processes: >-
   "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
 nginx_pidfile: /run/nginx.pid

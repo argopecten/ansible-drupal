@@ -10,5 +10,5 @@
     force: true
     mode: "755"
   loop:
-    - { name: "project-ownership-permissions.sh" }
+    - { name: "platform-ownership-permissions.sh" }
     - { name: "site-ownership-permissions.sh" }
