@@ -47,8 +47,8 @@ drupal_site_install_extra_args: []
 # TBC drupal_repo: "https://git.drupalcode.org/project/drupal"
 composer_project_options: "--prefer-dist --stability dev --no-interaction"
 
-# Permissions for the Drupal directory
-drupal_root_permissions: "0750"
+# Permissions for the Drupal platform (project) directory
+drupal_root_permissions: "0755"
 #####################
 
 ### Variables for composer
