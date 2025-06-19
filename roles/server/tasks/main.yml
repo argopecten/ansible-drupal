@@ -11,11 +11,18 @@
   - never  # This tag is used to prevent running the task without a tag
   - install
 
-# Update LEMP servers
-# Runs after the installation to update the servers
+# Update LEMP servers' packages
+# Run to update packages. Use carefully, as it may cause issues with running services.
 - block:
     - name: Update packages
       include_tasks: config/package-update.yml
+  tags:
+  - never  # This tag is used to prevent running the task without a tag
+  - update
+
+# Update LEMP servers' configurations
+# Runs after the installation to update the servers
+- block:
     - name: Update scripts
       include_tasks: config/bash-scripts.yml
     - name: Update MySQL
@@ -24,7 +31,6 @@
       include_tasks: config/nginx-config.yml
     - name: Update PHP
       include_tasks: config/php-config.yml
-
   tags:
   - verify
   - install
