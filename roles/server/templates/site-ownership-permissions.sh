@@ -9,10 +9,10 @@ You need to provide the following argument:
   --root: Path to the root of your Drupal site of a project, obligatory argument.
   --user: Username of the user to whom you want to give file and directory ownership
                  (defaults to 'ubuntu').
-  --group: Group of users to give file and directory group ownership (defaults to 'ubuntu').
+  --group: Group of users to give file and directory group ownership (defaults to 'www-data').
 
 Usage: (sudo) ${0##*/} --root=PATH --user=USER --group=GROUP
-Example: (sudo) ${0##*/} --root=/var/www/drupal-10.4.0/web/sites/example.com --user=ubuntu --group=ubuntu
+Example: (sudo) ${0##*/} --root=/var/www/drupal-10.4.0/web/sites/example.com --user=ubuntu --group=www-data
 HELP
 exit 0
 }
@@ -25,7 +25,7 @@ fi
 
 # Set default values
 USER="ubuntu"
-GROUP="ubuntu"
+GROUP="www-data"
 
 # Parse command line arguments
 for i in "$@"; do
@@ -68,78 +68,77 @@ fi
 
 cd "${SITE_ROOT}"
 
-### Set ownership and permissions for code directories and files
-# - scope is ./libraries, ./modules, ./themes, and ./vendor directories
-# - special care is needed for the settings.php files
-# - Code is owned by the drupal user and by its group.
-# - Drupal user can write, group only read, other users have no access and permissions.
-# - Webserver user should be in the drupal users group, so can read and execute
-# - No need for unified permissions in the /vendor folder.
+### Set ownership and permissions for directories and files of a Drupal site
+# scope is:
+# - code: ./libraries, ./modules, and ./themes directories. No vendor directory!
+# - content: ./files and ./private directories
+# - settings files: ./settings.php and ./../sites.php
+# 
+# Ownership
+# - Code is owned by the platform user.
+# - Groups are set to the webserver group.
+# - No permissions for other users.
+#
+# Permissions:
+#   - Code directories:
+#     Might exists or not, but if they exist, they should have the following permissions:
+#     - directories: 2750 (user can read/write/execute, group can read/execute, others have no access, setgid bit set).
+#     - files: 0640 (user can read/write, group can read, others have no access).
+#   - Settings files:
+#     The settings.php files should have 440 permissions (user can read/write, group can read, others have no access):
+#     - settings.php files: 0440 (user can read, group can read, others have no access).
+# - Content directories and files:
+#   The /web/sites/*/files and /web/sites/*/private directories are used for content storage:
+#     - directories: 2770 (user can read/write/execute, group can read/write/execute, others have no access, setgid bit set).
+#     - files: 0660 (user can read/write, group can read/write, others have no access).
 
-DIR_PERM='u=rwx,g=rxs,o=' # Code folders: 2750
-FILE_PERM='u=rw,g=r,o='  # Code files in /web: 0640
-FILE_PERM_VENDOR='o-rwx' # Code files in /vendor: remove all permissions for others
+### Set permissions
+# Code directories and files permissions
+# - scope is ./libraries, ./modules, and .${SITE_ROOT/themes directories. No vendor directory!
+code_dir_perms='u=rwx,g=rx,o='          # Code directories:    0750 or rwxr-x---
+code_file_perms='u=rw,g=r,o='           # Code files:          0640 or rw-r-----
+# Content directories and files permissions
+# - scope is ./files and ./private directories
+content_dir_perms="u=rwx,g=rwx,g+s,o="  # Content directories: 2770 or rwxrws---
+content_file_perms="ug=rw,o="           # Content files:       0660 or rw-rw----
 
 # Set ownership for code files and directories
-printf "Changing ownership of all contents of ${SITE_ROOT}:\n user => ${USER} \t group => ${GROUP}\n"
-# works only on files and directories that are not yet owned by the ${USER} and ${GROUP}
-# https://stackoverflow.com/questions/4210042/how-do-i-exclude-a-directory-when-using-find
-find . \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -exec chown ${USER}:${GROUP} '{}' \+
+printf "Changing ownership in ${SITE_ROOT} to:\n user => ${USER} \t group => ${GROUP}\n"
+find . \( -path ./files -o -path ./private -prune \) -o \( ! -user ${USER} -o ! -group ${GROUP} \) \( -type f -o -type d \) -exec chown ${USER}:${GROUP} '{}' \+
 
 # Set permissions for code directories
-printf "Changing permissions of all directories inside ${SITE_ROOT} to ${DIR_PERM} ...\n"
+printf "Changing permissions for code directories inside ${SITE_ROOT} to ${code_dir_perms} ...\n"
 # find directories that are not having the correct permissions and change them, except the files and private directories
-find . \( -path ./files -o -path ./private -prune \) -o -type d ! -perm "${DIR_PERM}" -exec chmod "${DIR_PERM}" '{}' \+
+find . \( -path ./files -o -path ./private -prune \) -o -type d ! -perm "${code_dir_perms}" -exec chmod "${code_dir_perms}" '{}' \+
 
 # Set permissions for code files
-printf "Changing permissions of all files inside ${SITE_ROOT} to ${FILE_PERM} ...\n"
-# find files that are not having the correct permissions and change them, except the web/sites directory
-find . \( -path ./files -o -path ./private -prune \) -o -type f ! -perm "${FILE_PERM}" -exec chmod "${FILE_PERM}" '{}' \+
-if [ -d "./vendor" ]; then
-  find ./vendor -type f ! -perm "${FILE_PERM_VENDOR}" -exec chmod "${FILE_PERM_VENDOR}" '{}' \+
-fi
+printf "Changing permissions for code files inside ${SITE_ROOT} to ${code_file_perms} ...\n"
+# find files that are not having the correct permissions and change them, except the files and private directories
+find . \( -path ./files -o -path ./private -prune \) -o -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
 
-# settings files should have 440 permissions
-if [ -f ./settings.php ]; then
-  find . -type f -name '*settings.php' -exec chmod 440 '{}' \;
-fi
 
-# /web/sites/sites.php file should have 440 permissions
-if [ -f ./../sites.php ]; then
-  chown "${USER}":"${GROUP}" "./../sites.php"
-  chmod 440 "./../sites.php"
-fi
-
-### Set ownership and permissions for content directories and files
-# - scope is ./files and ./private directories
-# - Code is owned by the drupal user and by its group.
-# - Drupal user and group can write, other users have no access and permissions.
-# - Webserver user should be in the drupal users group, so can read, write and execute
-
+### Set ownership and permissions for content directories and files in ./files and ./private directories
+printf "Changing permissions for content directories and files in ${SITE_ROOT} ...\n"
 # List of content directories to process
 DIRECTORIES=("files" "private")
-
-# Permission settings for content directories and files
-DIR_PERM="u=rwx,g=rwx,g+s,o="  # 2770 or rwxrws---
-FILE_PERM="ug=rw,o=" # 0660 or rw-rw----
-
 for dir in "${DIRECTORIES[@]}"; do
-    if [ -d "./$dir" ]; then
-        echo "Processing directory: ./$dir"
-
-        # Set directory permissions (including setgid bit)
-        chmod "$DIR_PERM" "./$dir"
-
-        # Process files
-        find "./$dir" -type f ! -perm "${FILE_PERM}" -exec chmod "${FILE_PERM}" '{}' \+
-
-        # Process subdirectories (maintain setgid)
-        find "./$dir" -type d ! -perm "${DIR_PERM}" -exec chmod "${DIR_PERM}" '{}' \+
-
-        echo "Permissions set for ./$dir and its contents"
-    else
-        echo "Info: ./$dir directory not found, skipping"
-    fi
+  if [ -d "./$dir" ]; then
+    echo "Processing directory: ./$dir"
+    # Set directory permissions (including setgid bit)
+    chmod "$content_dir_perms" "./$dir"
+    # Process files
+    find "./$dir" -type f ! -perm "${content_file_perms}" -exec chmod "${content_file_perms}" '{}' \+
+    # Process subdirectories (maintain setgid)
+    find "./$dir" -type d ! -perm "${content_dir_perms}" -exec chmod "${content_dir_perms}" '{}' \+
+    echo "   Permissions set for ./$dir and its contents"
+  else
+    echo "   Skipping: ./$dir directory not found."
+  fi
 done
+
+
+# settings files should have 440 permissions
+find . -type f -name 'settings.php' -exec chmod 440 '{}' \;
+find . -type f -name 'settings.local.php' -exec chmod 440 '{}' \;
 
 echo "Done setting proper ownership and permissions for files and directories."
