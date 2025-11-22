@@ -26,7 +26,7 @@
   changed_when: false
 
 # Reload Nginx
-- name: "Reload nginx"
+- name: Reload Nginx
   ansible.builtin.service:
     name: nginx
     state: reloaded
@@ -39,3 +39,30 @@
   ansible.builtin.service:
     name: "php{{ php_version }}-fpm"
     state: restarted
+
+
+### Handlers for SSH tasks
+# Reload SSH service
+- name: Reload SSH service
+  ansible.builtin.service:
+    name: ssh
+    state: reloaded
+  become: true
+  when: ansible_os_family == "Debian"
+
+### Handlers for fail2ban tasks
+# Restart fail2ban service
+- name: Restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+  become: true
+  when: ansible_os_family == "Debian"
+
+### Handlers for firewall tasks
+# Reload UFW
+- name: Reload UFW
+  ansible.builtin.command: ufw reload
+  changed_when: false
+  become: true
+  when: ansible_os_family == "Debian"

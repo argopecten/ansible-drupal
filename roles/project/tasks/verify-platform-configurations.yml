@@ -20,7 +20,7 @@
     msg: "Platform root does exist for platform {{ item.key }} on host {{ inventory_hostname }}"
   when: project_root.stat.exists == True
 
-- name: Ensure new project root exists and has proper permissions.
+- name: Ensure platform root has proper permissions.
   ansible.builtin.file:
     path: "{{ item.value.path }}/{{ item.value.name }}"
     state: directory
@@ -29,6 +29,7 @@
     mode: "{{ drupal_root_permissions }}"
   become: true
   when: project_root.stat.exists == True
+  notify: Set ownership and file permissions for a Drupal platform
 
 # create backup directory for the new Drupal platform
 - name: Create backup directory for the new Drupal platform

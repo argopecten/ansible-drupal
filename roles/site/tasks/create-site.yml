@@ -10,7 +10,7 @@
 - name: Check presence of platform
   ansible.builtin.assert:
     that: 
-      - platforms[ sites[item.key].platform ].name == sites[item.key].platform
+      - platforms[sites[item.key].platform].name == sites[item.key].platform
     fail_msg: "Defined platform for site {{ item.key }} is not present on the server."
   register: platform
 

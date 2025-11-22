@@ -11,11 +11,18 @@
   - never  # This tag is used to prevent running the task without a tag
   - install
 
-# Update LEMP servers
-# Runs after the installation to update the servers
+# Update LEMP servers' packages
+# Run to update packages. Use carefully, as it may cause issues with running services.
 - block:
     - name: Update packages
       include_tasks: config/package-update.yml
+  tags:
+  - never  # This tag is used to prevent running the task without a tag
+  - update
+
+# Update LEMP servers' configurations
+# Runs after the installation to update the servers
+- block:
     - name: Update scripts
       include_tasks: config/bash-scripts.yml
     - name: Update MySQL
@@ -24,8 +31,20 @@
       include_tasks: config/nginx-config.yml
     - name: Update PHP
       include_tasks: config/php-config.yml
-
   tags:
   - verify
   - install
+  - never  # This tag is used to prevent running the task without a tag
+
+# Secure servers of the "secured" group. It hardens SSH, firewall, fail2ban ...
+- block:
+    - name: Secure SSH
+      include_tasks: config/secured-ssh.yml
+    - name: Secure UFW firewall
+      include_tasks: config/secured-firewall.yml
+    - name: Secure fail2ban
+      include_tasks: config/secured-fail2ban.yml
+  when: secured_server | default(false)  # Only run on servers listed in the secured group
+  tags:
+  - secure
   - never  # This tag is used to prevent running the task without a tag

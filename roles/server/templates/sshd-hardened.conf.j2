@@ -1,0 +1,69 @@
+# Hardened SSH Configuration Template
+# Location: /etc/ssh/sshd_config.d/60-ansible-ssh-hardening.conf
+
+# Change default port to a non-standard port (e.g., 2222)
+Port {{ ssh_port }}
+
+# Disable root login
+PermitRootLogin no
+
+# Allow login only for defined users
+AllowUsers {{ ssh_users | join(' ')}}
+
+# Disable password authentication (use SSH keys)
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+
+# Disable the use of Pluggable Authentication Modules (PAM) within the SSH daemon
+UsePAM no
+
+# Disable challenge-response authentication
+ChallengeResponseAuthentication no
+
+# Enable public key authentication
+PubkeyAuthentication yes
+
+# Disable X11 forwarding (remote GUI view)
+X11Forwarding no
+
+# Disable port forwarding
+AllowTcpForwarding no
+
+# Restrict maximum failed authentication attempts
+MaxAuthTries {{ ssh_maxauthtries }}
+
+# LogLevel for detailed logging
+LogLevel INFO
+
+# Disable SSH Agent Forwarding
+AllowAgentForwarding no
+# Match User {{ ssh_users | join(' ') }}
+#    AllowAgentForwarding yes
+# Match all
+
+# Set a short grace period for authentication
+LoginGraceTime {{ ssh_login_gracetime }}s
+
+# Enable rate-limiting with MaxStartups
+# Number of unauthenticated connections allowed:limited:dropped
+MaxStartups 10:30:60
+
+# Prevent DNS resolution of client IPs
+UseDNS no
+
+### Cryptographic settings
+# Key Exchange Algorithms
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha256
+# Encryption Ciphers
+Ciphers aes256-gcm@openssh.com,chacha20-poly1305@openssh.com
+# Message Authentication Codes
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512
+
+# not to display the Message of the Day (MOTD) upon a successful login
+PrintMotd no
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# override default of no subsystems
+Subsystem       sftp    /usr/lib/openssh/sftp-server

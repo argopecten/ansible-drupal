@@ -11,15 +11,23 @@
 #
 # Usage:
 #   Use on of the tags to run specific operation:
-#   ansible-playbook playbooks/platforms.yml --tags install
-#   ansible-playbook playbooks/platforms.yml --tags verify
-#   ansible-playbook playbooks/platforms.yml --tags update
-#   ansible-playbook playbooks/platforms.yml --tags delete
+#   ansible-playbook playbooks/platforms.yml --tags install --ask-vault-pass
+#   ansible-playbook playbooks/platforms.yml --tags install --extra-vars "platform=drupal11min" --ask-vault-pass
+#   ansible-playbook playbooks/platforms.yml --tags verify  --ask-vault-pass
+#   ansible-playbook playbooks/platforms.yml --tags update  --ask-vault-pass
+#   ansible-playbook playbooks/platforms.yml --tags delete  --ask-vault-pass
 
 - name: Manages Drupal projects with Ansible
   hosts: 
-    - webservers
+    - m01
+    - m02
+    - m03
+    - r04
   become: true
+
+  # Encrypted variables, like IP, port, ...
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
 
   tasks:
     # Run tasks of the project role as defined by tags

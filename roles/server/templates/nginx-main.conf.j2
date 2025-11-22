@@ -1,7 +1,12 @@
+# {{ nginx_main_conf_file }}
+# Nginx main configuration file on {{ inventory_hostname }} 
+# generated: {{ ansible_date_time.date }}
+# {{ ansible_managed }} manual changes will be overwritten!
+
 user              {{ nginx_user }};
-error_log         {{ nginx_error_log }};
-pid               {{ nginx_pidfile }};
 worker_processes  {{ nginx_worker_processes }};
+pid               {{ nginx_pidfile }};
+error_log         {{ nginx_error_log }};
 
 {% if nginx_extra_conf_options %}
 {{ nginx_extra_conf_options }}
@@ -13,38 +18,59 @@ events {
 }
 
 http {
-    include                       {{ nginx_mime_file }};
-    default_type                  application/octet-stream;
+    ##
+    # Basic Settings
+    ##
+    
+    sendfile                      {{ nginx_sendfile }};
+    tcp_nopush                    {{ nginx_tcp_nopush }};
+    tcp_nodelay                   {{ nginx_tcp_nodelay }};
+    types_hash_max_size           {{ nginx_types_hash_max_size }};
+    keepalive_timeout             {{ nginx_keepalive_timeout }};
+    keepalive_requests            {{ nginx_keepalive_requests }};
+    server_tokens                 {{ nginx_server_tokens }};
     server_names_hash_bucket_size {{ nginx_server_names_hash_bucket_size }};
+    server_name_in_redirect       {{ nginx_server_name_in_redirect }};
     client_max_body_size          {{ nginx_client_max_body_size }};
+    default_type                  application/octet-stream;
 
+    ##
+    # SSL Settings
+    ##
+    ssl_protocols                 {{ nginx_ssl_protocols }};
+    ssl_prefer_server_ciphers     {{ nginx_ssl_prefer_server_ciphers }};
+    ssl_ciphers                   '{{ nginx_ssl_ciphers }}';
+
+    ##
+    # Logging Settings
+    ##
     log_format main {{ nginx_log_format|indent(23) }};
     access_log      {{ nginx_access_log }};
+    error_log       {{ nginx_error_log }};
 
-    sendfile        {{ nginx_sendfile }};
-    tcp_nopush      {{ nginx_tcp_nopush }};
-    tcp_nodelay     {{ nginx_tcp_nodelay }};
+    ##
+    # Gzip Compression Settings
+    ##
+    gzip              {{ nginx_gzip }};
+    gzip_static       {{ nginx_gzip_static }};
+    gzip_vary         {{ nginx_gzip_vary }};
+    gzip_proxied      {{ nginx_gzip_proxied }};
+    gzip_buffers      {{ nginx_gzip_buffers }};
+    gzip_comp_level   {{ nginx_gzip_comp_level }};
+    gzip_http_version {{ nginx_gzip_http_version }};
+    gzip_min_length   {{ nginx_gzip_min_length }};
+    gzip_types        {{ nginx_gzip_types|indent(8) }};
+    gzip_disable      "msie6";
 
-    keepalive_timeout  {{ nginx_keepalive_timeout }};
-    keepalive_requests {{ nginx_keepalive_requests }};
-    server_tokens      {{ nginx_server_tokens }};
-
-{% block http_gzip %}
-    # gzip on;
-{% endblock %}
-
-{% if nginx_extra_http_options %}
+    ##
+    # Cache Settings
+    ##
     {{ nginx_extra_http_options|indent(4, False) }}
-{% endif %}
 
-{% block http_includes %}
-    # add drupal commong configurations
-    include {{ nginx_conf_path }}/*.conf;
-
-    # add drupal site configurations
-    include {{ nginx_vhost_path }}/*;
-{% endblock %}
-
-{% block http_end %}
-{% endblock %}
+    ##
+    # Includes
+    ##
+    include {{ nginx_mime_file }};            # Include mime types
+    include {{ nginx_conf_path }}/*.conf;     # Include global configurations, if any
+    include {{ nginx_vhost_path }}/*;         # Include drupal site vhosts
 }

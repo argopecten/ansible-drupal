@@ -1,0 +1,11 @@
+# /etc/ufw/ufw.conf
+# Use for boot-time enablement, logging configuration, and application policy defaults.
+#
+# {{ ansible_managed }}
+# UFW Configuration file for {{ inventory_hostname }} generated: {{ ansible_date_time.date }}
+
+# Set to yes to start on boot.
+ENABLED={{ ufw_enabled | default('no') }}
+
+# Set the loglevel.
+LOGLEVEL={{ ufw_logging | default('low') }}

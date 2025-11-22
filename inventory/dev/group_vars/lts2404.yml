@@ -2,8 +2,8 @@
 # Variables for Ubuntu 24.04 LTS servers
 server_os: "Ubuntu 24.04 LTS"
 
-# Global variables: variables can be used in any playbooks or roles
-# date: "{{ lookup('ansible.builtin.pipe', 'date +%y%m%d') }}"
+# Environment: dev or prod, used in inventory
+env: "dev" # or prod
 
 # Admin User in OS
 root_user: "root"

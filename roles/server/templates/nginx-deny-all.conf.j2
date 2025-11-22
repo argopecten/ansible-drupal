@@ -1,0 +1,11 @@
+# Deny access to sensitive files
+# {{ nginx_snippets_path }}/deny-all.conf
+# Nginx configuration snippet on {{ inventory_hostname }} 
+# generated: {{ ansible_date_time.date }}
+# {{ ansible_managed }}, manual changes will be overwritten!
+
+{% for file in nginx_deny_files %}
+location ~ /\{{ file }}$ {
+  deny all;
+}
+{% endfor %}

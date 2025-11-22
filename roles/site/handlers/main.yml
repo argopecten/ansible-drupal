@@ -6,7 +6,7 @@
     /usr/local/bin/site-ownership-permissions.sh
     --root="{{ platform_path }}/web/sites/{{ site_name }}"
     --user="{{ platform_user }}"
-    --group="{{ platform_group }}"
+    --group="{{ nginx_group }}"
   args:
     chdir: "{{ platform_path }}"
   become: true

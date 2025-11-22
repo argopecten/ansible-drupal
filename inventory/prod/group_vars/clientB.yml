@@ -1,0 +1,41 @@
+---
+# Variables for client sites
+
+client: "clientB"
+
+sites:
+  c1_example_com:
+    name: "c1.example.com"
+    server: m01
+    platform: drupal11
+    modules: []
+    # from vault file, encrypted with ansible-vault
+    cf:
+      zone_id: "{{ c1.zone_id | default('dummy') }}"
+      email: "{{ c1.email | default('dummy') }}"
+      api_key: "{{ c1.api_key | default('dummy') }}"
+      private_key: "{{ c1.key | default('dummy') }}"
+
+  c2_example_com:
+    name: "c2.example.com"
+    server: m01
+    platform: drupal11min
+    modules: []
+    # from vault file, encrypted with ansible-vault
+    cf:
+      zone_id: "{{ c2.zone_id | default('dummy') }}"
+      email: "{{ c2.email | default('dummy') }}"
+      api_key: "{{ c2.api_key | default('dummy') }}"
+      private_key: "{{ c2.key | default('dummy') }}"
+
+  c3_example_com:
+    name: "c3.example.com"
+    server: m01
+    platform: drupal11min
+    modules: []
+    # from vault file, encrypted with ansible-vault
+    cf:
+      zone_id: "{{ c3.zone_id | default('dummy') }}"
+      email: "{{ c3.email | default('dummy') }}"
+      api_key: "{{ c3.api_key | default('dummy') }}"
+      private_key: "{{ c3.key | default('dummy') }}"

@@ -6,14 +6,6 @@
     name: "{{ item.value.group }}"
     state: present
 
-# Add web server user to the project user group
-- name: "Add web server user to the project user group"
-  ansible.builtin.user:
-    name: "{{ nginx_user }}"
-    groups: "{{ item.value.group }}"
-    append: yes
-  become: true
-
 - name: Create platform users
   ansible.builtin.user:
     name: "{{ item.value.user }}"

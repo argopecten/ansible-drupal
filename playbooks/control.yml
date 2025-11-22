@@ -1,0 +1,17 @@
+---
+
+# This is a playbook to setup the control server only.
+
+- name: Setup the control server as localhost
+  hosts: localhost
+  vars:
+    env: dev   # or prod
+  become: true
+
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
+
+  tasks:
+    - name: Print message
+      ansible.builtin.debug:
+        msg: Hello, we are running on localhost in the {{ env }} environment!

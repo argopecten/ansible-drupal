@@ -1,14 +1,21 @@
 - name: Test connection to all servers
-  # hosts: all
-  hosts: 
-    - lts2404
+  hosts: all
   become: true
-  
-  tasks:
-    - name: Print message
-      ansible.builtin.debug:
-        msg: Hello world
 
-    - name: Log all variables for current host
+  # Encrypted variables, like IPs, cloudflare API key, ...
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
+
+  tasks:
+
+#    - name: Log all variables for current host
+#      ansible.builtin.debug:
+#        var: hostvars[inventory_hostname]
+
+    - name: Print variables from vaultvars.yml
       ansible.builtin.debug:
-        var: hostvars[inventory_hostname]
+        var: "{{ inventory_hostname}}"
+
+    - name: Print message with variable
+      ansible.builtin.debug:
+        msg: "Hello {{ inventory_hostname }}"

@@ -5,7 +5,6 @@
 - block:
     - name: Setup the platform users
       include_tasks: setup-platform-users.yml
-      # with_items: "{{ platforms | dict2items }}"
       loop: "{{ platforms | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
@@ -19,10 +18,12 @@
 - block:
     - name: Install new Drupal platforms
       include_tasks: install-new-drupal-platforms.yml
-      # with_items: "{{ platforms | dict2items }}"
       loop: "{{ platforms | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
+  when: 
+    - platform is defined
+    - platform == platforms[item.key].name
   tags:
   - install
   - never  # This tag is used to prevent running the task without a tag
@@ -31,13 +32,11 @@
 - block:
     - name: Verify platform user configurations
       include_tasks: setup-platform-users.yml
-      # with_items: "{{ platforms | dict2items }}"
       loop: "{{ platforms | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
     - name: Verify configurations for all platforms
       include_tasks: verify-platform-configurations.yml
-      # with_items: "{{ platforms | dict2items }}"
       loop: "{{ platforms | dict2items }}"
       loop_control:
         label: "{{ item.key }}"

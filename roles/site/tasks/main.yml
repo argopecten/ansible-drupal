@@ -16,7 +16,6 @@
 - block:
     - name: Create new site
       include_tasks: create-site.yml
-      # with_items: "{{ sites | dict2items }}"
       loop: "{{ sites | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
@@ -28,27 +27,11 @@
   - never 
   - install
 
-# Verify configuration for the site defined in command line or all sites
-- block:
-    - name: Verify configurations for the site
-      include_tasks: verify-site-configurations.yml
-      # with_items: "{{ sites | dict2items }}"
-      loop: "{{ sites | dict2items }}"
-      loop_control:
-        label: "{{ item.key }}"
-  when:
-    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
-  tags:
-  - never
-  - verify
-  - install
-
 # Create login URL for the site defined in command line
 # ansible-playbook playbooks/sites.yml --tags reset-password --extra-vars "site=c1.example.com"
 - block:
     - name: Create login URL for the site
       include_tasks: create-login-url.yml
-      # with_items: "{{ sites | dict2items }}"
       loop: "{{ sites | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
@@ -65,7 +48,6 @@
 - block:
     - name: Delete site
       include_tasks: delete-site.yml
-      # with_items: "{{ sites | dict2items }}"
       loop: "{{ sites | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
@@ -82,7 +64,6 @@
 - block:
     - name: Update site
       include_tasks: update-sites.yml
-      # with_items: "{{ sites | dict2items }}"
       loop: "{{ sites | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
@@ -109,7 +90,7 @@
   - backup
 
 # Restore site defined in command line 
-# ansible-playbook playbooks/sites.yml --tags resore --extra-vars "site=c1.example.com"
+# ansible-playbook playbooks/sites.yml --tags restore --extra-vars "site=c1.example.com arch=250322"
 - block:
     - name: Restore site
       include_tasks: restore-site.yml
@@ -141,3 +122,34 @@
   tags:
   - never
   - migrate
+
+# Setup certificate for the site defined in command line or all sites
+# ansible-playbook playbooks/sites.yml --tags ssl --extra-vars "site=c1.example.com"
+- block:
+    - name: Setup SSL certificate
+      include_tasks: ssl-certificates.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - install
+  - verify
+  - ssl
+
+  # Verify configuration for the site defined in command line or all sites
+  # ansible-playbook playbooks/sites.yml --tags verify --extra-vars "site=c1.example.com" --ask-vault-pass
+- block:
+    - name: Verify configurations for the site
+      include_tasks: verify-site-configurations.yml
+      loop: "{{ sites | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server) or (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+  - never
+  - verify
+  - install
