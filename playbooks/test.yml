@@ -1,21 +1,10 @@
 - name: Test connection to all servers
-  hosts: all
+  hosts: managed
+  vars:
+    env: dev   # or prod
   become: true
 
-  # Encrypted variables, like IPs, cloudflare API key, ...
-  vars_files:
-    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
-
   tasks:
-
-#    - name: Log all variables for current host
-#      ansible.builtin.debug:
-#        var: hostvars[inventory_hostname]
-
-    - name: Print variables from vaultvars.yml
+    - name: Print message
       ansible.builtin.debug:
-        var: "{{ inventory_hostname}}"
-
-    - name: Print message with variable
-      ansible.builtin.debug:
-        msg: "Hello {{ inventory_hostname }}"
+        msg: Hello, we are running on {{ inventory_hostname }} in the {{ env }} environment!

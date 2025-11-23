@@ -1,4 +1,0 @@
----
-# Host Variable for this particular host
-ansible_host: "{{ m01.ip }}"
-ansible_port: "{{ m01.port | default(22) }}"
