@@ -4,33 +4,30 @@
 # This Ansible playbook is designed to manage servers to host Drupal sites.
 #
 # It does the following:
-# - installs and configures LEMP stack on servers: --tags install
+# - installs and configures LAMP stack on servers: --tags install
 # - verifies the configuration of the servers:     --tags verify
 # - secures servers: SSH, firewall, ...            --tags secure
 # - updates servers                                --tags update
 # - deletes servers: won't be implemented
 #
 # Usage:
-#   Use on of the tags to run specific operation:
+#   Use one of the tags to run specific operation:
 #   ansible-playbook playbooks/servers.yml --tags secure  --ask-vault-pass
 #   ansible-playbook playbooks/servers.yml --tags install --ask-vault-pass
 #   ansible-playbook playbooks/servers.yml --tags verify  --ask-vault-pass
 #   ansible-playbook playbooks/servers.yml --tags update  --ask-vault-pass
 
-- name: Manages LEMP servers for Drupal with Ansible
+- name: Manages LAMP servers for Drupal with Ansible
   hosts: 
-    - webservers
-    - dbservers
-    - secured
+    # - secured
+    # - lamp
+    # just one server for development, do not commit!!!!!!
+    - ap-host01-dev
   become: true
-
-  # Encrypted variables, like IP, port, ...
-  vars_files:
-    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
 
   tasks:
     # Run tasks of the server role as defined by tags
-    - name: LEMP server operations
+    - name: LAMP server operations
       include_role:
         name: server
       tags: 

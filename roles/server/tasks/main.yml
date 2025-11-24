@@ -1,9 +1,9 @@
 ---
-# This file contains the main tasks for setting up LEMP servers
+# This file contains the main tasks for setting up LAMP servers
 
-# Setup LEMP servers
+# Setup LAMP servers
 - block:
-    - name: Install common packages, Nginx and MySQL
+    - name: Install common packages, Apache and MySQL
       include_tasks: install/apt-install-packages.yml
     - name: Install PHP and Composer
       include_tasks: install/php-install.yml
@@ -11,7 +11,7 @@
   - never  # This tag is used to prevent running the task without a tag
   - install
 
-# Update LEMP servers' packages
+# Update LAMP servers' packages
 # Run to update packages. Use carefully, as it may cause issues with running services.
 - block:
     - name: Update packages
@@ -20,15 +20,15 @@
   - never  # This tag is used to prevent running the task without a tag
   - update
 
-# Update LEMP servers' configurations
+# Update LAMP servers' configurations
 # Runs after the installation to update the servers
 - block:
     - name: Update scripts
       include_tasks: config/bash-scripts.yml
     - name: Update MySQL
       include_tasks: config/mysql-config.yml
-    - name: Update Nginx
-      include_tasks: config/nginx-config.yml
+    - name: Update Apache
+      include_tasks: config/apache2-config.yml
     - name: Update PHP
       include_tasks: config/php-config.yml
   tags:

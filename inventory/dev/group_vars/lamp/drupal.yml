@@ -1,0 +1,37 @@
+---
+# Drupal and Drush variables for webservers
+
+#############
+# Drupal platforms on the webservers
+platforms:
+  drupal10:
+    version: "10.4.0"
+    profile: "standard"
+    path: "/var/www/"
+    name: "drupal10"
+    user: "d10user"
+    group: "d10user"
+    # Composer Requirements
+    dependencies:
+      - "drush/drush:^13.3"
+      - "drupal/admin_toolbar:^3.0"
+      - "drupal/pathauto:^1.8"
+  drupal11:
+    version: "11.1"
+    profile: "standard"
+    path: "/var/www/"
+    name: "drupal11"
+    user: "d11user"
+    group: "d11user"
+    # Composer Requirements
+    dependencies:
+      - "drush/drush:^13.3"
+
+# Drush Configuration
+drush_path_site: "{{ drupal_path }}/vendor/bin/drush"
+
+# Additional arguments for the site-install command
+drupal_site_install_extra_args: []
+
+# Permissions for the Drupal directory
+drupal_root_permissions: "0750"

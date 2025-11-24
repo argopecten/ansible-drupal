@@ -1,0 +1,22 @@
+# /etc/apache2/conf-available/vhost-access-log.conf
+# Apache vhost access log configuration on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# The following directives define some format nicknames for use with a CustomLog directive.
+# Note that the use of %{X-Forwarded-For}i instead of %h is not recommended.
+# Use mod_remoteip instead.
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+
+# Capture requests for vhosts without explicit CustomLog directives.
+CustomLog {{ apache_other_vhosts_log | default('${APACHE_LOG_DIR}/other_vhosts_access.log') }} {{ apache_vhost_log_format | default('vhost_combined') }}
+
+{% if apache_vhost_extra_logs | default([]) %}
+# Additional access logs configured via inventory.
+{% for log_line in apache_vhost_extra_logs %}
+{{ log_line }}
+{% endfor %}
+{% endif %}
