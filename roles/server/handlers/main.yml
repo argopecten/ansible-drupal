@@ -14,21 +14,24 @@
 
 
 ### Handlers for webserver tasks
-# Restart Nginx
-- name: "Restart Nginx"
+# Restart Apache
+- name: "Restart Apache"
   ansible.builtin.service:
-    name: nginx
+    name: apache2
     state: restarted
 
-# Validate Nginx configuration
-- name: "Validate nginx configuration"
-  ansible.builtin.command: nginx -t -c /etc/nginx/nginx.conf
+# Validate Apache configuration before reloading.
+- name: "Validate apache configuration"
+  listen: "Reload Apache"
+  ansible.builtin.command: apachectl configtest
   changed_when: false
+  become: true
 
-# Reload Nginx
-- name: Reload Nginx
+# Reload Apache only if config test passes.
+- name: Reload Apache service
+  listen: "Reload Apache"
   ansible.builtin.service:
-    name: nginx
+    name: apache2
     state: reloaded
   become: true
 

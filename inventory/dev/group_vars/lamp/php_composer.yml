@@ -1,0 +1,38 @@
+---
+# PHP and Composer variables for webservers
+
+# Composer project options used during Drupal deployments
+composer_project_options: "--prefer-dist --stability dev --no-interaction"
+
+# Global (system-wide) Composer
+composer_version: "2.8.4"
+composer_path: "/usr/bin/composer"
+
+### Variables for the PHP role
+php_version: "8.3"                # Define the PHP version to be used
+
+# PHP Compatibility Matrix
+php_extensions: [fpm, curl, gd, mbstring, mysql, xml, zip, bcmath, intl, soap]
+
+# Define the PHP repositories
+php_repositories:
+  - { repo: 'ppa:ondrej/php' }      # the main PHP repository
+  - { repo: 'ppa:ondrej/apache2' }  # the Apache repository
+
+# Define the PHP configuration file path
+php_ini_path: "/etc/php/{{ php_version }}/fpm/php.ini" # Define default PHP configuration settings
+
+# Define the list of PHP configuration changes using variables
+php_date_timezone:             "Europe/Budapest"  # Set the default timezone for PHP
+php_max_execution_time:        240                # Set the maximum execution time for PHP scripts (in seconds)
+php_max_input_time:            120                # Set the maximum input time for PHP scripts (in seconds)
+php_post_max_size:             "50M"              # Set the maximum size of POST data that PHP will accept
+php_upload_max_filesize:       "50M"              # Set the maximum size of uploaded files that PHP will accept
+
+# Define the list of PHP configuration changes using variables
+php_configurations:
+  - { regexp: '^;date.timezone =', line: 'date.timezone = {{ php_date_timezone }}' }
+  - { regexp: '^max_execution_time =', line: 'max_execution_time = {{ php_max_execution_time }}' }
+  - { regexp: '^max_input_time =', line: 'max_input_time = {{ php_max_input_time }}' }
+  - { regexp: '^post_max_size =', line: 'post_max_size = {{ php_post_max_size }}' }
+  - { regexp: '^upload_max_filesize =', line: 'upload_max_filesize = {{ php_upload_max_filesize }}' }

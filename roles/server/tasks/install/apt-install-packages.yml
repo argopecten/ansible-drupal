@@ -17,13 +17,14 @@
     update_cache: true
   when: common_packages is defined
 
-# Install Nginx
-- name: "Install Nginx"
+# Install packages for Apache
+- name: Install Apache packages
   ansible.builtin.apt:
-    name: "{{ nginx_packages }}"
+    name: "{{ apache_packages | default(['apache2']) }}"
     state: present
     update_cache: true
-  when: nginx_packages is defined
+  become: true
+  when: apache_packages is defined
 
 # Install packages for MySQL
 - name: "Install MySQL"
