@@ -1,0 +1,12 @@
+---
+# Creates file/database backups for Drupal sites.
+
+- name: Back up Drupal sites
+  ansible.builtin.include_tasks: backup-sites.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
+      or
+      (site is not defined and inventory_hostname == sites[item.key].server)

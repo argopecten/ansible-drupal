@@ -1,0 +1,18 @@
+---
+# Applies Drupal core/module updates plus configuration refreshes.
+- name: Update Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Run site update tasks
+      ansible.builtin.import_role:
+        name: site_update
+
+    - name: Re-apply site settings following updates
+      ansible.builtin.import_role:
+        name: site_settings
+
+    - name: Re-apply site permissions following updates
+      ansible.builtin.import_role:
+        name: site_permissions

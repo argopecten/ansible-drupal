@@ -1,0 +1,33 @@
+######
+# 
+# This Ansible playbook verifies Drupal platform configurations on webservers.
+# It copies the execution context from platforms.yml while restricting the
+# tasks to verification (user access, filesystem state, etc.).
+#
+# Usage:
+#   ansible-playbook playbooks/platform-verify.yml --tags verify --ask-vault-pass
+
+- name: Verify Drupal platforms
+  hosts: 
+    - m01
+    - m02
+    - m03
+    - r04
+  become: true
+
+  # Encrypted variables, like repository credentials, ...
+  vars_files:
+    - "../inventory/{{ env }}/group_vars/vaultvars.yml"
+
+  tasks:
+    - name: Drupal platform verification
+      include_role:
+        name: project
+      tags: 
+        - verify
+        - never  # Prevents accidental execution without explicit tags
+
+  environment:
+    COMPOSER_PROCESS_TIMEOUT: "1200"
+    COMPOSER_MEMORY_LIMIT: "-1"
+    COMPOSER_HOME: "/home/{{ ansible_user }}/.composer"

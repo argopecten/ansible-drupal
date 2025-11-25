@@ -1,0 +1,10 @@
+---
+# Validates Drupal site health and expected configuration.
+- name: Verify Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Run site verification
+      ansible.builtin.import_role:
+        name: site_verify

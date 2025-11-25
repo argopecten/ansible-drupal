@@ -1,0 +1,20 @@
+<VirtualHost *:80>
+    ServerName {{ site_name }}
+{% for alias in site_aliases %}
+    ServerAlias {{ alias }}
+{% endfor %}
+    DocumentRoot {{ platform_path }}/web
+
+    <Directory {{ platform_path }}/web>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/{{ site_name }}-error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ site_name }}-access.log combined
+
+    SetEnvIf X-Forwarded-Proto "https" HTTPS=on
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-XSS-Protection "1; mode=block"
+</VirtualHost>

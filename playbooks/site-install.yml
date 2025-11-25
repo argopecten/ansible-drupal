@@ -1,0 +1,30 @@
+---
+# Provisions Drupal sites on top of existing platforms.
+- name: Install Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Apply site base configuration
+      ansible.builtin.import_role:
+        name: site_base
+
+    - name: Install requested sites
+      ansible.builtin.import_role:
+        name: site_install
+
+    - name: Apply site settings
+      ansible.builtin.import_role:
+        name: site_settings
+
+    - name: Ensure site file permissions are correct
+      ansible.builtin.import_role:
+        name: site_permissions
+
+    - name: Configure site vhosts
+      ansible.builtin.import_role:
+        name: site_vhost
+
+    - name: Configure site aliases
+      ansible.builtin.import_role:
+        name: site_alias

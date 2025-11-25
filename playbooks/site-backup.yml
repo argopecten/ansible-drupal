@@ -1,0 +1,10 @@
+---
+# Captures database and file backups for Drupal sites.
+- name: Back up Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Run site backup tasks
+      ansible.builtin.import_role:
+        name: site_backup

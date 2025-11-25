@@ -1,0 +1,6 @@
+---
+# Install and configure PHP runtimes/composer for Drupal hosting.
+
+- import_tasks: install.yml
+
+- import_tasks: configure.yml

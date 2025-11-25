@@ -1,0 +1,12 @@
+[sshd]
+enabled = true
+port = {{ ssh_port}}
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = {{ fail2ban_sshd_maxretry | default('3') }}
+
+[apache-http-auth]
+enabled = true
+filter = apache-auth
+port = http,https
+logpath = /var/log/apache2/error.log

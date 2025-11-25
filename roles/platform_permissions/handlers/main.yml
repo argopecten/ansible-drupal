@@ -1,0 +1,16 @@
+---
+# Handlers that enforce Drupal platform filesystem ownership.
+
+- name: Set ownership and file permissions for a Drupal platform
+  ansible.builtin.command: >
+    /usr/local/bin/platform-ownership-permissions.sh
+    --root="{{ item_platform.value.path }}/{{ item_platform.value.name }}"
+    --user="{{ item_platform.value.user }}"
+    --group="{{ item_platform.value.group }}"
+  args:
+    chdir: "{{ item_platform.value.path }}/{{ item_platform.value.name }}"
+  become: true
+  loop: "{{ platforms | dict2items }}"
+  loop_control:
+    loop_var: item_platform
+    label: "{{ item_platform.key }}"

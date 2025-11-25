@@ -1,0 +1,32 @@
+---
+# Configures and maintains base server requirements for Drupal hosting.
+# Run with tags like --tags install|secure|verify|update to scope work.
+- name: Configure Drupal server requirements
+  hosts: managed
+  become: true
+
+  tasks:
+    - name: Apply base operating system configuration
+      ansible.builtin.import_role:
+        name: server_base
+      tags:
+        - install
+
+    - name: Apply server security hardening
+      ansible.builtin.import_role:
+        name: server_security
+      tags:
+        - secure
+
+    - name: Verify server state
+      ansible.builtin.import_role:
+        name: server_verify
+      tags:
+        - install
+        - verify
+
+    - name: Apply server updates
+      ansible.builtin.import_role:
+        name: server_update
+      tags:
+        - update

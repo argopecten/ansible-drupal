@@ -1,0 +1,13 @@
+---
+# Restores Drupal sites from archived backups.
+
+- name: Restore Drupal sites
+  ansible.builtin.include_tasks: restore-site.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - site is defined
+    - arch is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server

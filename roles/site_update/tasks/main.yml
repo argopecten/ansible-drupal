@@ -1,0 +1,27 @@
+---
+# Handles Drupal site updates and migrations.
+
+- name: Update Drupal sites
+  ansible.builtin.include_tasks: update-sites.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
+      or
+      (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+    - update
+
+- name: Migrate Drupal sites between platforms
+  ansible.builtin.include_tasks: migrate-site.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - site is defined
+    - target is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server
+  tags:
+    - migrate

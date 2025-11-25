@@ -1,0 +1,20 @@
+---
+# Verifies Drupal site configuration/filesystem/vhost state.
+
+- name: Gather verification context for Drupal sites
+  ansible.builtin.include_tasks: verify-site-configurations.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
+      or
+      (site is not defined and inventory_hostname == sites[item.key].server)
+
+- name: Enforce permissions during verification
+  ansible.builtin.import_role:
+    name: site_permissions
+
+- name: Ensure vhosts are configured during verification
+  ansible.builtin.import_role:
+    name: site_vhost

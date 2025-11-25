@@ -1,0 +1,12 @@
+---
+# Removes Drupal sites and their database/users.
+
+- name: Delete Drupal sites
+  ansible.builtin.include_tasks: delete-site.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - site is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server

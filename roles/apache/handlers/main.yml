@@ -1,0 +1,20 @@
+---
+# Handlers responsible for managing Apache lifecycle actions.
+
+- name: "Restart Apache"
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+
+- name: "Validate apache configuration"
+  listen: "Reload Apache"
+  ansible.builtin.command: apachectl configtest
+  changed_when: false
+  become: true
+
+- name: Reload Apache service
+  listen: "Reload Apache"
+  ansible.builtin.service:
+    name: apache2
+    state: reloaded
+  become: true

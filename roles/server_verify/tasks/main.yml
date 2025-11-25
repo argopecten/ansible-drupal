@@ -1,0 +1,16 @@
+---
+# Ensures runtime services and helper scripts remain configured properly.
+
+- import_tasks: scripts.yml
+
+- name: Apply MySQL configuration
+  ansible.builtin.import_role:
+    name: mysql
+
+- name: Apply Apache configuration
+  ansible.builtin.import_role:
+    name: apache
+
+- name: Apply PHP configuration
+  ansible.builtin.import_role:
+    name: php

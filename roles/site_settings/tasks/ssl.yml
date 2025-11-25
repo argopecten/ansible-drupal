@@ -1,0 +1,14 @@
+---
+- name: Configure SSL certificates for target sites
+  ansible.builtin.include_tasks: ssl-certificates.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
+      or
+      (site is not defined and inventory_hostname == sites[item.key].server)
+  tags:
+    - install
+    - verify
+    - ssl

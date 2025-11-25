@@ -1,0 +1,7 @@
+---
+# Handlers responsible for MySQL/MariaDB lifecycle actions.
+
+- name: "Restart MySQL"
+  ansible.builtin.service:
+    name: mysql
+    state: restarted

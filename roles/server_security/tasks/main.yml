@@ -1,0 +1,8 @@
+---
+# Aggregates all server hardening tasks (SSH, firewall, fail2ban).
+
+- import_tasks: secured-ssh.yml
+
+- import_tasks: secured-firewall.yml
+
+- import_tasks: secured-fail2ban.yml

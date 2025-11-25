@@ -1,0 +1,10 @@
+---
+# Removes Drupal sites and related resources.
+- name: Delete Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Run site deletion tasks
+      ansible.builtin.import_role:
+        name: site_delete

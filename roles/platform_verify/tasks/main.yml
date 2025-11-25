@@ -1,0 +1,12 @@
+---
+# Validates platform ownership/permissions and supporting directories.
+
+- name: Refresh platform accounts before verification
+  ansible.builtin.import_role:
+    name: platform_base
+
+- name: Verify platform configurations
+  ansible.builtin.include_tasks: verify-platform-configurations.yml
+  loop: "{{ platforms | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"

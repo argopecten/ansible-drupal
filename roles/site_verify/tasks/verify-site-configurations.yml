@@ -1,0 +1,18 @@
+---
+# Verify site configurations
+
+- name: Set variables for the Drupal site
+  ansible.builtin.set_fact:
+    client: "{{ client | default('unspecified') }}"
+    site_name: "{{ sites[item.key].name }}"
+    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
+    platform_user: "{{ platforms[ sites[item.key].platform ].user }}"
+    platform_group: "{{ platforms[ sites[item.key].platform ].group }}"
+
+- name: Verify site configurations
+  ansible.builtin.debug:
+    msg: 
+      - "Verifying site configurations for:"
+      - "- Client: {{ client }}"
+      - "- Platform path: {{ platform_path }}"
+      - "- Site name: {{ site_name }}"  

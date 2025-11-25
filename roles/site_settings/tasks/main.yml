@@ -1,0 +1,6 @@
+---
+# Aggregates login/SSL tasks; import specific files via tasks_from when needed.
+
+- import_tasks: login.yml
+
+- import_tasks: ssl.yml

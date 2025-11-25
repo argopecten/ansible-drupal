@@ -1,0 +1,22 @@
+---
+# Security-related handlers for SSH, fail2ban, and UFW.
+
+- name: Reload SSH service
+  ansible.builtin.service:
+    name: ssh
+    state: reloaded
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Reload UFW
+  ansible.builtin.command: ufw reload
+  changed_when: false
+  become: true
+  when: ansible_os_family == "Debian"

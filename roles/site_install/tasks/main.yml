@@ -1,0 +1,12 @@
+---
+# Creates new Drupal sites on the specified platform/server.
+
+- name: Install requested site definition
+  ansible.builtin.include_tasks: create-site.yml
+  loop: "{{ sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - site is defined
+    - site == sites[item.key].name
+    - inventory_hostname == sites[item.key].server

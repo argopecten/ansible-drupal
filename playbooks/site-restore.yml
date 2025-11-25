@@ -1,0 +1,10 @@
+---
+# Restores Drupal sites from existing backups.
+- name: Restore Drupal sites
+  hosts: lamp
+  become: true
+
+  tasks:
+    - name: Run site restore tasks
+      ansible.builtin.import_role:
+        name: site_restore
