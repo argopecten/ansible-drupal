@@ -1,2 +1,5 @@
 ---
 # defaults file for site_update
+
+# Override to point Drush config:import at a specific sync directory.
+site_update_config_dir: ""

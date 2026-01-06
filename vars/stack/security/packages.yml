@@ -1,0 +1,6 @@
+---
+secured_packages:
+  - openssh-server
+  - openssh-client
+  - ufw
+  - fail2ban

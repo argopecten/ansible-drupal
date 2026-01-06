@@ -1,0 +1,101 @@
+# Migrates Drupal sites by restoring the latest backup onto a target platform.
+
+- name: Prepare site context for migration
+  ansible.builtin.import_role:
+    name: site_context
+
+- block:
+    - name: Capture migration inputs and source metadata
+      ansible.builtin.set_fact:
+        site_migrate_requested_platform: "{{ site_migrate_target_platform | default(site_target_platform | default('')) }}"
+        site_migrate_source_platform: "{{ site_context_platform_entry }}"
+        site_migrate_site_name: "{{ site_context_site_name }}"
+
+    - name: Require migration target platform
+      ansible.builtin.assert:
+        that:
+          - site_migrate_requested_platform | string | length > 0
+        fail_msg: >-
+          Provide a destination platform via -e "site_migrate_target_platform=<platform_id>"
+          (or site_target_platform) when migrating a site from backup.
+
+    - name: Validate target platform exists on host
+      ansible.builtin.assert:
+        that:
+          - platforms is defined
+          - site_migrate_requested_platform in platforms
+        fail_msg: >-
+          Target platform '{{ site_migrate_requested_platform }}' is not defined for host {{ inventory_hostname }}.
+
+    - name: Compose normalized target platform entry
+      ansible.builtin.set_fact:
+        site_migrate_target_platform_entry: >-
+          {{
+            platforms[site_migrate_requested_platform]
+            | combine({
+                'path': (
+                  (platforms[site_migrate_requested_platform].path
+                    | default(platform_base_dir.path | default('/var/www/drupal')))
+                  | regex_replace('\\/*$', '/')
+                ),
+                'name': site_migrate_requested_platform
+              })
+          }}
+
+    - name: Validate target platform entry
+      ansible.builtin.assert:
+        that:
+          - site_migrate_target_platform_entry | length > 0
+          - (site_migrate_target_platform_entry.state | default('present')) != 'absent'
+          - site_migrate_target_platform_entry.user is defined
+          - site_migrate_target_platform_entry.group is defined
+        fail_msg: >-
+          Target platform entry '{{ site_migrate_requested_platform }}' is incomplete on host {{ inventory_hostname }}.
+
+    - name: Find available backups for the site
+      ansible.builtin.find:
+        paths: "/home/{{ site_migrate_source_platform.user }}/backup/{{ site_migrate_source_platform.name }}/{{ site_migrate_site_name }}"
+        file_type: directory
+        depth: 1
+      register: site_migrate_backup_candidates
+      failed_when: false
+
+    - name: Determine latest backup timestamp
+      ansible.builtin.set_fact:
+        site_migrate_backup_timestamp: >-
+          {{
+            site_migrate_backup_candidates.files
+            | selectattr('path', 'defined')
+            | sort(attribute='mtime', reverse=true)
+            | map(attribute='path')
+            | map('basename')
+            | select('match', '^[0-9]{8}-[0-9]{4}$')
+            | list
+            | first
+            | default('')
+          }}
+
+    - name: Abort when no backups exist for migration
+      ansible.builtin.fail:
+        msg: >-
+          No backups found for {{ site_migrate_site_name }} under
+          /home/{{ site_migrate_source_platform.user }}/backup/{{ site_migrate_source_platform.name }}/{{ site_migrate_site_name }}/.
+      when: site_migrate_backup_timestamp | length == 0
+
+    - name: Prepare restore parameters for migration
+      ansible.builtin.set_fact:
+        site_restore_timestamp: "{{ site_migrate_backup_timestamp }}"
+        site_restore_backup_dir: "/home/{{ site_migrate_source_platform.user }}/backup/{{ site_migrate_source_platform.name }}/{{ site_migrate_site_name }}/{{ site_migrate_backup_timestamp }}"
+        site_restore_platform_entry: "{{ site_migrate_target_platform_entry }}"
+
+    - name: Log migration plan
+      ansible.builtin.debug:
+        msg: >-
+          Migrating {{ site_migrate_site_name }} from {{ site_migrate_source_platform.name }}
+          to {{ site_migrate_target_platform_entry.name }} using backup {{ site_migrate_backup_timestamp }}.
+  when: site_context_should_process | default(false)
+
+- name: Restore latest backup to target platform
+  ansible.builtin.import_role:
+    name: site_restore
+  when: site_context_should_process | default(false)

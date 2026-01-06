@@ -1,12 +1,39 @@
----
 # Creates new Drupal sites on the specified platform/server.
 
-- name: Install requested site definition
-  ansible.builtin.include_tasks: create-site.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
-  when:
-    - site is defined
-    - site == sites[item.key].name
-    - inventory_hostname == sites[item.key].server
+- block:
+    - name: Prepare site and platform context
+      ansible.builtin.include_role:
+        name: site_context
+      when: not site_context_cached | default(false)
+
+    - name: Initialize site existence flag
+      ansible.builtin.set_fact:
+        site_install_site_exists: "{{ site_context_site_exists | default(false) }}"
+
+    - block:
+        - name: Install new site
+          ansible.builtin.include_tasks: install-site-drush.yml
+          when: not site_install_site_exists
+
+        - name: Update site context after installation
+          ansible.builtin.set_fact:
+            site_context_site_exists: true
+          when: not site_install_site_exists
+
+        - name: Create login URL
+          ansible.builtin.import_role:
+            name: site_login
+          when: not site_install_site_exists
+
+        - name: Log message if site already exists
+          ansible.builtin.debug:
+            msg: "Site {{ site_context_site_name }} already exists."
+          when: site_install_site_exists
+      when: site_context_should_process
+
+    - name: Verify and finalize site configuration
+      ansible.builtin.import_role:
+        name: site_verify
+      when:
+        - site_context_should_process
+        - site_context_site_exists | default(false)

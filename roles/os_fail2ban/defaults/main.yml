@@ -1,0 +1,19 @@
+---
+fail2ban_ignoreips:
+  - 127.0.0.1/8
+  - ::1
+fail2ban_loglevel: INFO
+fail2ban_logtarget: STDOUT
+fail2ban_socket: /var/run/fail2ban/fail2ban.sock
+fail2ban_action: "%(banaction)s[port=\"%(port)s\", protocol=\"%(protocol)s\"]"
+fail2ban_action_mw: "action_mw"
+fail2ban_cloudflare_ignoreip_file: "/etc/fail2ban/ignoreip.cloudflare"
+fail2ban_cloudflare_ignoreips: >-
+  {{
+    ((cloudflare_enabled | default(false)) | ternary(cloudflare_ipv4_cidrs | default([]), [])) +
+    ((cloudflare_enabled | default(false)) | ternary(cloudflare_ipv6_cidrs | default([]), []))
+  }}
+fail2ban_ignoreip_files: >-
+  {{
+    ((fail2ban_cloudflare_ignoreips | length) > 0) | ternary([fail2ban_cloudflare_ignoreip_file], [])
+  }}

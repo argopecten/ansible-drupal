@@ -1,0 +1,75 @@
+# /etc/apache2/conf-available/drupal.conf
+# Apache Drupal configuration on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+### Drupal-specific Apache configurations
+
+# Enforce HTTPS behind proxies/load balancers
+RewriteEngine On
+
+# Detect non-HTTPS requests
+RewriteCond %{HTTPS} off [OR]
+# Redirect if the proxy didn't say it was HTTPS
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+### End of Drupal-specific Apache configurations
+
+
+### Block access to Drupal's sensitive files and directories
+# Block direct access to Drupal private files
+<DirectoryMatch "^.*/sites/.*/files/private/">
+    Require all denied
+</DirectoryMatch>
+
+# Block access to backup or staging files in /files
+#<DirectoryMatch "^.*/sites/.*/files/(backups|staging|tmp|logs)/">
+#    Require all denied
+#</DirectoryMatch>
+
+# Block .env files (if using dotenv or other env file formats)
+<FilesMatch "^\.env.*$">
+    Require all denied
+</FilesMatch>
+
+# Disable PHP execution in public files directories
+<DirectoryMatch "^.*/sites/.*/files/">
+    SetHandler none
+    Options -ExecCGI -Indexes
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+</DirectoryMatch>
+
+# Block Composer files
+<FilesMatch "^(composer\.json|composer\.lock)$">
+    Require all denied
+</FilesMatch>
+
+# Block access to Drupal's autoload and config files
+<FilesMatch "^(autoload\.php|web\.config)$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to vendor directory
+<DirectoryMatch "^.*/vendor/.*$">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to private config directories if present
+<DirectoryMatch "^.*/(config|sites)/.*\.yml$">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to .git directories
+<DirectoryMatch "^.*/\.git/.*$">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to any dotfiles (optional catch-all)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+### End of sensitive files and directories access restrictions

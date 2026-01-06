@@ -1,0 +1,16 @@
+---
+sites:
+  wp:
+    host: "ap-host09"
+    name: "{{ vault_ap_host09.wp.name }}"
+    platform: "drupal11.2"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_ap_host09.wp.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_ap_host09.wp.cf.api_key | default('dummy') }}"
+    state: present

@@ -1,0 +1,104 @@
+---
+# Resolves platform context for a site definition.
+
+- name: Validate platform inputs
+  ansible.builtin.assert:
+    that:
+      - site_context_site_definition is defined
+      - site_context_site_platform | default('') | length > 0
+    fail_msg: >-
+      Site {{ site_context_site_identifier | default('unknown') }} must declare a platform.
+
+- name: Resolve site platform host entry
+  ansible.builtin.import_tasks: "{{ playbook_dir }}/../roles/platform_context/tasks/resolve_entry.yml"
+  vars:
+    platform_identifier: "{{ site_context_site_platform }}"
+
+- name: Collect platform context facts
+  ansible.builtin.set_fact:
+    site_context_platform_entry: "{{ platform_context_entry }}"
+    site_context_platform_path: "{{ platform_context_path }}"
+    site_context_platform_root: "{{ platform_context_root }}"
+    site_context_platform_name: "{{ platform_context_name }}"
+    site_context_platform_user: "{{ platform_context_user }}"
+    site_context_platform_group: "{{ platform_context_group }}"
+
+- name: Determine Drupal site path
+  ansible.builtin.set_fact:
+    site_context_site_path: "{{ site_context_platform_root }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
+
+- name: Block operations on sites/default
+  ansible.builtin.assert:
+    that:
+      - site_context_site_subdir | default(site_context_site_name) | lower != 'default'
+    fail_msg: "Operations against sites/default are not supported. Provide a non-default site subdirectory."
+
+- name: Check if site directory exists on platform
+  ansible.builtin.stat:
+    path: "{{ site_context_site_path }}"
+  become: true
+  register: site_context_site_stat
+
+- name: Record site existence state
+  ansible.builtin.set_fact:
+    site_context_site_exists: "{{ site_context_site_stat.stat.exists }}"
+
+- name: Identify site settings.php path
+  ansible.builtin.set_fact:
+    site_context_settings_file: "{{ site_context_site_path }}/settings.php"
+
+- name: Check for site settings.php
+  ansible.builtin.stat:
+    path: "{{ site_context_settings_file }}"
+  register: site_context_settings_stat
+  become: true
+  when: site_context_site_exists
+
+- name: Read site database credentials from settings.php
+  ansible.builtin.slurp:
+    path: "{{ site_context_settings_file }}"
+  register: site_context_settings_php
+  become: true
+  when:
+    - site_context_site_exists
+    - site_context_settings_stat.stat.exists
+
+- name: Parse database credentials from settings.php
+  ansible.builtin.set_fact:
+    site_context_db_name: "{{ (site_context_settings_content | regex_findall(\"['\\\"]database['\\\"]\\s*=>\\s*['\\\"]([^'\\\"]+)['\\\"]\")) | first | default('') }}"
+    site_context_db_user: "{{ (site_context_settings_content | regex_findall(\"['\\\"]username['\\\"]\\s*=>\\s*['\\\"]([^'\\\"]+)['\\\"]\")) | first | default('') }}"
+    site_context_db_password: "{{ (site_context_settings_content | regex_findall(\"['\\\"]password['\\\"]\\s*=>\\s*['\\\"]([^'\\\"]+)['\\\"]\")) | first | default('') }}"
+    site_context_db_host: "{{ (site_context_settings_content | regex_findall(\"['\\\"]host['\\\"]\\s*=>\\s*['\\\"]([^'\\\"]+)['\\\"]\")) | first | default('localhost') }}"
+  vars:
+    site_context_settings_content: "{{ site_context_settings_php.content | b64decode }}"
+  when:
+    - site_context_site_exists
+    - site_context_settings_stat.stat.exists
+
+- name: Initialize database credentials for new site
+  ansible.builtin.set_fact:
+    site_context_db_name: "{{ site_context_site_name | regex_replace('[^a-zA-Z0-9]', '') }}"
+    site_context_db_user: "{{ site_context_site_name | regex_replace('[^a-zA-Z0-9]', '') }}"
+    site_context_db_password: "{{ lookup('ansible.builtin.password', '/dev/null', length=20, chars=['ascii_letters', 'digits', '!+-.:<=>_|']) }}"
+    site_context_db_host: "localhost"
+  when: not site_context_site_exists
+
+- name: Ensure database credentials are available
+  ansible.builtin.assert:
+    that:
+      - site_context_db_name | default('') | length > 0
+      - site_context_db_user | default('') | length > 0
+      - site_context_db_password | default('') | length > 0
+    fail_msg: >-
+      Database credentials could not be extracted from {{ site_context_settings_file }}.
+      Ensure $databases['default']['default'] defines database/username/password in settings.php.
+  when:
+    - site_context_should_process
+    - site_context_site_exists
+
+- name: Log platform summary for site
+  ansible.builtin.debug:
+    msg: >-
+      Site {{ site_context_site_name }} runs on platform {{ site_context_platform_name }}
+      rooted at {{ site_context_platform_root }} (user={{ site_context_platform_user }},
+      group={{ site_context_platform_group }}).

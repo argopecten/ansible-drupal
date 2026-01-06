@@ -1,0 +1,39 @@
+---
+- name: Ensure fail2ban jail.d directory exists
+  ansible.builtin.file:
+    path: /etc/fail2ban/jail.d
+    state: directory
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: "0755"
+  become: true
+
+- name: Configure per-site Drupal access log jail
+  vars:
+    fail2ban_drupal_access_jail_name: >-
+      drupal-site-access-{{ site_context_site_name | regex_replace('[^A-Za-z0-9_-]', '_') }}
+  ansible.builtin.template:
+    src: "{{ role_path }}/../os_fail2ban/templates/drupal-site-access-jail.conf.j2"
+    dest: /etc/fail2ban/jail.d/drupal-site-access-{{ site_context_site_name }}.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: "0644"
+    force: true
+  notify: Restart fail2ban
+  become: true
+  when: (fail2ban_drupal_access_enabled | default(true)) | bool
+
+- name: Configure per-site Drupal error log jail
+  vars:
+    fail2ban_drupal_error_jail_name: >-
+      drupal-site-error-{{ site_context_site_name | regex_replace('[^A-Za-z0-9_-]', '_') }}
+  ansible.builtin.template:
+    src: "{{ role_path }}/../os_fail2ban/templates/drupal-site-error-jail.conf.j2"
+    dest: /etc/fail2ban/jail.d/drupal-site-error-{{ site_context_site_name }}.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: "0644"
+    force: true
+  notify: Restart fail2ban
+  become: true
+  when: (fail2ban_drupal_error_enabled | default(true)) | bool

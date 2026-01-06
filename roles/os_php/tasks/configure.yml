@@ -1,0 +1,56 @@
+# Common tasks for php
+
+# Apply PHP CLI configuration overrides.
+- name: Copy PHP CLI override configuration file
+  ansible.builtin.template:
+    src: php-overrides.ini.j2
+    dest: "/etc/php/{{ php_version }}/cli/conf.d/{{ php_overrides_conf_filename }}"
+    owner: "{{ root_user | default('root') }}"
+    group: "{{ root_group | default('root') }}"
+    mode: "0644"
+    force: true
+  vars:
+    php_ini_overrides: "{{ php_cli_configurations }}"
+  notify: Restart PHP-FPM
+  become: true
+
+# Apply PHP FPM configuration overrides.
+- name: Copy PHP FPM override configuration file
+  ansible.builtin.template:
+    src: php-overrides.ini.j2
+    dest: "/etc/php/{{ php_version }}/fpm/conf.d/{{ php_overrides_conf_filename }}"
+    owner: "{{ root_user | default('root') }}"
+    group: "{{ root_group | default('root') }}"
+    mode: "0644"
+    force: true
+  vars:
+    php_ini_overrides: "{{ php_fpm_configurations }}"
+  notify: Restart PHP-FPM
+  become: true
+
+- name: Configure PHP-FPM logging
+  ansible.builtin.lineinfile:
+    path: "{{ php_fpm_config_file }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: false
+  loop:
+    - { regexp: '^;?error_log\\s*=', line: 'error_log = {{ php_fpm_error_log }}' }
+    - { regexp: '^;?log_level\\s*=', line: 'log_level = {{ php_fpm_log_level }}' }
+  notify: Restart PHP-FPM
+  become: true
+
+- name: Configure PHP-FPM pool logging
+  ansible.builtin.lineinfile:
+    path: "{{ php_fpm_pool_config_file }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: false
+  loop:
+    - { regexp: '^;?access\\.log\\s*=', line: 'access.log = {{ php_fpm_access_log }}' }
+    - { regexp: '^;?catch_workers_output\\s*=', line: 'catch_workers_output = {{ php_fpm_catch_workers_output }}' }
+    - { regexp: '^;?decorate_workers_output\\s*=', line: 'decorate_workers_output = {{ php_fpm_decorate_workers_output }}' }
+    - { regexp: '^;?slowlog\\s*=', line: 'slowlog = {{ php_fpm_slowlog }}' }
+    - { regexp: '^;?request_slowlog_timeout\\s*=', line: 'request_slowlog_timeout = {{ php_fpm_request_slowlog_timeout }}' }
+  notify: Restart PHP-FPM
+  become: true

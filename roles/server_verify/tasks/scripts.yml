@@ -4,14 +4,30 @@
 - name: Install scripts from templates
   ansible.builtin.template:
     src: "{{ item.src }}"
-    dest: "/usr/local/bin/{{ item.name }}"
+    dest: "{{ script_install_dir | default('/usr/local/bin') }}/{{ item.name }}"
     owner: "{{ root_user }}"
     group: "{{ root_group }}"
     force: true
     mode: "755"
   become: true
   loop:
-    - name: "platform-ownership-permissions.sh"
-      src: "{{ role_path }}/../platform_permissions/templates/platform-ownership-permissions.sh"
-    - name: "site-ownership-permissions.sh"
-      src: "{{ role_path }}/../site_permissions/templates/site-ownership-permissions.sh"
+    - name: "platform-ownership.sh"
+      src: "{{ role_path }}/../platform_verify/templates/platform-ownership.sh"
+    - name: "platform-permissions.sh"
+      src: "{{ role_path }}/../platform_verify/templates/platform-permissions.sh"
+    - name: "site-ownership.sh"
+      src: "{{ role_path }}/../site_verify/templates/site-ownership.sh"
+    - name: "site-permissions.sh"
+      src: "{{ role_path }}/../site_verify/templates/site-permissions.sh"
+
+# Set default editor
+- name: Set default editor
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/skel/.bashrc
+    state: present
+    create: yes
+    line: "{{ item }}"
+  loop:
+    - "export EDITOR=nano"
+    - "export VISUAL=nano"

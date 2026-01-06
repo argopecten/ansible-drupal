@@ -1,0 +1,29 @@
+# /etc/apache2/conf-available/security.conf
+# Apache security configuration on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# Hide detailed version tokens in HTTP responses.
+ServerTokens Prod
+
+# Do not leak module information on generated pages.
+ServerSignature Off
+
+# Disable the TRACE method to mitigate cross-site tracing attacks.
+TraceEnable Off
+
+### General Apache Security Headers
+# Protect against Clickjacking attacks.
+Header always append X-Frame-Options "SAMEORIGIN"
+
+# Prevent MIME-type sniffing.
+Header set X-Content-Type-Options "nosniff"
+
+# Enable XSS protection in browsers (legacy, still helpful)
+Header set X-XSS-Protection "1; mode=block"
+
+# Limit information in referrer headers
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Enforce HTTPS (only if HTTPS is used site-wide and certs are valid!)
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+### End of General Apache Security Headers

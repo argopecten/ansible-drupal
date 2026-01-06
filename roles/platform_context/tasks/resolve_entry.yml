@@ -1,0 +1,55 @@
+---
+# Normalizes a platform entry from host_vars.
+# Requires: platform_identifier (string), platforms mapping, platform_base_dir.path optional default.
+
+- name: Validate host platform mapping
+  ansible.builtin.assert:
+    that:
+      - platforms is defined
+      - platforms is mapping
+      - platforms | length > 0
+    fail_msg: >-
+      Host {{ inventory_hostname }} must declare platforms as a non-empty mapping keyed by platform identifier.
+
+- name: Resolve platform entry from host_vars
+  ansible.builtin.set_fact:
+    platform_context_host_entry: "{{ platforms[platform_identifier] | default({}) }}"
+
+- name: Ensure platform entry exists in host_vars
+  ansible.builtin.assert:
+    that:
+      - platform_context_host_entry | length > 0
+    fail_msg: "Platform '{{ platform_identifier }}' is not defined in host_vars for {{ inventory_hostname }}."
+
+- name: Compose normalized platform entry
+  ansible.builtin.set_fact:
+    platform_context_entry: >-
+      {{
+        platform_context_host_entry
+        | combine({
+            'name': platform_identifier,
+            'path': (
+              platform_context_host_entry.path
+              | default(platform_base_dir.path | default('/var/www/drupal'))
+              | regex_replace('\\/*$', '/')
+            )
+          })
+      }}
+
+- name: Collect normalized platform facts
+  ansible.builtin.set_fact:
+    platform_context_path: "{{ platform_context_entry.path }}"
+    platform_context_root: "{{ (platform_context_entry.path | regex_replace('\\/+$', '')) }}/{{ platform_context_entry.name }}"
+    platform_context_name: "{{ platform_context_entry.name }}"
+    platform_context_user: "{{ platform_context_entry.user }}"
+    platform_context_group: "{{ platform_context_entry.group }}"
+
+- name: Validate platform entry state
+  ansible.builtin.assert:
+    that:
+      - platform_context_entry | length > 0
+      - (platform_context_entry.state | default('present')) != 'absent'
+      - platform_context_entry.user is defined
+      - platform_context_entry.group is defined
+    fail_msg: >-
+      Platform '{{ platform_identifier }}' is not usable on host {{ inventory_hostname }}. Check host_vars definition.

@@ -1,0 +1,10 @@
+# Supported Drupal platform:
+# Drupal platform on host09.dxhost.hu
+ 
+d11.2:
+  name: "d11.2"
+  composer_project: "drupal/recommended-project"  # https://github.com/drupal/recommended-project
+  version: "11.2.*"
+  dependencies:
+    - "drush/drush:^13.7"
+  state: present

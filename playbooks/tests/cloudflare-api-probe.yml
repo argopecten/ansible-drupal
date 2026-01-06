@@ -1,0 +1,23 @@
+- hosts: all
+  gather_facts: false
+  vars:
+    cloudflare_use_api: true
+    cloudflare_pinned_ipv4_cidrs: []
+    cloudflare_pinned_ipv6_cidrs: []
+  tasks:
+    - import_role:
+        name: os_cloudflare
+    - name: Show Cloudflare API raw response
+      debug:
+        var: hostvars[cloudflare_delegate_host_effective | default(inventory_hostname)].cloudflare_ips_response_result | default('undefined')
+      run_once: true
+    - name: Show Cloudflare CIDRs
+      debug:
+        msg:
+          - "IPv4: {{ cloudflare_ipv4_cidrs }}"
+          - "IPv6: {{ cloudflare_ipv6_cidrs }}"
+    - stat:
+        path: /etc/ssl/certs/cloudflare.pem
+      register: cf_cert
+    - debug:
+        var: cf_cert.stat.exists

@@ -1,0 +1,16 @@
+---
+sites:
+  ex2:
+    host: "ap-host01"
+    name: "{{ vault_ap_host01.ex2.name }}"
+    platform: "drupal11.2"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_ap_host01.ex2.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_ap_host01.ex2.cf.api_key | default('dummy') }}"
+    state: present

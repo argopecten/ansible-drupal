@@ -1,0 +1,40 @@
+# Ansible host variables for ap-host01
+# Secrets in inventory/prod/group_vars/clientAP/vault.yml
+
+# Host info
+ansible_host: "{{ vault_ap_host01.ip }}"
+ansible_port: "{{ vault_ap_host01.port }}"
+fqdn: "{{ vault_ap_host01.fqdn }}"
+hardware: "{{ vault_ap_host01.hardware }}"
+cloudflare_enabled: true
+host_secured: true
+
+# Client info
+env: prod                # environment for playbooks
+client_name: clientAP   # client name for playbooks
+
+# LAMP stack
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+# Supported platforms for this host
+platforms:
+  drupal11:
+    user: drupal11
+    group: drupal11
+  drupal11.2:
+    user: drupal11_2
+    group: drupal11_2
+  drupal10.4:
+    user: drupal10_4
+    group: drupal10_4
+  drupal10.5:
+    user: drupal10_5
+    group: drupal10_5
+
+# Groups
+Belongs to groups: clientAP, managed, secured, lamp, lts2404

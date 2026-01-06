@@ -1,27 +1,94 @@
----
-# Handles Drupal site updates and migrations.
+# Handles Drupal site updates.
 
-- name: Update Drupal sites
-  ansible.builtin.include_tasks: update-sites.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
-  when:
-    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
-      or
-      (site is not defined and inventory_hostname == sites[item.key].server)
-  tags:
-    - update
+- name: Prepare site context
+  ansible.builtin.import_role:
+    name: site_context
 
-- name: Migrate Drupal sites between platforms
-  ansible.builtin.include_tasks: migrate-site.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- block:
+    - name: Set update context
+      ansible.builtin.set_fact:
+        site_update_drush_path: "{{ site_context_platform_root }}/vendor/bin/drush"
+        site_update_drush_cmd: "{{ site_context_platform_root }}/vendor/bin/drush --uri={{ site_context_site_name }} --root={{ site_context_platform_root }}"
+        site_update_config_dir_resolved: >-
+          {%- if site_update_config_dir is defined and (site_update_config_dir | string | length) > 0 -%}
+            {{- site_update_config_dir -}}
+          {%- elif site_context_site_definition is defined and site_context_site_definition.config_sync_dir is defined -%}
+            {{- site_context_site_definition.config_sync_dir -}}
+          {%- else -%}
+            {{- site_context_platform_root ~ '/config/sync' -}}
+          {%- endif -%}
+
+    - name: Verify Drush is available for site update
+      ansible.builtin.stat:
+        path: "{{ site_update_drush_path }}"
+      register: site_update_drush_stat
+
+    - name: Fail when Drush executable is missing
+      ansible.builtin.fail:
+        msg: >-
+          Drush was not found at {{ site_update_drush_path }} for site {{ site_context_site_name }}.
+          Ensure the platform dependencies are installed before running site updates.
+      when: not site_update_drush_stat.stat.exists
+
+    - block:
+        - name: Set maintenance mode on
+          ansible.builtin.command: "{{ site_update_drush_cmd }} state:set system.maintenance_mode 1 -y"
+          args:
+            chdir: "{{ site_context_platform_root }}"
+          become: true
+          become_user: "{{ site_context_platform_user }}"
+
+        - name: Run database updates
+          ansible.builtin.command: "{{ site_update_drush_cmd }} updatedb -y"
+          args:
+            chdir: "{{ site_context_platform_root }}"
+          become: true
+          become_user: "{{ site_context_platform_user }}"
+
+        - name: Detect config sync directory
+          ansible.builtin.stat:
+            path: "{{ site_update_config_dir_resolved }}"
+          register: site_update_config_dir_stat
+          when: site_update_config_dir_resolved | length > 0
+
+        - name: Skip configuration import when sync directory is missing
+          ansible.builtin.debug:
+            msg: >-
+              Skipping config:import for {{ site_context_site_name }} because
+              {{ site_update_config_dir_resolved | default('[unset]') }} does not exist.
+          when:
+            - site_update_config_dir_resolved | length > 0
+            - site_update_config_dir_stat is defined
+            - not site_update_config_dir_stat.stat.exists
+
+        - name: Import configuration changes
+          ansible.builtin.command: "{{ site_update_drush_cmd }} config:import -y"
+          args:
+            chdir: "{{ site_context_platform_root }}"
+          become: true
+          become_user: "{{ site_context_platform_user }}"
+          when:
+            - site_update_config_dir_resolved | length > 0
+            - site_update_config_dir_stat is defined
+            - site_update_config_dir_stat.stat.exists
+
+        - name: Clear cache
+          ansible.builtin.command: "{{ site_update_drush_cmd }} cache:rebuild -y"
+          args:
+            chdir: "{{ site_context_platform_root }}"
+          become: true
+          become_user: "{{ site_context_platform_user }}"
+      rescue:
+        - name: Log Drupal update failure
+          ansible.builtin.debug:
+            msg: "Drupal update failed for {{ site_context_site_name }}; proceeding to disable maintenance mode."
+      always:
+        - name: Set maintenance mode off
+          ansible.builtin.command: "{{ site_update_drush_cmd }} state:set system.maintenance_mode 0 -y"
+          args:
+            chdir: "{{ site_context_platform_root }}"
+          become: true
+          become_user: "{{ site_context_platform_user }}"
   when:
-    - site is defined
-    - target is defined
-    - site == sites[item.key].name
-    - inventory_hostname == sites[item.key].server
-  tags:
-    - migrate
+    - site_context_should_process
+    - site_context_site_exists

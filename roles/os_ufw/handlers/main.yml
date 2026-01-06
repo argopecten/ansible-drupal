@@ -1,0 +1,6 @@
+---
+- name: Reload UFW
+  ansible.builtin.command: ufw reload
+  changed_when: false
+  become: true
+  when: ansible_os_family == "Debian"

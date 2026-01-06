@@ -1,0 +1,16 @@
+---
+sites:
+  svi:
+    host: "ap-host01"
+    name: "{{ vault_ap_host01.svi.name }}"
+    platform: "drupal11.2"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_ap_host01.svi.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_ap_host01.svi.cf.api_key | default('dummy') }}"
+    state: present

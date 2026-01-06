@@ -1,0 +1,16 @@
+---
+# Defaults for journald log management.
+
+logging_journald_config_dir: "/etc/systemd/journald.conf.d"
+logging_journald_config_file: "{{ logging_journald_config_dir }}/os-logging.conf"
+logging_journald_persistent_dir: "/var/log/journal"
+logging_journald_persistent_dir_mode: "2750"
+
+logging_journald_storage: "persistent"
+logging_journald_compress: "yes"
+logging_journald_system_max_use: "1G"
+logging_journald_system_keep_free: "500M"
+logging_journald_max_retention_sec: "0"
+logging_journald_max_file_sec: "1month"
+logging_journald_rate_limit_interval_sec: "30s"
+logging_journald_rate_limit_burst: 10000

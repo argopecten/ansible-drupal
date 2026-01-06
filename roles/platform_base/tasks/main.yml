@@ -1,8 +1,0 @@
----
-# Creates/maintains the Unix users and supporting directories for each platform.
-
-- name: Ensure platform accounts exist
-  ansible.builtin.include_tasks: setup-platform-users.yml
-  loop: "{{ platforms | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"

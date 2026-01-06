@@ -1,0 +1,14 @@
+# Host Variables for control node
+
+# Secrets in inventory/group_vars/control/vault.yml
+# This setup ensures secrets are loaded and applied to every host
+# in this inventory before host connection details are evaluated 
+
+ansible_host: "{{ vault_ap_ctrl01.ip }}"
+ansible_port: "{{ vault_ap_ctrl01.port }}"
+fqdn: "{{ vault_ap_ctrl01.fqdn }}"
+hardware: "{{ vault_ap_ctrl01.hardware }}"
+cloudflare_enabled: true
+host_secured: true
+
+env: prod

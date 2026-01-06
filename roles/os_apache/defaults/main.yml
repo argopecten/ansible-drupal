@@ -1,0 +1,77 @@
+---
+apache_conf_dir: "/etc/apache2"
+apache_main_conf_file: "{{ apache_conf_dir }}/apache2.conf"
+apache_sites_enabled: "{{ apache_conf_dir }}/sites-enabled"
+apache_required_modules:
+  - headers
+  - ssl
+  - proxy
+  - proxy_fcgi
+  - rewrite
+  - actions
+  - remoteip
+  - remoteip
+apache_php_version: "{{ php_version | default('8.3') }}"
+apache_php_handler: "proxy:unix:/run/php/php{{ apache_php_version }}-fpm.sock|fcgi://localhost"
+
+apache_enabled_configurations:
+  - name: "security"
+    path: "security.conf"
+  - name: "php{{ apache_php_version }}-fpm"
+    path: "php{{ apache_php_version }}-fpm.conf"
+  - name: "drupal"
+    path: "drupal.conf"
+  - name: "vhost-access-log"
+    path: "vhost-access-log.conf"
+  - name: "error-pages"
+    path: "error-pages.conf"
+apache_cloudflare_configuration:
+  name: "cloudflare"
+  path: "cloudflare.conf"
+cloudflare_enabled: false
+apache_cloudflare_conf_file: "{{ apache_conf_dir }}/conf-available/cloudflare.conf"
+apache_cloudflare_ipv4_cidrs: "{{ cloudflare_ipv4_cidrs | default([]) }}"
+apache_cloudflare_ipv6_cidrs: "{{ cloudflare_ipv6_cidrs | default([]) }}"
+
+# Catch-all site settings (template installed and enabled by default).
+apache_catch_all_site_id: "000-catchall-ssl"
+apache_catch_all_server_name: "{{ fqdn | default(inventory_hostname) }}"
+apache_catch_all_ssl_apex: "{{ apache_catch_all_server_name.split('.')[-2:] | join('.') }}"
+apache_catch_all_document_root: "/var/www/html"
+apache_catch_all_page: "index.html"
+apache_catch_all_page_title: "Site Not Found"
+apache_catch_all_page_message: "This hostname is not configured on this server."
+apache_catch_all_ssl_cert_dir: "/etc/ssl/certs"
+apache_catch_all_ssl_key_dir: "/etc/ssl/private"
+apache_catch_all_ssl_certificate: "{{ apache_catch_all_ssl_cert_dir }}/{{ apache_catch_all_ssl_apex }}.pem"
+apache_catch_all_ssl_key: "{{ apache_catch_all_ssl_key_dir }}/{{ apache_catch_all_ssl_apex }}.key"
+apache_catch_all_ssl_provider: "selfsigned"
+apache_catch_all_ssl_renewal_days: "{{ ssl_selfsigned_renewal_days | default(30) }}"
+apache_catch_all_ssl_force_renew: false
+apache_catch_all_ssl: >-
+  {{
+    {
+      'provider': apache_catch_all_ssl_provider,
+      'renewal_days': (apache_catch_all_ssl_provider == 'selfsigned') | ternary(apache_catch_all_ssl_renewal_days, omit),
+      'force_renew': apache_catch_all_ssl_force_renew
+    }
+  }}
+apache_catch_all_cf: {}
+
+# Shared error pages configuration
+apache_error_pages:
+  - code: 400
+    title: "Bad Request"
+    message: "Your browser sent a request this server could not understand."
+  - code: 403
+    title: "Forbidden"
+    message: "You do not have permission to access this resource."
+  - code: 404
+    title: "Not Found"
+    message: "The page you are looking for might have been removed or is temporarily unavailable."
+  - code: 421
+    title: "Misdirected Request"
+    message: "The requested domain name isn’t served here."
+  - code: 500
+    title: "Server Error"
+    message: "Something went wrong on our end. Please try again later."

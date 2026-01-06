@@ -1,0 +1,27 @@
+---
+sshd_main_config_file: "/etc/ssh/sshd_config"
+sshd_hardened_config_file: "/etc/ssh/sshd_config.d/60-ansible_hardened-sshd.conf"
+
+ssh_users:
+  - "{{ ansible_user | default('ansible') }}"
+ssh_port: "{{ ansible_port }}"
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_kbdinteractive_authentication: "no"
+ssh_use_pam: "no"
+ssh_pubkey_authentication: "yes"
+ssh_x11_forwarding: "no"
+ssh_allow_tcp_forwarding: "no"
+ssh_allow_agent_forwarding: "no"
+ssh_gateway_ports: "no"
+ssh_permit_tunnel: "no"
+ssh_maxauthtries: 3
+ssh_login_gracetime: 30
+ssh_max_startups: "10:30:60"
+ssh_use_dns: "no"
+ssh_kex_algorithms: "curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha256"
+ssh_ciphers: "aes256-gcm@openssh.com,chacha20-poly1305@openssh.com"
+ssh_macs: "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
+ssh_log_level: "VERBOSE"
+ssh_print_motd: "no"
+ssh_banner: "none"

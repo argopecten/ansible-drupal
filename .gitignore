@@ -1,0 +1,26 @@
+# Local Ansible vault password file
+.vault_pass
+
+# Local Ansible working directory (transient artifacts)
+.ansible/
+
+# Ansible run artifacts
+*.retry
+
+# Logs and caches
+*.log
+logs/
+log/
+__pycache__/
+*.py[cod]
+
+# Virtual environments and env files
+.venv/
+venv/
+.env
+
+# Editor/OS cruft
+.vscode/
+.idea/
+*.swp
+.DS_Store

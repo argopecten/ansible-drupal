@@ -1,0 +1,37 @@
+# Ansible host variables for mh-host05
+# Secrets in inventory/prod/group_vars/clientMH/vault.yml
+
+# Host info
+ansible_host: "{{ vault_mh_host05.ip }}"
+ansible_port: "{{ vault_mh_host05.port }}"
+fqdn: "{{ vault_mh_host05.fqdn }}"
+hardware: "{{ vault_mh_host05.hardware }}"
+cloudflare_enabled: true
+host_secured: true
+
+# Client info
+env: prod               # environment for playbooks
+client_name: clientMH   # client name for playbooks
+
+# LAMP stack
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+# Supported platforms for this host
+platforms:
+  drupal11:
+    user: drupal11
+    group: drupal11
+  drupal11.3:
+    user: drupal11_3
+    group: drupal11_3
+  drupal10.6:
+    user: drupal10_6
+    group: drupal10_6
+
+# Groups
+Belongs to groups: clientMH, managed, secured, lamp, lts2404

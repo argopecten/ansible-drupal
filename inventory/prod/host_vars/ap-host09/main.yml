@@ -1,0 +1,50 @@
+# Ansible host variables for ap-host09
+# Secrets in inventory/prod/group_vars/clientAP/vault.yml
+
+# Host info
+ansible_host: "{{ vault_ap_host09.ip }}"
+ansible_port: "{{ vault_ap_host09.port }}"
+fqdn: "{{ vault_ap_host09.fqdn }}"
+hardware: "{{ vault_ap_host09.hardware }}"
+cloudflare_enabled: true
+host_secured: true
+
+# Catch-all Apache/SSL settings for this host
+# CF is defined for the fqdn apex domain only.
+apache_catch_all_cf:
+  zone_id: "{{ vault_ap_host09.catchall.cf.zone_id | default('dummy') }}"
+  api_key: "{{ vault_ap_host09.catchall.cf.api_key | default('') }}"
+apache_catch_all_ssl:
+  provider: cloudflare
+  renewal_days: 365   # choose your window
+  force_renew: false
+
+# Client info
+env: prod               # environment for playbooks
+client_name: clientAP   # client name for playbooks
+
+# LAMP stack
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+# Supported platforms for this host
+platforms:
+  drupal11:
+    user: drupal11
+    group: drupal11
+  drupal11.2:
+    user: drupal11_2
+    group: drupal11_2
+  drupal11.3:
+    user: drupal11_3
+    group: drupal11_3
+  d11.2:
+    user: ubuntu
+    group: ubuntu
+
+# Groups
+Belongs to groups: clientAP, managed, secured, lamp, lts2404

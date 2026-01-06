@@ -1,0 +1,142 @@
+---
+# Fail2Ban setup for LEMP Stack
+- name: Ensure fail2ban is installed
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+    update_cache: yes
+  become: true
+
+# Manage Cloudflare ignore list (used via file: in fail2ban.local)
+- name: Configure Cloudflare ignoreip file
+  ansible.builtin.template:
+    src: "ignoreip.cloudflare.j2"
+    dest: "{{ fail2ban_cloudflare_ignoreip_file | default('/etc/fail2ban/ignoreip.cloudflare') }}"
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+  when:
+    - cloudflare_enabled | default(false)
+    - fail2ban_cloudflare_ignoreips is defined
+    - fail2ban_cloudflare_ignoreips | length > 0
+
+# Set up fail2ban-server configuration
+- name: Configure fail2ban.local for fail2ban-server
+  ansible.builtin.template:
+    src: "fail2ban-server.conf.j2"
+    dest: /etc/fail2ban/fail2ban.local
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+
+# Set up fail2ban jail configuration
+- name: Configure jail.local
+  ansible.builtin.template:
+    src: "fail2ban-jail-local.conf.j2"
+    dest: /etc/fail2ban/jail.local
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+
+- name: Install PHP-FPM upstream filter
+  ansible.builtin.template:
+    src: "php-fpm.conf.j2"
+    dest: /etc/fail2ban/filter.d/php-fpm.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+
+- name: Install Drupal authentication filter
+  ansible.builtin.template:
+    src: "drupal-auth.conf.j2"
+    dest: /etc/fail2ban/filter.d/drupal-auth.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+
+- name: Install Drupal access-log authentication filter
+  ansible.builtin.template:
+    src: "drupal-auth-access.conf.j2"
+    dest: /etc/fail2ban/filter.d/drupal-auth-access.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: true
+  notify:
+    - Restart fail2ban
+  become: true
+
+# Start and enable fail2ban service
+- name: Start fail2ban service
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+  changed_when: false
+
+- name: Apply fail2ban configuration immediately
+  meta: flush_handlers
+
+- name: Wait for fail2ban socket
+  block:
+    - name: Wait for fail2ban socket
+      ansible.builtin.wait_for:
+        path: /var/run/fail2ban/fail2ban.sock
+        state: present
+        timeout: 30
+      become: true
+  rescue:
+    - name: Collect fail2ban service status
+      ansible.builtin.command: systemctl --no-pager -l status fail2ban
+      register: fail2ban_service_status
+      changed_when: false
+      failed_when: false
+      become: true
+
+    - name: Collect fail2ban journal
+      ansible.builtin.command: journalctl -u fail2ban --no-pager -n 100
+      register: fail2ban_journal
+      changed_when: false
+      failed_when: false
+      become: true
+
+    - name: Display fail2ban diagnostics
+      ansible.builtin.debug:
+        msg:
+          - "fail2ban socket not created; service diagnostics:"
+          - "{{ fail2ban_service_status.stdout_lines | default([]) }}"
+          - "{{ fail2ban_journal.stdout_lines | default([]) }}"
+
+    - name: Fail when fail2ban socket is missing
+      ansible.builtin.fail:
+        msg: "fail2ban socket not created; see diagnostics above."
+
+- name: Check fail2ban status
+  command: fail2ban-client status
+  register: fail2ban_status
+  changed_when: false
+  become: true
+
+- name: Display fail2ban status
+  debug:
+    var: fail2ban_status.stdout_lines

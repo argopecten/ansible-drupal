@@ -1,0 +1,58 @@
+---
+### Apache-related variables for LAMP servers
+
+apache_packages:
+  - apache2
+  - libapache2-mod-fcgid
+
+apache_required_modules:
+  - headers
+  - ssl
+  - proxy
+  - proxy_fcgi
+  - rewrite
+  - actions
+  - remoteip
+
+apache_conf_dir: "/etc/apache2"
+apache_main_conf_file: "{{ apache_conf_dir }}/apache2.conf"
+apache_runtime_dir: "/run/apache2"
+apache_pid_file: "{{ apache_runtime_dir }}/apache2.pid"
+apache_site_specific_logging: true
+
+apache_timeout: 300
+apache_keepalive: "On"
+apache_max_keepalive_requests: 100
+apache_keepalive_timeout: 5
+
+apache_user:  "{{ lookup('env', 'APACHE_RUN_USER')  | default('www-data', true) }}"
+apache_group: "{{ lookup('env', 'APACHE_RUN_GROUP') | default('www-data', true) }}"
+apache_log_level: "warn"
+
+apache_ssl_protocol: "-SSLv3 -TLSv1 -TLSv1.1 +TLSv1.2 +TLSv1.3"
+apache_ssl_cipher_suite: "HIGH:!aNULL:!MD5"
+apache_ssl_honor_order: "on"
+
+apache_document_root: "/var/www/"
+apache_document_root_options: "FollowSymLinks"
+apache_document_root_override: "All"
+apache_directory_index: "index.php index.html"
+
+apache_server_tokens: "Prod"
+apache_server_signature: "Off"
+apache_trace_enable: "Off"
+
+apache_php_handler: "proxy:unix:/run/php/php{{ php_version | default('8.3') }}-fpm.sock|fcgi://localhost/"
+
+apache_conf_template: "apache-main.conf.j2"
+apache_default_vhost_template: "apache-default.conf.j2"
+apache_drupal_snippet_template: "apache-drupal.conf.j2"
+
+apache_worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+
+apache_extra_conf_options: ""
+apache_extra_http_options: ""
+apache_vhost_extra_logs: ""
+
+apache_remove_default_vhost: false
+apache_vhosts: []

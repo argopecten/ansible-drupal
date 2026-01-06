@@ -1,0 +1,9 @@
+[{{ fail2ban_drupal_error_jail_name }}]
+enabled = {{ (fail2ban_drupal_error_enabled | default(true)) | ternary('true', 'false') }}
+filter = apache-auth
+port = http,https
+backend = {{ fail2ban_backend | default('systemd') }}
+journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+maxretry = {{ fail2ban_drupal_maxretry | default(fail2ban_maxretry | default('5')) }}
+findtime = {{ fail2ban_drupal_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime = {{ fail2ban_drupal_bantime | default(fail2ban_bantime | default('1h')) }}

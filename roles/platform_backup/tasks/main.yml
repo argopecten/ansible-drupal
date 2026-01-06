@@ -1,0 +1,11 @@
+---
+# Creates compressed archives of the selected Drupal platforms.
+
+- name: Backup Drupal platform
+  ansible.builtin.include_tasks:
+    file: backup.yml
+  vars:
+    platform_item: "{{ platform_selected }}"
+  when:
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'

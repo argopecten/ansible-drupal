@@ -1,0 +1,24 @@
+---
+# Toggle API fetch; set to false to rely solely on pinned CIDRs.
+cloudflare_use_api: true
+cloudflare_ip_api: "https://api.cloudflare.com/client/v4/ips"
+cloudflare_ipv4_cidrs: []
+cloudflare_ipv6_cidrs: []
+
+# Optional pinned CIDRs if you want to avoid network calls or pin a version.
+cloudflare_pinned_ipv4_cidrs: []
+cloudflare_pinned_ipv6_cidrs: []
+
+# Where the fetch happens.
+cloudflare_delegate_host: "localhost"
+
+# Cache the distributed facts so subsequent plays can reuse them.
+cloudflare_fact_cacheable: true
+
+# Origin CA root certificate
+cloudflare_origin_ca_url: "https://developers.cloudflare.com/ssl/static/origin_ca_rsa_root.pem"
+cloudflare_origin_ca_dest: "/etc/ssl/certs/cloudflare.pem"
+
+# Persist fetched CIDRs to a local vars file (disabled by default).
+cloudflare_write_stack_vars: false
+cloudflare_stack_vars_path: "{{ (ansible_config_file | default(playbook_dir | default('/opt/ansible'))) | dirname }}/vars/stack/security/cloudflare.yml"

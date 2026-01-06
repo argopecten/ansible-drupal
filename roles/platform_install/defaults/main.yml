@@ -1,2 +1,4 @@
----
-# defaults file for platform_install
+# Defaults for platform_install
+
+platform_authorized_key_file: "~/.ssh/id_rsa.pub"
+platform_authorized_key: ""

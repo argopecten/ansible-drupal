@@ -1,2 +1,5 @@
 ---
-# defaults file for site_install
+# Modules to enable on every site install unless overridden by the site entry.
+# Override per platform via site_install_modules in the platform definition,
+# or per site via modules under sites.d/*.yml.
+site_install_default_modules: []

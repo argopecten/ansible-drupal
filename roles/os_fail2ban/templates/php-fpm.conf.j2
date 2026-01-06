@@ -1,0 +1,8 @@
+[Definition]
+# Blocks hosts that repeatedly trigger PHP-FPM upstream errors via Apache proxy_fcgi.
+failregex = ^\[[^\]]+\] \[proxy_fcgi:error\].*\[client <HOST>(?::\d+)?\].*AH01071: Got error 'Primary script unknown'
+            ^\[[^\]]+\] \[proxy_fcgi:error\].*\[client <HOST>(?::\d+)?\].*AH01067: Failed to read FastCGI header
+            ^\[[^\]]+\] \[proxy_fcgi:error\].*\[client <HOST>(?::\d+)?\].*AH01068: Got bogus FastCGI record
+            ^\[[^\]]+\] \[proxy_fcgi:error\].*\[client <HOST>(?::\d+)?\].*AH01061: Got timeout while reading response header
+ignoreregex =
+port = http,https

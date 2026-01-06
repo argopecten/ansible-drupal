@@ -1,0 +1,28 @@
+---
+
+- name: Prepare site context for login
+  ansible.builtin.include_role:
+    name: site_context
+  when: not site_context_cached | default(false)
+
+- block:
+    - name: Set login context facts
+      ansible.builtin.set_fact:
+        site_login_drush_path: "{{ site_context_platform_root }}/vendor/bin/drush"
+        site_login_user: "{{ site_context_site_definition.user | default(site_context_site_definition.admin_user | default('admin')) }}"
+        site_login_site_name: "{{ site_context_site_name }}"
+        site_login_platform_path: "{{ site_context_platform_root }}"
+
+    - name: Create login URL with Drush
+      ansible.builtin.command: >
+        {{ site_login_drush_path }} user:login -y --name={{ site_login_user }} --uri=https://{{ site_login_site_name }}
+        --root={{ site_login_platform_path }}
+      args:
+        chdir: "{{ site_login_platform_path }}"
+      register: site_login_url_output
+      become: true
+
+    - name: Present login URL in log
+      ansible.builtin.debug:
+        msg: "Login URL for {{ site_login_site_name }}: {{ site_login_url_output.stdout }}"
+  when: site_context_should_process | default(false)

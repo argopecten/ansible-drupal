@@ -1,27 +1,47 @@
 ---
-# Configures and maintains base server requirements for Drupal hosting.
+# Configures and maintains LAMP server requirements for Drupal hosting.
 # Run with tags like --tags install|secure|verify|update to scope work.
-- name: Configure Drupal server requirements
+- name: Configure LAMP server requirements
   hosts: managed
   become: true
+  vars_files:
+    - "{{ playbook_dir }}/../vars/environments/{{ env | default('dev') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/os/{{ stack.os | default('ubuntu-24') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/php/{{ stack.php | default('php-83') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/mysql/{{ stack.mysql | default('mysql-80') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/apache/{{ stack.apache | default('apache-24') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/security/ssh.yml"
+    - "{{ playbook_dir }}/../vars/stack/security/ufw.yml"
+    - "{{ playbook_dir }}/../vars/stack/security/packages.yml"
+    - "{{ playbook_dir }}/../vars/stack/security/fail2ban.yml"
 
+  pre_tasks:
+    - name: Require explicit tags for server playbook
+      ansible.builtin.meta: end_play
+      when: ansible_run_tags is not defined or ansible_run_tags | length == 0
+
+  # import_role loads tasks statically, so tag filtering happens before 
+  # execution and role-level tags inherit correctly.
   tasks:
     - name: Apply base operating system configuration
       ansible.builtin.import_role:
-        name: server_base
+        name: server_install
       tags:
+        - never
         - install
 
-    - name: Apply server security hardening
+    - name: Apply security hardening
       ansible.builtin.import_role:
-        name: server_security
+        name: server_secure
       tags:
+        - never
         - secure
 
     - name: Verify server state
       ansible.builtin.import_role:
         name: server_verify
       tags:
+        - never
         - install
         - verify
 
@@ -29,4 +49,5 @@
       ansible.builtin.import_role:
         name: server_update
       tags:
+        - never
         - update

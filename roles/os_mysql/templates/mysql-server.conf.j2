@@ -1,0 +1,20 @@
+# The MySQL  Server configuration file from Ansible
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+
+#
+[mysqld]
+user            = {{ mysql_root_user }}
+bind-address    = {{ mysql_bind_address }}
+port            = {{ mysql_port }}
+datadir         = {{ mysql_data_dir }}
+
+pid-file        = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+log-error       = {{ mysql_error_log | default('stderr') }}
+
+# Custom settings from Ansible
+{% for setting, value in mysql_custom_settings.items() %}
+{{ setting }} = {{ value }}
+{% endfor %}

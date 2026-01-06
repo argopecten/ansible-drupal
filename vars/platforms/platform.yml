@@ -1,0 +1,16 @@
+---
+# Global Drupal platform defaults
+
+# Base directory for all Drupal platforms
+platform_base_dir:
+  path: "/var/www/drupal"
+  owner: "{{ ansible_user | default('ansible') }}"
+  group: "{{ ansible_user | default('ansible') }}"
+  mode: "0755"
+
+# Default Drupal platform settings
+default_drupal_composer_project: "drupal/recommended-project"
+default_drupal_profile: "standard"
+default_drupal_version: "11.2"
+drupal_root_permissions: "0750"
+drupal_site_install_extra_args: []

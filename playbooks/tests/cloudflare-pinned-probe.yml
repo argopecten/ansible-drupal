@@ -1,0 +1,22 @@
+- hosts: all
+  gather_facts: false
+  vars:
+    cloudflare_use_api: false  # set true if API reachable
+    cloudflare_pinned_ipv4_cidrs:
+      - 173.245.48.0/20
+      - 103.21.244.0/22
+    cloudflare_pinned_ipv6_cidrs:
+      - 2400:cb00::/32
+      - 2606:4700::/32
+  tasks:
+    - import_role:
+        name: os_cloudflare
+    - debug:
+        msg:
+          - "IPv4: {{ cloudflare_ipv4_cidrs }}"
+          - "IPv6: {{ cloudflare_ipv6_cidrs }}"
+    - stat:
+        path: /etc/ssl/certs/cloudflare.pem
+      register: cf_cert
+    - debug:
+        var: cf_cert.stat.exists

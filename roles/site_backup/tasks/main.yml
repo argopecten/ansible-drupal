@@ -1,12 +1,53 @@
----
 # Creates file/database backups for Drupal sites.
 
-- name: Back up Drupal sites
-  ansible.builtin.include_tasks: backup-sites.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- name: Prepare site context
+  ansible.builtin.import_role:
+    name: site_context
+
+- block:
+    - name: Set backup context
+      ansible.builtin.set_fact:
+        site_backup_timestamp: >-
+          {{ site_backup_timestamp
+             | default(ansible_date_time.year ~ ansible_date_time.month ~ ansible_date_time.day
+                       ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute) }}
+        site_backup_drush_path: "{{ site_context_platform_root }}/vendor/bin/drush"
+        site_backup_site_name: "{{ site_context_site_name }}"
+        site_backup_db_name: "{{ site_context_db_name }}"
+        site_backup_dir: >-
+          /home/{{ site_context_platform_user }}/backup/{{ site_context_platform_entry.name }}/{{ site_context_site_name }}/{{
+            site_backup_timestamp
+            | default(ansible_date_time.year ~ ansible_date_time.month ~ ansible_date_time.day
+                      ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute) }}
+
+    - name: Create backup directory for the site
+      ansible.builtin.file:
+        path: "{{ site_backup_dir }}"
+        state: directory
+        owner: "{{ site_context_platform_user }}"
+        group: "{{ site_context_platform_group }}"
+        mode: "0750"
+      become: true
+      when: not ansible_check_mode
+
+    - name: Backup database for site
+      ansible.builtin.command: >
+        {{ site_backup_drush_path }} sql:dump --uri={{ site_backup_site_name }} --root={{ site_context_platform_root }}
+        --result-file={{ site_backup_dir }}/database.sql
+      args:
+        chdir: "{{ site_context_platform_root }}"
+      become: true
+      become_user: "{{ site_context_platform_user }}"
+      when: not ansible_check_mode
+
+    - name: Backup site directory
+      ansible.builtin.archive:
+        path: "{{ site_context_platform_root }}/web/sites/{{ site_backup_site_name }}"
+        dest: "{{ site_backup_dir }}/files.tar.gz"
+        owner: "{{ site_context_platform_user }}"
+        group: "{{ site_context_platform_group }}"
+      become: true
+      when: not ansible_check_mode
   when:
-    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
-      or
-      (site is not defined and inventory_hostname == sites[item.key].server)
+    - site_context_should_process
+    - site_context_site_exists

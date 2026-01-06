@@ -1,0 +1,157 @@
+---
+- name: Clone Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root_src: "{{ (platform_item.value.path | default(platform_base_dir.path | default('/var/www/drupal')) | regex_replace('\\/+$', '')) ~ '/' ~ platform_item.value.name }}"
+    platform_clone_name: >-
+      {{
+        platform_clone_destination
+        | default(platform_item.value.clone_destination | default(''))
+      }}
+    platform_clone_definition_path: "{{ playbook_dir }}/../vars/platforms/{{ platform_clone_name }}.yml"
+    platform_clone_base_dir: "{{ platform_base_dir.path | default('/var/www/drupal') | regex_replace('\\/+$', '') }}"
+    platform_clone_dest_clean: "{{ (platform_clone_base_dir ~ '/' ~ platform_clone_name) | regex_replace('\\/+$', '') }}"
+    platform_clone_archive: "{{ (platform_clone_tempdir.path | default('/tmp')) ~ '/platform-clone.tar.gz' }}"
+  block:
+    - name: Validate platform clone inputs
+      ansible.builtin.assert:
+        that:
+          - platform_item.value.name is defined
+          - platform_item.value.user is defined
+          - platform_item.value.group is defined
+          - platform_clone_name | string | length > 0
+          - not platform_clone_name | regex_search('/')
+          - platform_clone_dest_clean != (platform_root_src | regex_replace('\\/+$', ''))
+        fail_msg: >-
+          Platform {{ platform_item.key }} requires name/user/group and a clone destination name
+          (set platform_clone_destination). Provide only the new platform name (no slashes);
+          the full path is derived under {{ platform_clone_base_dir }}, and it cannot match the
+          source path.
+
+    - name: Capture source platform definition
+      ansible.builtin.set_fact:
+        platform_clone_source_definition: "{{ platform_context_definition[platform_item.key] | default({}) }}"
+
+    - name: Validate source platform definition data
+      ansible.builtin.assert:
+        that:
+          - platform_clone_source_definition | length > 0
+        fail_msg: "Platform definition for {{ platform_item.key }} is not loaded; cannot derive clone definition."
+
+    - name: Check if clone platform definition file exists
+      ansible.builtin.stat:
+        path: "{{ platform_clone_definition_path }}"
+      register: platform_clone_definition_stat
+      delegate_to: localhost
+      run_once: true
+
+    - name: Create clone platform definition file when missing
+      ansible.builtin.copy:
+        dest: "{{ platform_clone_definition_path }}"
+        content: "{{ { platform_clone_name: platform_clone_source_definition | combine({'name': platform_clone_name}) } | to_nice_yaml(indent=2) }}"
+        mode: "0644"
+      when:
+        - not platform_clone_definition_stat.stat.exists
+      delegate_to: localhost
+      run_once: true
+
+    - name: Check platform source root exists
+      ansible.builtin.stat:
+        path: "{{ platform_root_src }}"
+      register: platform_clone_source_stat
+
+    - name: Fail when platform source root is missing
+      ansible.builtin.assert:
+        that:
+          - platform_clone_source_stat.stat.exists
+        fail_msg: "Platform root {{ platform_root_src }} does not exist on {{ inventory_hostname }}."
+
+    - name: Check platform destination root
+      ansible.builtin.stat:
+        path: "{{ platform_clone_dest_clean }}"
+      register: platform_clone_dest_stat
+
+    - name: Fail when clone destination already exists
+      ansible.builtin.assert:
+        that:
+          - not platform_clone_dest_stat.stat.exists
+        fail_msg: "Clone destination {{ platform_clone_dest_clean }} already exists on {{ inventory_hostname }}."
+
+    - name: Check platform sites directory exists
+      ansible.builtin.stat:
+        path: "{{ platform_root_src }}/web/sites"
+      register: platform_clone_sites_stat
+
+    - name: Discover client site directories to exclude
+      ansible.builtin.find:
+        paths: "{{ platform_root_src }}/web/sites"
+        file_type: directory
+        depth: 1
+      register: platform_clone_site_dirs
+      when: platform_clone_sites_stat.stat.isdir | default(false)
+
+    - name: Build platform clone site exclusion list
+      ansible.builtin.set_fact:
+        platform_clone_exclude_sites: >-
+          {{
+            (platform_clone_site_dirs.files
+             if (platform_clone_site_dirs is defined and platform_clone_site_dirs.files is defined)
+             else [])
+            | map(attribute='path')
+            | map('regex_replace', '^' ~ (platform_root_src | regex_escape) ~ '/web/sites/?', '')
+            | select('match', '^[^/]+$')
+            | reject('equalto', 'default')
+            | list
+          }}
+
+    - name: Create temporary directory for platform clone
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: platform-clone
+      register: platform_clone_tempdir
+      when: not ansible_check_mode
+
+    - name: Archive platform source for cloning
+      ansible.builtin.command:
+        cmd: >-
+          tar -czf "{{ platform_clone_archive }}"
+          {% for site_dir in platform_clone_exclude_sites | default([]) %}
+          --exclude="./web/sites/{{ site_dir }}"
+          --exclude="./web/sites/{{ site_dir }}/*"
+          {% endfor %}
+          -C "{{ platform_root_src }}"
+          .
+      args:
+        creates: "{{ platform_clone_archive }}"
+      become: true
+      when: not ansible_check_mode
+
+    - name: Create clone destination directory
+      ansible.builtin.file:
+        path: "{{ platform_clone_dest_clean }}"
+        state: directory
+        owner: "{{ platform_item.value.user }}"
+        group: "{{ platform_item.value.group }}"
+        mode: "{{ platform_item.value.drupal_root_permissions | default(drupal_root_permissions | default('0750')) }}"
+      become: true
+
+    - name: Extract platform clone into destination
+      ansible.builtin.unarchive:
+        src: "{{ platform_clone_archive }}"
+        dest: "{{ platform_clone_dest_clean }}"
+        remote_src: true
+      become: true
+      when: not ansible_check_mode
+
+    - name: Remove platform clone temporary directory
+      ansible.builtin.file:
+        path: "{{ platform_clone_tempdir.path }}"
+        state: absent
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_clone_tempdir is defined
+
+    - name: Report platform clone
+      ansible.builtin.debug:
+        msg: "Platform {{ platform_item.key }} cloned from {{ platform_root_src }} to {{ platform_clone_dest_clean }} on {{ inventory_hostname }}."
+  when: platform_item is defined

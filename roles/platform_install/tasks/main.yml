@@ -1,11 +1,10 @@
----
-# Creates Drupal codebases for the requested platforms via Composer.
+# Prepares platform prerequisites and installs Drupal codebases via Composer.
 
-- name: Install targeted Drupal platforms
-  ansible.builtin.include_tasks: install-new-drupal-platforms.yml
-  loop: "{{ platforms | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- name: Install Drupal platform
+  ansible.builtin.include_tasks:
+    file: install-drupal-platform.yml
+  vars:
+    platform_item: "{{ platform_selected }}"
   when:
-    - platform is defined
-    - platform == platforms[item.key].name
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'

@@ -1,0 +1,69 @@
+# /etc/apache2/sites-available/{{ apache_catch_all_site_id }}.conf
+# Simple catch-all site to serve a static error page for unknown hosts.
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+{% set error_root = apache_catch_all_document_root %}
+{% set error_page = apache_catch_all_page %}
+{% set error_hostname = apache_catch_all_server_name %}
+{% set error_apex = apache_catch_all_ssl_apex %}
+{% set error_cert = apache_catch_all_ssl_certificate %}
+{% set error_key = apache_catch_all_ssl_key %}
+{% set allowed_hosts = apache_catch_all_allowed_hostnames | default([error_hostname]) %}
+{% set allowed_pattern = allowed_hosts | map('regex_escape') | join('|') %}
+{% set error_doc = '/error/' %}
+
+<VirtualHost *:80>
+    ServerName {{ error_hostname }}
+    DocumentRoot {{ error_root }}
+
+    <Directory {{ error_root }}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        DirectoryIndex {{ error_page }}
+        Require all granted
+    </Directory>
+
+    ErrorDocument 400 {{ error_doc }}400.html
+    ErrorDocument 403 {{ error_doc }}403.html
+    ErrorDocument 404 {{ error_doc }}404.html
+    ErrorDocument 500 {{ error_doc }}500.html
+    ErrorDocument 421 {{ error_doc }}421.html
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/error/
+    RewriteCond %{HTTP_HOST} !^(?:{{ allowed_pattern }})$
+    RewriteRule ^ - [R=421,L]
+
+    ErrorLog /proc/self/fd/2
+    CustomLog /proc/self/fd/1 vhost_journal
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName {{ error_hostname }}
+    DocumentRoot {{ error_root }}
+
+    <Directory {{ error_root }}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        DirectoryIndex {{ error_page }}
+        Require all granted
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile {{ error_cert }}
+    SSLCertificateKeyFile {{ error_key }}
+
+    ErrorDocument 400 {{ error_doc }}400.html
+    ErrorDocument 403 {{ error_doc }}403.html
+    ErrorDocument 404 {{ error_doc }}404.html
+    ErrorDocument 500 {{ error_doc }}500.html
+    ErrorDocument 421 {{ error_doc }}421.html
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/error/
+    RewriteCond %{HTTP_HOST} !^(?:{{ allowed_pattern }})$
+    RewriteRule ^ - [R=421,L]
+
+    ErrorLog /proc/self/fd/2
+    CustomLog /proc/self/fd/1 vhost_journal
+</VirtualHost>

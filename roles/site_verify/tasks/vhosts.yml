@@ -1,0 +1,21 @@
+- block:
+    - name: Deploy Apache vhost configuration
+      vars:
+        site_name: "{{ site_context_site_name }}"
+        platform_path: "{{ site_context_platform_root }}"
+      ansible.builtin.template:
+        src: "{{ role_path }}/../os_apache/templates/apache-vhost.conf.j2"
+        dest: "{{ apache_vhost_path | default('/etc/apache2/sites-available') }}/{{ site_name }}.conf"
+        owner: "{{ root_user }}"
+        group: "{{ root_group }}"
+        mode: "0644"
+        force: true
+      notify: Reload Apache service
+
+    - name: Enable Apache site
+      ansible.builtin.command: "a2ensite {{ site_context_site_name }}.conf"
+      args:
+        creates: "{{ apache_sites_enabled | default('/etc/apache2/sites-enabled') }}/{{ site_context_site_name }}.conf"
+      become: true
+      notify: Reload Apache service
+  when: site_context_should_process | default(false)

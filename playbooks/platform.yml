@@ -1,0 +1,100 @@
+---
+# Manages Drupal platform lifecycles (install, update, verify, delete).
+- name: Manage Drupal platforms
+  hosts: lamp
+  become: true
+  vars_files:
+    - "{{ playbook_dir }}/../vars/platforms/platform.yml"
+    - "{{ playbook_dir }}/../vars/environments/{{ env | default('dev') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/os/{{ stack.os | default('ubuntu-24') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/php/{{ stack.php | default('php-83') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/mysql/{{ stack.mysql | default('mysql-80') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/apache/{{ stack.apache | default('apache-24') }}.yml"
+
+  pre_tasks:
+    - name: Require explicit tags for platform playbook
+      ansible.builtin.meta: end_play
+      when: ansible_run_tags is not defined or ansible_run_tags | length == 0
+
+    - name: Enforce single-host platform operations
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+        fail_msg: >-
+          Platform operations must target exactly one host. Re-run with
+          --limit <hostname>.
+      run_once: true
+      delegate_to: localhost
+      tags: always
+
+    - name: Require explicit platform parameter
+      ansible.builtin.assert:
+        that:
+          - platform | default('') | string | length > 0
+        fail_msg: >-
+          Provide -e "platform=<id>" to select which platform to operate on.
+      tags: always
+
+    - name: Include platform-specific variables
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../vars/platforms/{{ platform }}.yml"
+      tags: always
+
+  # import_role loads tasks statically, so tag filtering happens before 
+  # execution and role-level tags inherit correctly.
+  tasks:
+    - name: Prepare platform selection
+      ansible.builtin.import_role:
+        name: platform_context
+      tags:
+        - always
+
+    - name: Prepare and install Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_install
+      tags:
+        - never
+        - install
+
+    - name: Update Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_update
+      tags:
+        - never
+        - update
+
+    - name: Verify Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_verify
+      tags:
+        - never
+        - install
+        - verify
+
+    - name: Delete Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_delete
+      tags:
+        - never
+        - delete
+
+    - name: Backup Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_backup
+      tags:
+        - never
+        - backup
+
+    - name: Restore Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_restore
+      tags:
+        - never
+        - restore
+
+    - name: Clone Drupal platforms
+      ansible.builtin.import_role:
+        name: platform_clone
+      tags:
+        - never
+        - clone

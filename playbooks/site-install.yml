@@ -3,28 +3,31 @@
 - name: Install Drupal sites
   hosts: lamp
   become: true
+  vars_files:
+    - "{{ playbook_dir }}/../vars/environments/{{ env | default('dev') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/os/{{ stack.os | default('ubuntu-24') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/security/ssl.yml"
+    - "{{ playbook_dir }}/../vars/stack/php/{{ stack.php | default('php-83') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/mysql/{{ stack.mysql | default('mysql-80') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/apache/{{ stack.apache | default('apache-24') }}.yml"
+    - "{{ playbook_dir }}/../vars/stack/drupal/{{ stack.drupal | default('drupal10') }}.yml"
+  pre_tasks:
+    - name: Require explicit site selection
+      ansible.builtin.assert:
+        that:
+          - site | default('') | string | length > 0
+        fail_msg: >-
+          Provide a single site identifier via -e "site=<site_identifier>" to run this playbook.
 
   tasks:
-    - name: Apply site base configuration
-      ansible.builtin.import_role:
-        name: site_base
-
     - name: Install requested sites
       ansible.builtin.import_role:
         name: site_install
+      tags:
+        - install
 
-    - name: Apply site settings
+    - name: Generate site login URLs
       ansible.builtin.import_role:
-        name: site_settings
-
-    - name: Ensure site file permissions are correct
-      ansible.builtin.import_role:
-        name: site_permissions
-
-    - name: Configure site vhosts
-      ansible.builtin.import_role:
-        name: site_vhost
-
-    - name: Configure site aliases
-      ansible.builtin.import_role:
-        name: site_alias
+        name: site_login
+      tags:
+        - install

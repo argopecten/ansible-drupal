@@ -1,0 +1,11 @@
+# Supported Drupal platform:
+# Drupal last stable release from drupal.org for version 10.5
+
+drupal10.6:
+  name: "drupal10.6"
+  composer_project: "drupal/recommended-project"  # https://github.com/drupal/recommended-project
+  version: "10.6.*"
+  dependencies:
+    - "drush/drush:^13"
+    - "drupal/admin_toolbar:^3.6"
+  state: present

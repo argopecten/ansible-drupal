@@ -1,0 +1,56 @@
+---
+# PHP 8.3 and Composer variables for webservers
+
+composer_project_options: "--prefer-dist --no-interaction --stability stable"
+composer_version: "2.9.2"
+composer_path: "/usr/bin/composer"
+
+php_version: "8.3"
+php_extensions: [fpm, curl, gd, mbstring, mysql, xml, zip, bcmath, intl, soap]
+
+php_ini_path: "/etc/php/{{ php_version }}/fpm/php.ini"
+php_date_timezone: "Europe/Budapest"
+
+# CLI-specific PHP settings
+php_cli_max_execution_time: 600
+php_cli_max_input_time: 300
+php_cli_memory_limit: "512M"
+php_cli_post_max_size: "128M"
+php_cli_upload_max_filesize: "128M"
+php_cli_display_errors: "On"
+php_cli_log_errors: "On"
+php_cli_error_reporting: "E_ALL & ~E_DEPRECATED & ~E_STRICT"
+
+# FPM-specific PHP settings
+php_fpm_max_execution_time: 240     # 600–900s (10–15 min) to allow large imports
+php_fpm_max_input_time: 120         # 600–900s to cover upload/parse of large payloads.
+php_fpm_memory_limit: "256M"        # 512M–1G if imports are heavy on parsing
+php_fpm_post_max_size: "50M"        # set to 1.5–2x your largest expected upload, e.g., 512M or 1G.
+php_fpm_upload_max_filesize: "50M"  # match expected file size, e.g., 512M or 1G
+php_fpm_request_terminate_timeout: 900  # align with max_execution_time plus buffer
+php_fpm_display_errors: "Off"
+php_fpm_log_errors: "On"
+php_fpm_error_reporting: "E_ALL & ~E_DEPRECATED & ~E_STRICT"
+
+php_cli_configurations:
+  - { regexp: '^;date.timezone =', line: 'date.timezone = {{ php_date_timezone }}' }
+  - { regexp: '^max_execution_time =', line: 'max_execution_time = {{ php_cli_max_execution_time }}' }
+  - { regexp: '^max_input_time =', line: 'max_input_time = {{ php_cli_max_input_time }}' }
+  - { regexp: '^memory_limit =', line: 'memory_limit = {{ php_cli_memory_limit }}' }
+  - { regexp: '^post_max_size =', line: 'post_max_size = {{ php_cli_post_max_size }}' }
+  - { regexp: '^upload_max_filesize =', line: 'upload_max_filesize = {{ php_cli_upload_max_filesize }}' }
+  - { regexp: '^display_errors =', line: 'display_errors = {{ php_cli_display_errors }}' }
+  - { regexp: '^log_errors =', line: 'log_errors = {{ php_cli_log_errors }}' }
+  - { regexp: '^error_reporting =', line: 'error_reporting = {{ php_cli_error_reporting }}' }
+
+php_fpm_configurations:
+  - { regexp: '^;date.timezone =', line: 'date.timezone = {{ php_date_timezone }}' }
+  - { regexp: '^max_execution_time =', line: 'max_execution_time = {{ php_fpm_max_execution_time }}' }
+  - { regexp: '^max_input_time =', line: 'max_input_time = {{ php_fpm_max_input_time }}' }
+  - { regexp: '^memory_limit =', line: 'memory_limit = {{ php_fpm_memory_limit }}' }
+  - { regexp: '^post_max_size =', line: 'post_max_size = {{ php_fpm_post_max_size }}' }
+  - { regexp: '^upload_max_filesize =', line: 'upload_max_filesize = {{ php_fpm_upload_max_filesize }}' }
+  - { regexp: '^display_errors =', line: 'display_errors = {{ php_fpm_display_errors }}' }
+  - { regexp: '^log_errors =', line: 'log_errors = {{ php_fpm_log_errors }}' }
+  - { regexp: '^error_reporting =', line: 'error_reporting = {{ php_fpm_error_reporting }}' }
+  - { regexp: '^request_terminate_timeout =', line: 'request_terminate_timeout = {{ php_fpm_request_terminate_timeout }}' }

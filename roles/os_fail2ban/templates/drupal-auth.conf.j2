@@ -1,0 +1,8 @@
+[Definition]
+# Matches Drupal syslog entries emitted by the syslog module when a login fails.
+# Examples:
+# drupal[12345]: http://example.com|203.0.113.10|http://example.com/user/login|Login attempt failed for foo.
+# drupal[12345]: http://example.com|2001:db8::1|http://example.com/user/login|Login attempt failed for foo.
+failregex = ^.*\|<HOST>\|.*Login attempt failed.*
+            ^.*Login attempt failed for .* from <HOST>.*$
+ignoreregex =

@@ -1,0 +1,26 @@
+[Definition]
+loglevel = {{ fail2ban_loglevel | default('INFO') }}
+logtarget = {{ fail2ban_logtarget | default('STDOUT') }}
+socket = {{ fail2ban_socket | default('/var/run/fail2ban/fail2ban.sock') }}
+
+[DEFAULT]
+# --- Networking ---
+allowipv6 = auto
+usedns = {{ fail2ban_usedns | default('no') }}
+backend = {{ fail2ban_backend | default('systemd') }}
+
+# --- Ban logic ---
+bantime = {{ fail2ban_bantime | default('1h') }}
+findtime = {{ fail2ban_findtime | default('10m') }}
+maxretry = {{ fail2ban_maxretry | default('5') }}
+
+# --- Firewall (nftables) ---
+banaction = {{ fail2ban_banaction | default('nftables-multiport[priority=' ~ (fail2ban_nftables_priority | default('10')) ~ ']') }}
+action = {{ fail2ban_action | default('%(banaction)s[port=\"%(port)s\", protocol=\"%(protocol)s\"]') }}, {{ fail2ban_action_mw | default('action_mw') }}
+
+# --- Ignore trusted sources ---
+ignoreip = {{ fail2ban_ignoreips | default(['127.0.0.1/8', '::1']) | join(' ') }}{% if fail2ban_ignoreip_files is defined and (fail2ban_ignoreip_files | length > 0) %} {{ fail2ban_ignoreip_files | map('regex_replace', '^', 'file:') | join(' ') }}{% endif %}
+
+# --- Notifications (optional) ---
+destemail = {{ fail2ban_destemail | default('root@localhost') }}
+sender = {{ fail2ban_sender | default('root@' + ansible_fqdn) }}

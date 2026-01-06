@@ -1,0 +1,101 @@
+---
+- name: Install Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root: "{{ platform_base_dir.path ~ '/' ~ platform_item.value.name }}"
+    tmp_build_dir: "/tmp/{{ platform_item.key }}"
+    drupal_project: "{{ platform_item.value.composer_project | default(default_drupal_composer_project | default('drupal/recommended-project')) }}"
+    drupal_version: "{{ platform_item.value.version | default(default_drupal_version | default('')) }}"
+    drupal_site_dir: "{{ tmp_build_dir }}"
+  block:
+    - name: Validate platform definition
+      ansible.builtin.assert:
+        that:
+          - platform_item.value.name is defined
+          - platform_item.value.user is defined
+          - platform_item.value.group is defined
+          - drupal_project | length > 0
+          - drupal_version | length > 0
+        fail_msg: "Platform {{ platform_item.key }} is missing name/user/group or version/composer_project attributes."
+
+    - name: Ensure platform base directory exists
+      ansible.builtin.file:
+        path: "{{ platform_base_dir.path }}"
+        state: directory
+        owner: "{{ platform_base_dir.owner }}"
+        group: "{{ platform_base_dir.group }}"
+        mode: "{{ platform_base_dir.mode }}"
+      become: true
+
+    - name: Remove previous temporary build directory
+      ansible.builtin.file:
+        path: "{{ tmp_build_dir }}"
+        state: absent
+      become: true
+
+    - name: Generate Drupal project with Composer
+      community.general.composer:
+        command: create-project
+        arguments: "{{ drupal_project }}:{{ drupal_version }} {{ drupal_site_dir }} {{ composer_project_options | default('') }}"
+        working_dir: "/tmp"
+        optimize_autoloader: true
+      become_user: "{{ platform_item.value.user }}"
+      environment:
+        COMPOSER_PROCESS_TIMEOUT: "1200"
+        COMPOSER_MEMORY_LIMIT: "-1"
+        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+      when: not ansible_check_mode
+
+    - name: Install additional Composer dependencies
+      community.general.composer:
+        command: require
+        arguments: "{{ dependency }}"
+        working_dir: "{{ tmp_build_dir }}"
+      become_user: "{{ platform_item.value.user }}"
+      environment:
+        COMPOSER_PROCESS_TIMEOUT: "1200"
+        COMPOSER_MEMORY_LIMIT: "-1"
+        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+      loop: "{{ platform_item.value.dependencies | default([]) }}"
+      loop_control:
+        loop_var: dependency
+        label: "{{ dependency }}"
+      when:
+        - not ansible_check_mode
+        - (platform_item.value.dependencies | default([])) | length > 0
+
+    - name: Check current platform root
+      ansible.builtin.stat:
+        path: "{{ platform_root }}"
+      register: platform_root_stat
+
+    - name: Remove existing platform root before reinstalling
+      ansible.builtin.file:
+        path: "{{ platform_root }}"
+        state: absent
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_root_stat.stat.exists
+
+    - name: Ensure new platform root exists
+      ansible.builtin.file:
+        path: "{{ platform_root }}"
+        state: directory
+        owner: "{{ platform_item.value.user }}"
+        group: "{{ platform_item.value.group }}"
+        mode: "{{ platform_item.value.drupal_root_permissions | default(drupal_root_permissions | default('0750')) }}"
+      become: true
+
+    - name: Move Drupal project files into place
+      ansible.builtin.command:
+        cmd: "cp -r {{ tmp_build_dir }}/. {{ platform_root }}/"
+        creates: "{{ platform_root }}/web/index.php"
+      become: true
+      when: not ansible_check_mode
+
+    - name: Clean up temporary build directory
+      ansible.builtin.file:
+        path: "{{ tmp_build_dir }}"
+        state: absent
+      become: true
+  when: platform_item is defined

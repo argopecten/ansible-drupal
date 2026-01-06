@@ -1,0 +1,27 @@
+# /etc/apache2/sites-available/{{ site_name }}.conf
+# Apache vhost configuration on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+{% set site_apex = site_name.split('.')[-2:] | join('.') %}
+
+<VirtualHost *:80>
+    ServerName {{ site_name }}
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName {{ site_name }}
+    DocumentRoot {{ platform_path }}/web
+
+    <Directory {{ platform_path }}/web>
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/{{ site_apex }}.pem
+    SSLCertificateKeyFile /etc/ssl/private/{{ site_apex }}.key
+
+    ErrorLog /proc/self/fd/2
+    CustomLog /proc/self/fd/1 vhost_journal
+</VirtualHost>

@@ -1,58 +1,89 @@
 ---
-# Install a Drupal site with drush
+# Install a Drupal site with drush on the selected platform.
 
-# Set variables for the Drupal site
-- name: Set variables for the Drupal site 1
+- name: Derive Drupal site installation context
   ansible.builtin.set_fact:
-    platform_user: "{{ platforms[ sites[item.key].platform ].user }}"
-    platform_group: "{{ platforms[ sites[item.key].platform ].group }}"
-    platform_path: "{{ platforms[ sites[item.key].platform ].path }}{{ platforms[ sites[item.key].platform ].name }}"
-    install_profile: "{{ platforms[ sites[item.key].platform ].profile | default('standard') }}"
-    site_name: "{{ sites[item.key].name }}"
-    site_user: "{{ sites[item.key].user | default('admin') }}"
-    site_pass: "{{ lookup('ansible.builtin.password', '/dev/null', length=20 + (5 | random), chars=['ascii_letters', 'digits', '!+-.:<=>_|']) }}"
-    db_pass: "{{ lookup('ansible.builtin.password', '/dev/null', length=16, chars=['ascii_letters', 'digits', '!+-.:<=>_|']) }}"
-    db_host: "localhost"
-    db_backend: "mysql" 
-    extra_args: "{{ drupal_site_install_extra_args | join(' ') }}"
-    modules: "{{ sites[item.key].modules | join(' ') }}"
-# Set variables for the Drupal site reusing the previous variables
-- name: Set variables for the Drupal site reusing the previous variables
-  ansible.builtin.set_fact:
-    drush_path: "{{ platform_path }}/vendor/bin/drush"
-    db_user: "{{ site_name | regex_replace('[^a-zA-Z0-9]', '') }}"  # Remove special characters
-    db_name: "{{ site_name | regex_replace('[^a-zA-Z0-9]', '') }}"
+    site_install_platform_user: "{{ site_context_platform_user }}"
+    site_install_platform_path: "{{ site_context_platform_root }}"
+    site_install_profile: "{{ site_context_site_profile | default(site_context_site_definition.profile | default('standard')) }}"
+    site_install_site_name: "{{ site_context_site_name }}"
+    site_install_admin_user: "{{ site_context_site_definition.admin_user | default('admin') }}"
+    site_install_admin_pass: "{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_letters', 'digits']) }}"
+    site_install_db_name: "{{ site_context_db_name }}"
+    site_install_db_user: "{{ site_context_db_user }}"
+    site_install_db_pass: "{{ site_context_db_password }}"
+    site_install_db_host: "{{ site_context_db_host | default('localhost') }}"
+    site_install_db_backend: "{{ site_context_site_definition.db_backend | default('mysql') }}"
+    site_install_modules_enable: "{{ site_context_modules_enable | default([]) }}"
+    site_install_modules_disable: "{{ site_context_modules_disable | default([]) }}"
+    site_install_extra_args_raw: "{{ site_context_site_definition.site_install_extra_args | default(site_context_platform_entry.drupal_site_install_extra_args | default(drupal_site_install_extra_args | default([]))) }}"
+    site_install_drush_path: "{{ site_context_platform_root }}/vendor/bin/drush"
 
-# Create database user for site
-- name: Create database user for site
+- name: Normalize extra arguments list
+  ansible.builtin.set_fact:
+    site_install_extra_args: >-
+      {{
+        [] if site_install_extra_args_raw in ('', none)
+        else (
+          site_install_extra_args_raw
+          if site_install_extra_args_raw is iterable and site_install_extra_args_raw is not string
+          else [site_install_extra_args_raw]
+        )
+      }}
+
+- name: Ensure database exists for site
+  community.mysql.mysql_db:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mysql_unix_socket }}"
+    name: "{{ site_install_db_name }}"
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+    state: present
+  become: true
+
+- name: Ensure database user exists for site
   community.mysql.mysql_user:
     check_implicit_admin: true
     login_unix_socket: "{{ mysql_unix_socket }}"
-    name: "{{ db_user }}"
-    password: "{{ db_pass }}"
-    priv: "*.*:ALL,GRANT"
-    host: "{{ db_host }}"
+    name: "{{ site_install_db_user }}"
+    password: "{{ site_install_db_pass }}"
+    priv: "{{ site_install_db_name }}.*:ALL"
+    host: "{{ site_install_db_host }}"
     state: present
-  become: true
- 
-# Install Drupal core with drush only if sites have not been installed
-- name: Install Drupal core with drush.
-  ansible.builtin.command: >
-    {{ drush_path }} --root={{ platform_path }} site-install {{ install_profile }} -y
-    --site-name="{{ site_name }}"
-    --sites-subdir="{{ site_name }}"
-    --account-name="{{ site_user }}"
-    --account-pass="{{ site_pass }}"
-    --db-url={{ db_backend }}://{{ db_user }}:{{ db_pass }}@{{ db_host }}/{{ db_name }}
-    {{ extra_args }}
-  args:
-    chdir: "{{ platform_path }}"
+    column_case_sensitive: "{{ mysql_column_case_sensitive | default(true) }}"
   become: true
 
-# Install Drupal modules with drush
-- name: Install Drupal modules with drush.
+- name: Install Drupal core with drush
   ansible.builtin.command: >
-    {{ drush_path }} pm-enable -y {{ modules }} --uri={{ site_name }} --root={{ platform_path }}
+    {{ site_install_drush_path }} --root={{ site_install_platform_path }}
+    site-install {{ site_install_profile }} -y
+    --site-name="{{ site_install_site_name }}"
+    --sites-subdir="{{ site_install_site_name }}"
+    --account-name="{{ site_install_admin_user }}"
+    --account-pass="{{ site_install_admin_pass }}"
+    --db-url={{ site_install_db_backend }}://{{ site_install_db_user }}:{{ site_install_db_pass }}@{{ site_install_db_host }}/{{ site_install_db_name }}
+    {{ site_install_extra_args | join(' ') }}
   args:
-    chdir: "{{ platform_path }}"
+    chdir: "{{ site_install_platform_path }}"
   become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Disable selected Drupal modules
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} pm-uninstall -y {{ site_install_modules_disable | join(' ') }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_modules_disable | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Enable selected Drupal modules
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} pm-enable -y {{ site_install_modules_enable | join(' ') }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_modules_enable | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"

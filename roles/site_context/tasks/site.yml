@@ -1,0 +1,109 @@
+---
+# Provides baseline site facts and eligibility checks for site_* roles.
+
+- name: Normalize site request flags
+  ansible.builtin.set_fact:
+    site_context_site_identifier: "{{ site | default('') }}"
+    site_context_site_requested: "{{ site | default('') | string | length > 0 }}"
+    site_context_site_host_match: false
+    site_context_should_process: false
+
+- block:
+    - name: Locate host-specific site definitions directory
+      ansible.builtin.set_fact:
+        site_context_sites_dir: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/sites.d"
+
+    - name: Check for host-specific site definitions
+      ansible.builtin.stat:
+        path: "{{ site_context_sites_dir }}"
+      register: site_context_sites_dir_stat
+      delegate_to: localhost
+
+    - name: Discover host-specific site definition files
+      ansible.builtin.find:
+        paths: "{{ site_context_sites_dir }}"
+        patterns: "*.yml"
+        file_type: file
+      register: site_context_host_site_files
+      delegate_to: localhost
+      when: site_context_sites_dir_stat.stat.isdir
+
+    - name: Load host-specific site definition files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+        name: site_context_sites_tmp
+      loop: "{{ site_context_host_site_files.files | map(attribute='path') | sort }}"
+      register: site_context_host_sites_loaded
+      when:
+        - site_context_sites_dir_stat.stat.isdir
+        - site_context_host_site_files.files | default([]) | length > 0
+
+    - name: Merge host-specific site definitions
+      ansible.builtin.set_fact:
+        sites: >-
+          {{
+            sites | default({})
+            | combine(item.ansible_facts.site_context_sites_tmp.sites | default({}), recursive=True)
+          }}
+      loop: "{{ site_context_host_sites_loaded.results | default([]) }}"
+      when: site_context_host_sites_loaded is defined
+
+    - name: Determine host ownership for requested site
+      ansible.builtin.set_fact:
+        site_context_site_host_match: "{{ sites is defined and site_context_site_identifier in sites }}"
+
+    - block:
+        - name: Normalize selected site definition
+          ansible.builtin.set_fact:
+            site_context_site_definition: "{{ sites[site_context_site_identifier] }}"
+            site_context_site_name: "{{ sites[site_context_site_identifier].name | default(site_context_site_identifier) }}"
+            site_context_site_platform: "{{ sites[site_context_site_identifier].platform | default('') }}"
+            site_context_site_profile: "{{ sites[site_context_site_identifier].profile | default('standard') }}"
+            site_context_site_state: "{{ sites[site_context_site_identifier].state | default('present') }}"
+            site_context_modules_enable_raw: "{{ sites[site_context_site_identifier].modules_enable | default(sites[site_context_site_identifier].modules | default(site_install_default_modules | default([]))) }}"
+            site_context_modules_disable_raw: "{{ sites[site_context_site_identifier].modules_disable | default([]) }}"
+            site_context_site_subdir: "{{ sites[site_context_site_identifier].sites_subdir | default(sites[site_context_site_identifier].name | default(site_context_site_identifier)) }}"
+
+        - name: Validate required site attributes
+          ansible.builtin.assert:
+            that:
+              - site_context_site_name | string | length > 0
+              - (site_context_site_name | lower) is match('^[a-z0-9-]+(\\.[a-z0-9-]+)+$')
+              - site_context_site_profile | default('') | string | length > 0
+            fail_msg: >-
+              Site '{{ site_context_site_identifier }}' must define name as a fully-qualified
+              domain and provide a non-empty profile value.
+
+        - name: Calculate host/site flags
+          ansible.builtin.set_fact:
+            site_context_site_state_present: "{{ (site_context_site_state | string | lower) != 'absent' }}"
+            site_context_should_process: "{{ ((site_context_site_state | string | lower) != 'absent') and site_context_site_host_match }}"
+
+        - name: Normalize modules lists
+          ansible.builtin.set_fact:
+            site_context_modules_enable: >-
+              {{
+                [] if site_context_modules_enable_raw in ('', none)
+                else (
+                  site_context_modules_enable_raw
+                  if site_context_modules_enable_raw is iterable and site_context_modules_enable_raw is not string
+                  else [site_context_modules_enable_raw]
+                )
+              }}
+            site_context_modules_disable: >-
+              {{
+                [] if site_context_modules_disable_raw in ('', none)
+                else (
+                  site_context_modules_disable_raw
+                  if site_context_modules_disable_raw is iterable and site_context_modules_disable_raw is not string
+                  else [site_context_modules_disable_raw]
+                )
+              }}
+
+        - name: Log normalized site summary
+          ansible.builtin.debug:
+            msg: >-
+              Site {{ site_context_site_name }} ({{ site_context_site_identifier }}) targets platform
+              {{ site_context_site_platform | default('unspecified') }} – should_process={{ site_context_should_process }}
+      when: site_context_site_host_match
+  when: site_context_site_requested

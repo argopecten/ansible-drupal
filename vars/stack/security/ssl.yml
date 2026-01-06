@@ -1,0 +1,11 @@
+---
+# SSL defaults shared across playbooks.
+
+# Self-signed certificate parameters
+ssl_selfsigned_curve: "P-256"
+ssl_selfsigned_days: 365
+ssl_selfsigned_renewal_days: 30
+
+# Cloudflare certificate parameters
+ssl_cf_requested_validity: 730     # 2 years in days
+ssl_cf_request_type: "origin-ecc"  # Options: origin-ecc, origin-rsa

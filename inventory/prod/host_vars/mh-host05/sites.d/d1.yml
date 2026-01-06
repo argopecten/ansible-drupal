@@ -1,0 +1,16 @@
+---
+sites:
+  d1:
+    host: "mh-host05"
+    name: "{{ vault_mh_host05.d1.name }}"
+    platform: "drupal11.3"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_mh_host05.d1.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_mh_host05.d1.cf.api_key | default('dummy') }}"
+    state: present

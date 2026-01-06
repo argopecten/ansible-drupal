@@ -1,9 +1,0 @@
-[DEFAULT]
-ignoreip = {{ fail2ban_ignoreips | join(' ')}}
-bantime = {{ fail2ban_bantime | default('1h') }}
-findtime = {{ fail2ban_findtime | default('10m') }}
-maxretry = {{ fail2ban_maxretry | default('5') }}
-banaction = {{ fail2ban_banaction | default('iptables-multiport') }}
-destemail = {{ fail2ban_destemail | default('root@localhost') }}
-sender = {{ fail2ban_sender | default('root@' + ansible_fqdn) }}
-allowipv6 = auto

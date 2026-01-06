@@ -1,0 +1,85 @@
+# {{ apache_main_conf_file }}
+# Minimal Apache configuration for Ubuntu 24.04
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# The directory where shm and other runtime files will be stored.
+DefaultRuntimeDir {{ apache_runtime_dir }}
+
+# The file in which the server should record its process identification number when it starts.
+PidFile {{ apache_pid_file }}
+
+# The number of seconds before receives and sends time out.
+Timeout {{ apache_timeout }}
+
+# Whether or not to allow persistent connections (more than one request per connection).
+KeepAlive {{ apache_keepalive }}
+
+# The maximum number of requests to allow during a persistent connection. 0 = unlimited amount.
+MaxKeepAliveRequests {{ apache_max_keepalive_requests }}
+
+# Number of seconds to wait for the next request from the same client on the same connection.
+KeepAliveTimeout {{ apache_keepalive_timeout }}
+
+# user and group Apache runs as.
+User {{ apache_user }}
+Group {{ apache_group }}
+
+# SEC Log the names of clients or just their IP addresses
+HostnameLookups Off
+
+# The location of the error log file.
+ErrorLog /proc/self/fd/2
+
+# Control the severity of messages logged to the error_log.
+LogLevel {{ apache_log_level }}
+ErrorLogFormat "[%t] [%l] [pid %P:tid %T] [client %a] [vhost %v] %M"
+
+# Include module configuration:
+IncludeOptional {{ apache_conf_dir }}/mods-enabled/*.load
+IncludeOptional {{ apache_conf_dir }}/mods-enabled/*.conf
+
+# Include list of ports to listen on
+Include ports.conf
+
+# SSL Settings
+<IfModule mod_ssl.c>
+    {% if apache_ssl_protocol is defined %}
+    SSLProtocol {{ apache_ssl_protocol }}
+    {% else %}
+    SSLProtocol -SSLv3 -TLSv1 -TLSv1.1
+    SSLProtocol +TLSv1.2 +TLSv1.3
+    {% endif %}
+    SSLCipherSuite {{ apache_ssl_cipher_suite }}
+    SSLHonorCipherOrder {{ apache_ssl_honor_order }}
+</IfModule>
+
+# Sets the default security model of the Apache2 HTTPD server. 
+# It does not allow access to the root filesystem outside of /var/www.
+<Directory />
+    Options FollowSymLinks
+    AllowOverride None
+    Require all denied
+</Directory>
+# For fallback to the default Apache document root
+<Directory {{ apache_document_root }}>
+    Options {{ apache_document_root_options }}
+    AllowOverride {{ apache_document_root_override }}
+    # Ensure a sane directory index order for the document root:
+    DirectoryIndex {{ apache_directory_index }}
+    Require all granted
+</Directory>
+
+# The name of the file to look for in each directory for additional directives.
+AccessFileName .htaccess
+
+# The following lines prevent .htaccess and .htpasswd files from being
+# viewed by Web clients.
+<FilesMatch "^\\.ht">
+    Require all denied
+</FilesMatch>
+
+# Include generic snippets of statements
+IncludeOptional {{ apache_conf_dir }}/conf-enabled/*.conf
+
+# Include the virtual host configurations:
+IncludeOptional {{ apache_conf_dir }}/sites-enabled/*.conf

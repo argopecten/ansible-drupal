@@ -1,0 +1,87 @@
+---
+- name: Remove Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root: "{{ (platform_item.value.path | default(platform_base_dir.path | default('/var/www/drupal')) | regex_replace('\\/+$', '')) ~ '/' ~ platform_item.value.name }}"
+    platform_backup_dir: >-
+      {{
+        '/home/' ~ platform_item.value.user ~ '/backup/' ~ platform_item.key
+        if platform_item.value.user is defined
+        else ''
+      }}
+    active_user_count: "{{ (platforms | dict2items | selectattr('key', 'ne', platform_item.key) | selectattr('value.user', 'defined') | selectattr('value.user', 'equalto', platform_item.value.user | default('')) | list | length) }}"
+    active_group_count: "{{ (platforms | dict2items | selectattr('key', 'ne', platform_item.key) | selectattr('value.group', 'defined') | selectattr('value.group', 'equalto', platform_item.value.group | default('')) | list | length) }}"
+  block:
+    - name: Remove Drupal platform root directory
+      ansible.builtin.file:
+        path: "{{ platform_root }}"
+        state: absent
+      become: true
+      when: not ansible_check_mode
+
+    - name: Remove Drupal platform backup directory
+      ansible.builtin.file:
+        path: "{{ platform_backup_dir }}"
+        state: absent
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_item.value.user is defined
+
+    - name: Remove platform Unix user when unused elsewhere
+      block:
+        - name: Delete platform Unix user
+          ansible.builtin.user:
+            name: "{{ platform_item.value.user }}"
+            state: absent
+            remove: true
+      rescue:
+        - name: Warn user removal skipped due to active processes
+          ansible.builtin.debug:
+            msg: >
+              Skipping removal of user {{ platform_item.value.user }} because it is still in use:
+              {{ ansible_failed_result.msg | default('unknown error') }}
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_item.value.user is defined
+        - active_user_count == 0
+
+    - name: Remove platform user home directory when unused elsewhere
+      ansible.builtin.file:
+        path: "/home/{{ platform_item.value.user }}"
+        state: absent
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_item.value.user is defined
+        - active_user_count == 0
+
+    - name: Remove platform Unix group when unused elsewhere
+      block:
+        - name: Delete platform Unix group
+          ansible.builtin.group:
+            name: "{{ platform_item.value.group }}"
+            state: absent
+      rescue:
+        - name: Warn group removal skipped due to active members
+          ansible.builtin.debug:
+            msg: >-
+              Skipping removal of group {{ platform_item.value.group }} because it is still in use:
+              {{ ansible_failed_result.msg | default('unknown error') }}
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_item.value.group is defined
+        - active_group_count == 0
+
+    - name: Remove sudoers entry for retired platform user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: absent
+        regexp: "^{{ platform_item.value.user }} "
+        validate: 'visudo -cf %s'
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_item.value.user is defined
+  when: platform_item is defined

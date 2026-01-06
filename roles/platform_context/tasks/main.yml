@@ -1,0 +1,47 @@
+---
+# Resolves platform selection and merges definition with host_vars.
+
+- name: Validate platform definition file exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../vars/platforms/{{ platform }}.yml"
+  register: platform_context_definition_file
+  delegate_to: localhost
+  run_once: true
+
+- name: Ensure platform definition file exists
+  ansible.builtin.assert:
+    that:
+      - platform_context_definition_file.stat.exists
+    fail_msg: "Platform definition '{{ platform }}.yml' is not present under vars/platforms/."
+  delegate_to: localhost
+  run_once: true
+
+- name: Load platform definition
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/../vars/platforms/{{ platform }}.yml"
+    name: platform_context_definition
+
+- name: Resolve platform entry from host_vars
+  ansible.builtin.import_tasks: resolve_entry.yml
+  vars:
+    platform_identifier: "{{ platform }}"
+
+- name: Compose normalized platform selection
+  ansible.builtin.set_fact:
+    platform_selected: >-
+      {{
+        {
+          'key': platform,
+          'value': (
+            platform_context_definition[platform]
+            | combine(platform_context_entry)
+          )
+        }
+      }}
+
+- name: Prepare users for the platform
+  ansible.builtin.include_tasks: setup-platform-users.yml
+  vars:
+    platform_item: "{{ platform_selected }}"
+  when:
+    - platform_selected is defined

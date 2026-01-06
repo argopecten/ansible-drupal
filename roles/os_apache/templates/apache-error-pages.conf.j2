@@ -1,0 +1,15 @@
+# /etc/apache2/conf-available/error-pages.conf
+# Simple, non-localized error pages
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+Alias /error/ {{ apache_catch_all_document_root }}/
+
+<Directory {{ apache_catch_all_document_root }}>
+    Options -Indexes
+    AllowOverride None
+    Require all granted
+</Directory>
+
+{% for error in apache_error_pages %}
+ErrorDocument {{ error.code }} /error/{{ error.code }}.html
+{% endfor %}

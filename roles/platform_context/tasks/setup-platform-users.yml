@@ -1,0 +1,84 @@
+---
+# Manage Unix users and supporting directories for each platform.
+
+- name: Resolve controller SSH key for platform accounts
+  ansible.builtin.set_fact:
+    platform_authorized_key_content: >-
+      {{
+        platform_authorized_key
+        | default(lookup('file', platform_authorized_key_file, errors='ignore'))
+        | default('', true)
+      }}
+  when: platform_authorized_key_content is not defined
+
+- name: Ensure platform group exists
+  ansible.builtin.group:
+    name: "{{ platform_item.value.group }}"
+    state: present
+  become: true
+  when:
+    - platform_item.value.group is defined
+    - (platform_item.value.state | default('present')) != 'absent'
+
+- name: Add Apache group to platform group
+  ansible.builtin.user:
+    name: "{{ apache_group | default('www-data') }}"
+    groups: "{{ platform_item.value.group }}"
+    append: true
+  become: true
+  when:
+    - platform_item.value.group is defined
+    - (platform_item.value.state | default('present')) != 'absent'
+
+- name: Ensure platform user exists
+  ansible.builtin.user:
+    name: "{{ platform_item.value.user }}"
+    state: present
+    home: "/home/{{ platform_item.value.user }}"
+    group: "{{ platform_item.value.group }}"
+    shell: /bin/bash
+    password_lock: true
+    create_home: true
+  become: true
+  when:
+    - platform_item.value.user is defined
+    - platform_item.value.group is defined
+    - (platform_item.value.state | default('present')) != 'absent'
+
+- name: Add SSH key for platform user
+  ansible.posix.authorized_key:
+    user: "{{ platform_item.value.user }}"
+    key: "{{ platform_authorized_key_content }}"
+    state: present
+    manage_dir: true
+  become: true
+  when:
+    - platform_item.value.user is defined
+    - platform_authorized_key_content | default('') | length > 0
+    - (platform_item.value.state | default('present')) != 'absent'
+    - not ansible_check_mode
+
+- name: Add platform user to sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: "^{{ platform_item.value.user }} "
+    line: "{{ platform_item.value.user }} ALL=(ALL) NOPASSWD:ALL"
+    validate: 'visudo -cf %s'
+  become: true
+  when:
+    - platform_item.value.user is defined
+    - (platform_item.value.state | default('present')) != 'absent'
+
+- name: Add backup directory for platform user
+  ansible.builtin.file:
+    path: "/home/{{ platform_item.value.user }}/backup"
+    state: directory
+    owner: "{{ platform_item.value.user }}"
+    group: "{{ platform_item.value.group }}"
+    mode: "0750"
+  become: true
+  when:
+    - platform_item.value.user is defined
+    - platform_item.value.group is defined
+    - (platform_item.value.state | default('present')) != 'absent'

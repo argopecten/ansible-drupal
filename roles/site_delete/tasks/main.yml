@@ -1,12 +1,61 @@
----
 # Removes Drupal sites and their database/users.
 
-- name: Delete Drupal sites
-  ansible.builtin.include_tasks: delete-site.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- name: Prepare site context
+  ansible.builtin.import_role:
+    name: site_context
+
+- block:
+    - name: Set deletion context
+      ansible.builtin.set_fact:
+        site_delete_site_name: "{{ site_context_site_name }}"
+        site_delete_db_user: "{{ site_context_db_user }}"
+        site_delete_db_name: "{{ site_context_db_name }}"
+        site_delete_db_host: "{{ site_context_db_host | default('localhost') }}"
+
+    - name: Log site deletion
+      ansible.builtin.debug:
+        msg: "Deleting site {{ site_delete_site_name }}"
+
+    - name: Delete database user for site
+      community.mysql.mysql_user:
+        check_implicit_admin: true
+        login_unix_socket: "{{ mysql_unix_socket }}"
+        name: "{{ site_delete_db_user }}"
+        host: "{{ site_delete_db_host }}"
+        state: absent
+        column_case_sensitive: "{{ mysql_column_case_sensitive | default(true) }}"
+      become: true
+
+    - name: Delete database for site
+      community.mysql.mysql_db:
+        check_implicit_admin: true
+        login_unix_socket: "{{ mysql_unix_socket }}"
+        name: "{{ site_delete_db_name }}"
+        state: absent
+      become: true
+
+    - name: Delete site directory
+      ansible.builtin.file:
+        dest: "{{ site_context_platform_root }}/web/sites/{{ site_delete_site_name }}"
+        state: absent
+      become: true
+
+    - name: Remove vhost configuration file
+      ansible.builtin.file:
+        dest: "{{ apache_vhost_path | default('/etc/apache2/sites-available') }}/{{ site_delete_site_name }}.conf"
+        state: absent
+      become: true
+
+    - name: Remove enabled vhost symlink
+      ansible.builtin.file:
+        dest: "{{ apache_sites_enabled | default('/etc/apache2/sites-enabled') }}/{{ site_delete_site_name }}.conf"
+        state: absent
+      become: true
+
+    - name: Reload Apache
+      ansible.builtin.systemd:
+        name: "{{ apache_service_name | default('apache2') }}"
+        state: reloaded
+      become: true
   when:
-    - site is defined
-    - site == sites[item.key].name
-    - inventory_hostname == sites[item.key].server
+    - site_context_should_process

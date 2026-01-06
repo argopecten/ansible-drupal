@@ -1,13 +1,138 @@
 ---
 # Restores Drupal sites from archived backups.
 
-- name: Restore Drupal sites
-  ansible.builtin.include_tasks: restore-site.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- name: Prepare site context
+  ansible.builtin.import_role:
+    name: site_context
+
+- name: Apply target platform override for restore when provided
+  when: site_restore_platform_entry is defined
+  block:
+    - name: Update platform facts for restore target
+      ansible.builtin.set_fact:
+        site_context_platform_entry: "{{ site_restore_platform_entry }}"
+        site_context_platform_path: "{{ site_restore_platform_entry.path }}"
+        site_context_platform_root: "{{ (site_restore_platform_entry.path | regex_replace('\\/+$', '')) }}/{{ site_restore_platform_entry.name }}"
+        site_context_platform_name: "{{ site_restore_platform_entry.name }}"
+        site_context_platform_user: "{{ site_restore_platform_entry.user }}"
+        site_context_platform_group: "{{ site_restore_platform_entry.group }}"
+        site_context_site_path: "{{ (site_restore_platform_entry.path | regex_replace('\\/+$', '')) }}/{{ site_restore_platform_entry.name }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
+        site_context_settings_file: "{{ (site_restore_platform_entry.path | regex_replace('\\/+$', '')) }}/{{ site_restore_platform_entry.name }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}/settings.php"
+
+    - name: Check if site exists on restore target
+      ansible.builtin.stat:
+        path: "{{ site_context_site_path }}"
+      become: true
+      register: site_restore_target_site_stat
+
+    - name: Update site existence state for restore target
+      ansible.builtin.set_fact:
+        site_context_site_exists: "{{ site_restore_target_site_stat.stat.exists }}"
+
+- block:
+    - name: Normalize restore timestamp
+      ansible.builtin.set_fact:
+        site_restore_timestamp: "{{ site_restore_timestamp | default(site_backup_timestamp | default('')) }}"
+
+    - name: Discover latest site backup timestamp when missing
+      when: site_restore_timestamp | string | length == 0
+      block:
+        - name: Find backup timestamp directories
+          ansible.builtin.find:
+            paths: "/home/{{ site_context_platform_user }}/backup/{{ site_context_platform_entry.name }}/{{ site_context_site_name }}"
+            file_type: directory
+            depth: 1
+          register: site_restore_backup_candidates
+          failed_when: false
+
+        - name: Derive latest backup timestamp
+          ansible.builtin.set_fact:
+            site_restore_timestamp: >-
+              {{
+                site_restore_backup_candidates.files
+                | selectattr('path', 'defined')
+                | sort(attribute='mtime', reverse=true)
+                | map(attribute='path')
+                | map('basename')
+                | select('match', '^[0-9]{8}-[0-9]{4}$')
+                | list
+                | first
+                | default('')
+              }}
+
+    - name: Require restore timestamp
+      ansible.builtin.assert:
+        that:
+          - site_restore_timestamp | string | length > 0
+        fail_msg: >-
+          Provide a restore timestamp (YYYYMMDD-HHMM) via -e "site_restore_timestamp=..."
+          or ensure a dated backup directory exists.
+
+    - name: Build restore source paths
+      ansible.builtin.set_fact:
+        site_restore_backup_dir: >-
+          {{ site_restore_backup_dir | default('/home/' ~ site_context_platform_user
+              ~ '/backup/' ~ site_context_platform_entry.name
+              ~ '/' ~ site_context_site_name
+              ~ '/' ~ site_restore_timestamp) }}
+
+    - name: Set restore file and database paths
+      ansible.builtin.set_fact:
+        site_restore_drush_path: "{{ site_restore_drush_path | default(site_context_platform_root ~ '/vendor/bin/drush') }}"
+        site_restore_files_archive: "{{ site_restore_files_archive | default(site_restore_backup_dir ~ '/files.tar.gz') }}"
+        site_restore_db_dump: "{{ site_restore_db_dump | default(site_restore_backup_dir ~ '/database.sql') }}"
+
+    - name: Validate restore source artifacts
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ site_restore_files_archive }}"
+        - "{{ site_restore_db_dump }}"
+      register: site_restore_artifact_stats
+
+    - name: Ensure restore artifacts exist
+      ansible.builtin.assert:
+        that:
+          - site_restore_artifact_stats.results | map(attribute='stat.exists') | list is all
+        fail_msg: >-
+          Missing site restore artifacts under {{ site_restore_backup_dir }}. Expected
+          files.tar.gz and database.sql to exist.
+
+    - name: Ensure site exists before restore
+      block:
+        - name: Prepare install context
+          ansible.builtin.set_fact:
+            site_install_platform_entry: "{{ site_context_platform_entry }}"
+
+        - name: Seed site via install role
+          ansible.builtin.include_tasks: "{{ role_path }}/../site_install/tasks/install-site-drush.yml"
+      when: not site_context_site_exists
+
+    - name: Remove existing site directory before restore
+      ansible.builtin.file:
+        path: "{{ site_context_site_path }}"
+        state: absent
+      become: true
+      when: not ansible_check_mode
+
+    - name: Restore files in /web/sites directory
+      ansible.builtin.unarchive:
+        src: "{{ site_restore_files_archive }}"
+        dest: "{{ site_context_platform_root }}/web/sites/"
+        remote_src: true
+        owner: "{{ site_context_platform_user }}"
+        group: "{{ site_context_platform_group }}"
+      become: true
+      when: not ansible_check_mode
+      notify:
+        - Enforce Drupal site ownership
+        - Enforce Drupal site permissions
+
+    - name: Restore database for the site
+      ansible.builtin.shell: >
+        {{ site_restore_drush_path }} sql:cli --uri={{ site_context_site_name }} --root={{ site_context_platform_root }} < {{ site_restore_db_dump }}
+      args:
+        chdir: "{{ site_context_platform_root }}"
+      when: not ansible_check_mode
   when:
-    - site is defined
-    - arch is defined
-    - site == sites[item.key].name
-    - inventory_hostname == sites[item.key].server
+    - site_context_should_process

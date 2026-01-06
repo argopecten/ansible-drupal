@@ -1,0 +1,20 @@
+---
+sites:
+  da:
+    host: "ap-host09"
+    name: "{{ vault_ap_host09.da.name }}"
+    platform: "drupal11.2"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_ap_host09.da.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_ap_host09.da.cf.api_key | default('dummy') }}"
+    ssl:
+      provider: cloudflare
+      renewal_days: 30
+      force_renew: false
+    state: present

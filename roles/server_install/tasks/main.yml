@@ -1,0 +1,60 @@
+---
+
+# Add more repositories
+- name: Add repositories
+  ansible.builtin.apt_repository:
+    repo: "{{ item.repo }}"
+    state: present
+    update_cache: true
+  become: true
+  loop: "{{ additional_repositories }}"
+  when: additional_repositories is defined
+
+# Install common packages
+- name: "Install common packages"
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: common_packages is defined
+
+# Install ansible-lint on control hosts only
+- name: Install ansible-lint (control hosts only)
+  ansible.builtin.apt:
+    name: ansible-lint
+    state: present
+    update_cache: true
+  become: true
+  when: "'control' in group_names"
+
+# Install packages for Apache
+- name: Install Apache packages
+  ansible.builtin.apt:
+    name: "{{ apache_packages | default(['apache2']) }}"
+    state: present
+    update_cache: true
+  become: true
+  when: apache_packages is defined
+
+# Install packages for MySQL
+- name: "Install MySQL"
+  ansible.builtin.apt:
+    name: "{{ mysql_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: mysql_packages is defined
+
+# Install packages for security hardening
+- name: "Install security hardening packages"
+  ansible.builtin.apt:
+    name: "{{ secured_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: secured_packages is defined
+
+- name: Apply logging configuration
+  ansible.builtin.import_role:
+    name: os_logging

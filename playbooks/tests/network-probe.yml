@@ -1,0 +1,39 @@
+---
+# Basic network and SSH reachability test for all managed nodes.
+# Safe: read-only checks only.
+
+- name: Verify network connectivity to managed nodes
+  hosts: managed
+  gather_facts: false
+
+  vars:
+    # Default SSH port; override per-host in inventory if needed.
+    ansible_ssh_port: "{{ hostvars[inventory_hostname].ansible_port | default(22) }}"
+
+  tasks:
+
+    - name: Show resolved target hostname and SSH parameters
+      debug:
+        msg:
+          - "Target hostname: {{ inventory_hostname }}"
+          - "Resolved address: {{ ansible_host | default(inventory_hostname) }}"
+          - "SSH port: {{ ansible_ssh_port }}"
+          - "User: {{ ansible_user | default('current user') }}"
+
+    - name: ICMP ping via ansible.builtin.ping
+      ansible.builtin.ping:
+
+    - name: TCP port check (SSH)
+      vars:
+        target_ip: "{{ ansible_host | default(inventory_hostname) }}"
+      ansible.builtin.wait_for:
+        host: "{{ target_ip }}"
+        port: "{{ ansible_ssh_port }}"
+        timeout: 3
+      delegate_to: localhost
+      run_once: false
+
+    - name: Report success for this node
+      debug:
+        msg: "Node {{ inventory_hostname }} is reachable via ICMP and TCP/{{ ansible_ssh_port }}."
+

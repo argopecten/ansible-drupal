@@ -1,0 +1,102 @@
+---
+- name: Backup Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root: "{{ (platform_item.value.path | default(platform_base_dir.path | default('/var/www/drupal')) | regex_replace('\\/+$', '')) ~ '/' ~ platform_item.value.name }}"
+    backup_root: "{{ platform_backup_output_dir | default('/home/' ~ platform_item.value.user ~ '/backup') }}"
+    backup_dir: "{{ platform_item.value.backup_dir | default(platform_backup_dir | default(backup_root ~ '/' ~ platform_item.key)) }}"
+    backup_timestamp: >-
+      {{ platform_backup_timestamp
+         | default(ansible_date_time.year ~ ansible_date_time.month ~ ansible_date_time.day
+                   ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute) }}
+    backup_filename: >-
+      {{ platform_item.value.backup_filename
+         | default(platform_backup_filename | default(backup_timestamp ~ '.tar.gz')) }}
+    backup_dest: "{{ backup_dir ~ '/' ~ backup_filename }}"
+  block:
+    - name: Validate platform backup inputs
+      ansible.builtin.assert:
+        that:
+          - platform_item.value.name is defined
+          - platform_item.value.user is defined
+          - platform_item.value.group is defined
+        fail_msg: "Platform {{ platform_item.key }} must define name/user/group for backups."
+
+    - name: Check platform root exists before backup
+      ansible.builtin.stat:
+        path: "{{ platform_root }}"
+      register: platform_root_stat
+
+    - name: Check platform sites directory exists
+      ansible.builtin.stat:
+        path: "{{ platform_root }}/web/sites"
+      register: platform_sites_stat
+
+    - name: Discover client site directories to exclude
+      ansible.builtin.find:
+        paths: "{{ platform_root }}/web/sites"
+        file_type: directory
+        depth: 1
+      register: platform_site_dirs
+      when: platform_sites_stat.stat.isdir | default(false)
+
+    - name: Build platform backup site exclusion list
+      ansible.builtin.set_fact:
+        platform_backup_exclude_sites: >-
+          {{
+            (platform_site_dirs.files
+             if (platform_site_dirs is defined and platform_site_dirs.files is defined)
+             else [])
+            | map(attribute='path')
+            | map('regex_replace', '^' ~ (platform_root | regex_escape) ~ '/web/sites/?', '')
+            | select('match', '^[^/]+$')
+            | reject('equalto', 'default')
+            | list
+          }}
+
+    - name: Fail when platform root is missing
+      ansible.builtin.assert:
+        that:
+          - platform_root_stat.stat.exists
+        fail_msg: "Platform root {{ platform_root }} does not exist on {{ inventory_hostname }}."
+
+    - name: Ensure platform backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: "{{ platform_item.value.user }}"
+        group: "{{ platform_item.value.group }}"
+        mode: "0750"
+      become: true
+
+    - name: Archive Drupal platform root
+      ansible.builtin.command:
+        cmd: >-
+          tar -czf "{{ backup_dest }}"
+          {% for site_dir in platform_backup_exclude_sites | default([]) %}
+          --exclude="./web/sites/{{ site_dir }}"
+          --exclude="./web/sites/{{ site_dir }}/*"
+          {% endfor %}
+          -C "{{ platform_root }}"
+          .
+      args:
+        creates: "{{ backup_dest }}"
+      become: true
+      when: not ansible_check_mode
+
+    - name: Set ownership on platform backup artifact
+      ansible.builtin.file:
+        path: "{{ backup_dest }}"
+        owner: "{{ platform_item.value.user }}"
+        group: "{{ platform_item.value.group }}"
+        mode: "0640"
+      become: true
+      when: not ansible_check_mode
+
+    - name: Record platform backup artifact
+      ansible.builtin.set_fact:
+        platform_backup_artifacts: "{{ platform_backup_artifacts | default({}) | combine({ platform_item.key: backup_dest }) }}"
+
+    - name: Report platform backup artifact
+      ansible.builtin.debug:
+        msg: "Platform {{ platform_item.key }} archived to {{ backup_dest }} on {{ inventory_hostname }}."
+  when: platform_item is defined

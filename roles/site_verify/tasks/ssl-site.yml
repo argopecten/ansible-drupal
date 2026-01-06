@@ -1,0 +1,185 @@
+- block:
+    - name: Gather SSL variables
+      ansible.builtin.set_fact:
+        site_verify_ssl_config: "{{ site_context_site_definition.ssl | default({}) }}"
+        site_verify_ssl_name: "{{ site_context_site_name }}"
+        site_verify_ssl_apex: "{{ site_context_site_name.split('.')[-2:] | join('.') }}"
+        site_verify_cf_config: "{{ site_context_site_definition.cf | default({}) }}"
+        site_verify_cf_zone_id: "{{ site_context_site_definition.cf.zone_id | default('dummy') }}"
+        site_verify_cf_api_key: "{{ site_context_site_definition.cf.api_key | default('') }}"
+        site_verify_ssl_provider: >-
+          {{
+            site_verify_ssl_config.provider
+            | default(
+              'cloudflare'
+              if (site_context_site_definition.cf.api_key | default('') | length > 0
+                  and site_context_site_definition.cf.zone_id | default('dummy') != 'dummy')
+              else 'selfsigned'
+            )
+            | lower
+          }}
+
+    - name: Set SSL renewal and path variables
+      ansible.builtin.set_fact:
+        site_verify_ssl_force_renew: "{{ site_verify_ssl_config.force_renew | default(false) }}"
+        site_verify_ssl_renewal_days: >-
+          {{
+            site_verify_ssl_config.renewal_days
+            | default(
+                (ssl_selfsigned_renewal_days | default(30))
+                if site_verify_ssl_provider == 'selfsigned'
+                else 30
+              )
+            | int
+          }}
+        site_verify_ssl_cert_path: "{{ ssl_cert_dir | default('/etc/ssl/certs') }}/{{ site_verify_ssl_apex }}.pem"
+        site_verify_ssl_key_path: "{{ ssl_key_dir | default('/etc/ssl/private') }}/{{ site_verify_ssl_apex }}.key"
+
+    - name: Derive SSL hostnames (apex + wildcard)
+      ansible.builtin.set_fact:
+        site_verify_ssl_hostnames: "{{ [site_verify_ssl_apex, '*.' ~ site_verify_ssl_apex] }}"
+
+    - name: Validate SSL provider choice
+      ansible.builtin.assert:
+        that:
+          - site_verify_ssl_provider in ['cloudflare', 'selfsigned']
+        fail_msg: >-
+          Unsupported ssl.provider '{{ site_verify_ssl_provider }}'. Supported providers: cloudflare, selfsigned.
+
+    - name: Ensure SSL certificate directory exists
+      ansible.builtin.file:
+        path: "{{ ssl_cert_dir | default('/etc/ssl/certs') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: true
+
+    - name: Ensure SSL private key directory exists
+      ansible.builtin.file:
+        path: "{{ ssl_key_dir | default('/etc/ssl/private') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+      become: true
+
+    - name: Check for existing SSL certificate
+      ansible.builtin.stat:
+        path: "{{ site_verify_ssl_cert_path }}"
+      register: site_verify_cert_stat
+      become: true
+      become_user: "{{ root_user }}"
+
+    - name: Check for existing SSL private key
+      ansible.builtin.stat:
+        path: "{{ site_verify_ssl_key_path }}"
+      register: site_verify_key_stat
+      become: true
+      become_user: "{{ root_user }}"
+
+    - name: Evaluate certificate freshness
+      ansible.builtin.command: >
+        openssl x509 -noout -checkend {{ site_verify_ssl_renewal_days * 86400 }}
+        -in {{ site_verify_ssl_cert_path }}
+      register: site_verify_cert_check
+      changed_when: false
+      failed_when: site_verify_cert_check.rc not in [0, 1]
+      when: site_verify_cert_stat.stat.exists
+
+    - name: Decide if SSL needs renewal
+      ansible.builtin.set_fact:
+        site_verify_ssl_needs_renewal: >-
+          {{
+            site_verify_ssl_force_renew
+            or (not site_verify_cert_stat.stat.exists)
+            or (not site_verify_key_stat.stat.exists)
+            or (site_verify_cert_check.rc is defined and site_verify_cert_check.rc != 0)
+          }}
+
+    - name: Log SSL decision
+      ansible.builtin.debug:
+        msg: >-
+          ssl.provider={{ site_verify_ssl_provider }}, renew_in_days={{ site_verify_ssl_renewal_days }},
+          needs_renewal={{ site_verify_ssl_needs_renewal }}
+
+    - block:
+        - name: Generate self-signed PEM certificate
+          ansible.builtin.command: >
+            openssl req -x509 -nodes -days {{ ssl_selfsigned_days | default(365) }}
+            -newkey ec -pkeyopt ec_paramgen_curve:{{ ssl_selfsigned_curve | default('P-256') }}
+            -keyout {{ site_verify_ssl_key_path }}
+            -out {{ site_verify_ssl_cert_path }}
+            -subj "/C=US/ST=New York/L=New York/O=Example Inc./OU=IT Department/CN={{ site_verify_ssl_name }}"
+            -addext basicConstraints=CA:FALSE
+            -addext keyUsage=digitalSignature,keyEncipherment
+            -addext extendedKeyUsage=serverAuth
+          become: true
+      when:
+        - site_verify_ssl_provider == 'selfsigned'
+        - site_verify_ssl_needs_renewal
+
+    - block:
+        - name: Validate Cloudflare SSL inputs
+          ansible.builtin.assert:
+            that:
+              - site_verify_cf_api_key | length > 0
+            fail_msg: "Cloudflare SSL requires site cf.api_key to be set."
+
+        - name: Request Cloudflare origin certificate
+          ansible.builtin.uri:
+            url: "https://api.cloudflare.com/client/v4/certificates"
+            method: POST
+            headers:
+              Content-Type: "application/json"
+              Accept: "application/json"
+              X-Auth-User-Service-Key: "{{ site_verify_cf_api_key }}"
+            body_format: json
+            body:
+              hostnames: "{{ site_verify_ssl_hostnames }}"
+              requested_validity: "{{ ssl_cf_requested_validity | default(5475) }}"
+              request_type: "{{ ssl_cf_request_type | default('origin-ecc') }}"
+              cloudflare_branding: false
+            status_code: 200
+            return_content: true
+          register: cloudflare_cert
+          no_log: true
+
+        - name: Set fact with parsed Cloudflare response
+          ansible.builtin.set_fact:
+            site_verify_cf_response: "{{ cloudflare_cert.content | from_json }}"
+
+        - name: Log Cloudflare response summary
+          ansible.builtin.debug:
+            msg: >-
+              Received Cloudflare origin certificate for {{ site_verify_ssl_name }};
+              has_certificate={{ site_verify_cf_response.result.certificate is defined | ternary('yes','no') }}
+
+        - name: Save Cloudflare origin certificate
+          ansible.builtin.copy:
+            content: "{{ site_verify_cf_response.result.certificate }}"
+            dest: "{{ site_verify_ssl_cert_path }}"
+            owner: root
+            group: root
+            mode: '0644'
+            force: true
+          when: site_verify_cf_response.result.certificate is defined
+          become: true
+          no_log: true
+
+        - name: Save Cloudflare origin private key
+          ansible.builtin.copy:
+            content: "{{ site_verify_cf_response.result.private_key }}"
+            dest: "{{ site_verify_ssl_key_path }}"
+            owner: root
+            group: root
+            mode: '0600'
+            force: true
+          when: site_verify_cf_response.result.private_key is defined
+          become: true
+          no_log: true
+      when:
+        - site_verify_ssl_provider == 'cloudflare'
+        - site_verify_cf_zone_id != "dummy"
+        - site_verify_ssl_needs_renewal
+  when: site_context_should_process | default(false)

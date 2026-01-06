@@ -1,0 +1,129 @@
+# Setup tasks for Apache webserver
+
+- name: Build list of Apache configurations to enable (uses host cloudflare_enabled)
+  ansible.builtin.set_fact:
+    apache_enabled_configurations_effective: >-
+      {{ apache_enabled_configurations + ([apache_cloudflare_configuration] if cloudflare_enabled else []) }}
+
+# Copy Apache configurations.
+- name: Copy Apache configuration files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    force: true
+    owner: "{{ root_user | default('root') }}"
+    group: "{{ root_group | default('root') }}"
+    mode: '0644'
+  loop:
+    - { src: "apache-main.conf.j2", dest: "{{ apache_main_conf_file }}" }
+    - { src: "apache-drupal.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/drupal.conf" }
+    - { src: "apache-php-fpm.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/php{{ apache_php_version }}-fpm.conf" }
+    - { src: "apache-security.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/security.conf" }
+    - { src: "apache-site-log.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/vhost-access-log.conf" }
+    - { src: "apache-error-pages.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/error-pages.conf" }
+    - { src: "apache-default.conf.j2", dest: "{{ apache_conf_dir }}/sites-available/{{ apache_catch_all_site_id }}.conf" }
+  notify: Reload Apache
+  become: true
+
+- name: Copy Apache Cloudflare configuration file
+  ansible.builtin.template:
+    src: "apache-cloudflare.conf.j2"
+    dest: "{{ apache_cloudflare_conf_file }}"
+    force: true
+    owner: "{{ root_user | default('root') }}"
+    group: "{{ root_group | default('root') }}"
+    mode: '0644'
+  notify: Reload Apache
+  become: true
+  when: cloudflare_enabled
+
+- name: Ensure catch-all document root exists
+  ansible.builtin.file:
+    path: "{{ apache_catch_all_document_root }}"
+    state: directory
+    owner: "{{ apache_user | default('www-data') }}"
+    group: "{{ apache_group | default('www-data') }}"
+    mode: '0755'
+  become: true
+  when: apache_catch_all_document_root | length > 0
+
+- name: Deploy shared error page HTML
+  ansible.builtin.template:
+    src: "error-page.html.j2"
+    dest: "{{ apache_catch_all_document_root }}/{{ item.code }}.html"
+    owner: "{{ apache_user | default('www-data') }}"
+    group: "{{ apache_group | default('www-data') }}"
+    mode: '0644'
+  loop: "{{ apache_error_pages }}"
+  loop_control:
+    label: "{{ item.code }}"
+  become: true
+
+- name: Deploy catch-all landing page
+  ansible.builtin.template:
+    src: "error-page.html.j2"
+    dest: "{{ apache_catch_all_document_root }}/{{ apache_catch_all_page }}"
+    owner: "{{ apache_user | default('www-data') }}"
+    group: "{{ apache_group | default('www-data') }}"
+    mode: '0644'
+  vars:
+    item:
+      title: "{{ apache_catch_all_page_title }}"
+      message: "{{ apache_catch_all_page_message }}"
+  become: true
+
+- name: Enable required Apache modules
+  ansible.builtin.command: "a2enmod {{ item }}"
+  args:
+    creates: "{{ apache_conf_dir }}/mods-enabled/{{ item }}.load"
+  loop: "{{ apache_required_modules }}"
+  notify: Reload Apache
+  become: true
+
+- name: Find existing Apache enabled configuration files
+  ansible.builtin.find:
+    paths: "{{ apache_conf_dir }}/conf-enabled"
+    patterns: "*.conf"
+    file_type: any
+  register: apache_enabled_old_conf_files
+  become: true
+
+- name: Remove existing Apache enabled configuration symlinks
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ apache_enabled_old_conf_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  become: true
+
+- name: Enable Apache configuration
+  ansible.builtin.command: "a2enconf {{ item.name }}"
+  args:
+    creates: "{{ apache_conf_dir }}/conf-enabled/{{ item.path }}"
+  loop: "{{ apache_enabled_configurations_effective }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload Apache
+  become: true
+
+- name: Provision SSL for catch-all site
+  ansible.builtin.include_tasks: "{{ role_path }}/../site_verify/tasks/ssl-site.yml"
+  vars:
+    site_context_should_process: true
+    site_context_site_exists: true
+    site_context_site_name: "{{ apache_catch_all_server_name }}"
+    site_context_site_definition:
+      ssl: "{{ apache_catch_all_ssl }}"
+      cf: "{{ apache_catch_all_cf }}"
+    ssl_cert_dir: "{{ apache_catch_all_ssl_cert_dir }}"
+    ssl_key_dir: "{{ apache_catch_all_ssl_key_dir }}"
+    site_verify_ssl_apex: "{{ apache_catch_all_ssl_apex }}"
+  when: apache_catch_all_server_name | length > 0
+
+- name: Enable catch-all site
+  ansible.builtin.command: "a2ensite {{ apache_catch_all_site_id }}"
+  args:
+    creates: "{{ apache_sites_enabled }}/{{ apache_catch_all_site_id }}.conf"
+  notify: Reload Apache
+  become: true

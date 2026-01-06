@@ -1,17 +1,5 @@
 ---
 
-# Set default editor
-- name: Set default editor
-  become: yes
-  ansible.builtin.lineinfile:
-    path: /etc/skel/.bashrc
-    state: present
-    create: yes
-    line: "{{ item }}"
-  loop:
-    - "export EDITOR=nano"
-    - "export VISUAL=nano"
-
 # Allow release info change for apt
 - name: Allow release info change for apt
   become: yes
@@ -19,6 +7,7 @@
     dest: /etc/apt/apt.conf.d/99allow-releaseinfo-change
     content: 'Acquire::AllowReleaseInfoChange "true";'
     mode: '0644'
+  when: env | default('dev') == 'dev'
 
 # Update all installed packages and clean up
 - name: Update all installed packages and clean up

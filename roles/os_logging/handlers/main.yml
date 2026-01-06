@@ -1,0 +1,9 @@
+---
+# Handlers for journald.
+
+- name: Restart systemd-journald
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted
+  become: true
+  when: ansible_service_mgr == "systemd"

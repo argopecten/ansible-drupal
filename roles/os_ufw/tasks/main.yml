@@ -1,0 +1,106 @@
+---
+# UFW Setup for LEMP Stack
+- name: Ensure UFW is installed
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Force Cloudflare restriction flag from host variable
+  ansible.builtin.set_fact:
+    ufw_cloudflare_restrict_http: "{{ cloudflare_enabled | default(false) }}"
+  changed_when: false
+
+- name: Warn and disable Cloudflare restriction when no CIDRs are available
+  ansible.builtin.debug:
+    msg: >-
+      UFW Cloudflare restriction requested but no Cloudflare CIDRs are available;
+      disabling restriction for this run. Ensure os_cloudflare ran earlier or pin CIDRs.
+  when:
+    - ufw_cloudflare_restrict_http | default(false)
+    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) == 0
+
+- name: Disable Cloudflare restriction when no CIDRs are available
+  ansible.builtin.set_fact:
+    ufw_cloudflare_restrict_http: false
+  when:
+    - ufw_cloudflare_restrict_http | default(false)
+    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) == 0
+  changed_when: false
+
+# Set up UFW default configuration
+- name: Configure default configuration for UFW
+  ansible.builtin.template:
+    src: "ufw-default.conf.j2"
+    dest: /etc/default/ufw
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: yes
+  notify: Reload UFW
+  become: true
+
+# Set up UFW configuration
+- name: Configure UFW
+  ansible.builtin.template:
+    src: "ufw-etc.conf.j2"
+    dest: /etc/ufw/ufw.conf
+    owner: "{{ root_user }}"
+    group: "{{ root_group }}"
+    mode: '0644'
+    force: yes
+  notify: Reload UFW
+  become: true
+
+- name: Allow SSH through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ ssh_port }}"
+    proto: tcp
+  become: true
+
+- name: Allow HTTP/HTTPS from anywhere when Cloudflare restriction is off
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - "80"
+    - "443"
+  when:
+    - not (ufw_cloudflare_restrict_http | default(false))
+  become: true
+
+- name: Allow HTTP/HTTPS from Cloudflare only
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.1 }}"
+    proto: tcp
+    src: "{{ item.0 }}"
+  loop: "{{ ((cloudflare_ipv4_cidrs | default([])) + (cloudflare_ipv6_cidrs | default([]))) | product(['80', '443']) | list }}"
+  when:
+    - ufw_cloudflare_restrict_http | default(false)
+    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) > 0
+  become: true
+
+# Enable UFW
+- name: Enable UFW
+  ansible.builtin.command: ufw --force enable
+  changed_when: false
+  become: true
+  become_user: "{{ root_user }}"
+  when:
+    - ufw_enabled is defined and ufw_enabled == "yes"
+
+- name: Flush UFW handlers before status check
+  ansible.builtin.meta: flush_handlers
+
+- name: Check UFW status after reload
+  ansible.builtin.command: ufw status verbose
+  register: ufw_status
+  changed_when: false
+
+- name: Display UFW status
+  ansible.builtin.debug:
+    var: ufw_status.stdout_lines

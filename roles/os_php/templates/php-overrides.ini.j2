@@ -1,0 +1,5 @@
+; Managed by Ansible - PHP override settings
+; Changes to this file will be overwritten by automation.
+{% for config in php_ini_overrides | default([]) %}
+{{ config.line }}
+{% endfor %}

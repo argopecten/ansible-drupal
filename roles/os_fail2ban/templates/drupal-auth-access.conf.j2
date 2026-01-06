@@ -1,0 +1,6 @@
+[Definition]
+# Matches Drupal login attempts in Apache access logs.
+# Example:
+# 203.0.113.10 - - [23/Dec/2025:16:21:06 +0000] "POST /user/login HTTP/1.1" 401 6963 "https://example.com/user/login" "Mozilla/5.0"
+failregex = ^<HOST> - - \[[^\]]+\] "POST /user/login[^ ]* HTTP/[^"]+" (401|403) .*
+ignoreregex =

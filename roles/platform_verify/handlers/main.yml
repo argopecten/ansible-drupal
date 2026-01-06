@@ -1,0 +1,28 @@
+---
+# Handlers for platform verification lifecycle tasks.
+
+- name: Enforce Drupal platform ownership
+  ansible.builtin.command: >
+    {{ script_install_dir | default('/usr/local/bin') }}/platform-ownership.sh
+    --root="{{ platform_base_dir.path ~ '/' ~ platform_selected.value.name }}"
+    --user="{{ platform_selected.value.user }}"
+    --group="{{ platform_selected.value.group }}"
+  args:
+    chdir: "{{ platform_base_dir.path ~ '/' ~ platform_selected.value.name }}"
+  become: true
+  when:
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'
+
+- name: Enforce Drupal platform permissions
+  ansible.builtin.command: >
+    {{ script_install_dir | default('/usr/local/bin') }}/platform-permissions.sh
+    --root="{{ platform_base_dir.path ~ '/' ~ platform_selected.value.name }}"
+    --user="{{ platform_selected.value.user }}"
+    --group="{{ platform_selected.value.group }}"
+  args:
+    chdir: "{{ platform_base_dir.path ~ '/' ~ platform_selected.value.name }}"
+  become: true
+  when:
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'

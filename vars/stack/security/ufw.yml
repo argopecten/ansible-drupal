@@ -1,0 +1,21 @@
+---
+ufw_enabled: "yes"
+ufw_ipv6: "yes"
+ufw_default_input_policy: DROP
+ufw_default_output_policy: ACCEPT
+ufw_default_forward_policy: DROP
+ufw_default_application_policy: SKIP
+ufw_logging: low
+ufw_rules:
+  - port: "{{ ssh_port }}"
+    proto: tcp
+    comment: "### tuple ### allow tcp {{ ssh_port }} 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 80
+    proto: tcp
+    comment: "### tuple ### allow tcp 80 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 443
+    proto: tcp
+    comment: "### tuple ### allow tcp 443 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: 443
+    proto: udp
+    comment: "### tuple ### allow udp 443 0.0.0.0/0 any 0.0.0.0/0 in"

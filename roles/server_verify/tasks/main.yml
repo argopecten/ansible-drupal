@@ -3,14 +3,24 @@
 
 - import_tasks: scripts.yml
 
+- name: Apply security hardening for secured hosts
+  ansible.builtin.import_role:
+    name: server_secure
+  when:
+    - host_secured | default(false)
+
+- name: Apply logging configuration
+  ansible.builtin.import_role:
+    name: os_logging
+
 - name: Apply MySQL configuration
   ansible.builtin.import_role:
-    name: mysql
+    name: os_mysql
 
 - name: Apply Apache configuration
   ansible.builtin.import_role:
-    name: apache
+    name: os_apache
 
 - name: Apply PHP configuration
   ansible.builtin.import_role:
-    name: php
+    name: os_php

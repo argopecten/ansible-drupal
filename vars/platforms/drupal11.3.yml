@@ -1,0 +1,10 @@
+# Supported Drupal platform:
+# Drupal last stable release from drupal.org for version 11.3
+ 
+drupal11.3:
+  name: "drupal11.3"
+  composer_project: "drupal/recommended-project"  # https://github.com/drupal/recommended-project
+  version: "11.3.*"
+  dependencies:
+    - "drush/drush:^13.7"
+  state: present

@@ -1,0 +1,150 @@
+---
+- name: Restore Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root: "{{ (platform_item.value.path | default(platform_base_dir.path | default('/var/www/drupal')) | regex_replace('\\/+$', '')) ~ '/' ~ platform_item.value.name }}"
+    platform_restore_archive_input: >-
+      {{
+        platform_restore_archive
+        if (platform_restore_archive is defined)
+        else (
+          platform_restore_archives[platform_item.key]
+          if (platform_restore_archives is defined and platform_item.key in platform_restore_archives)
+          else platform_item.value.restore_archive | default('')
+        )
+      }}
+    platform_restore_backup_root: "{{ '/home/' ~ platform_item.value.user ~ '/backup' }}"
+    platform_restore_backup_dir: "{{ platform_item.value.backup_dir | default(platform_backup_dir | default(platform_restore_backup_root ~ '/' ~ platform_item.key)) }}"
+  block:
+    - name: Validate platform restore inputs
+      ansible.builtin.assert:
+        that:
+          - platform_item.value.name is defined
+          - platform_item.value.user is defined
+          - platform_item.value.group is defined
+        fail_msg: >-
+          Platform {{ platform_item.key }} requires name/user/group for restore.
+
+    - name: Initialize selected restore archive
+      ansible.builtin.set_fact:
+        platform_restore_archive_selected: "{{ platform_restore_archive_input | default('') }}"
+
+    - name: Check platform restore archive exists
+      ansible.builtin.stat:
+        path: "{{ platform_restore_archive_selected }}"
+      register: restore_archive_stat
+      when: platform_restore_archive_selected | length > 0
+
+    - name: Fail when provided restore archive is missing
+      ansible.builtin.assert:
+        that:
+          - platform_restore_archive_selected | length == 0 or restore_archive_stat.stat.exists
+        fail_msg: "Restore archive {{ platform_restore_archive_selected }} is not present on {{ inventory_hostname }}."
+
+    - name: Discover latest platform backup when no archive provided
+      ansible.builtin.find:
+        paths: "{{ platform_restore_backup_dir }}"
+        file_type: file
+        patterns:
+          - "*.tar.gz"
+        recurse: false
+      register: platform_restore_backup_files
+      when:
+        - platform_restore_archive_selected | length == 0
+
+    - name: Select latest platform backup archive
+      ansible.builtin.set_fact:
+        platform_restore_archive_selected: >-
+          {{
+            (platform_restore_backup_files.files
+             | sort(attribute='mtime', reverse=true)
+             | first).path
+            if (platform_restore_backup_files.files | default([]) | length) > 0
+            else ''
+          }}
+      when:
+        - platform_restore_archive_selected | length == 0
+
+    - name: Fail when no backup archive is available for restore
+      ansible.builtin.assert:
+        that:
+          - platform_restore_archive_selected | length > 0
+        fail_msg: >-
+          No restore archive provided or found. Place a backup under
+          {{ platform_restore_backup_dir }} or set platform_restore_archive.
+
+    - name: Check platform root for existing sites
+      ansible.builtin.stat:
+        path: "{{ platform_root }}/web/sites"
+      register: platform_restore_sites_stat
+
+    - name: Discover client site directories to preserve
+      ansible.builtin.find:
+        paths: "{{ platform_root }}/web/sites"
+        file_type: directory
+        depth: 1
+      register: platform_restore_site_dirs
+      when: platform_restore_sites_stat.stat.isdir | default(false)
+
+    - name: Build platform restore site preservation list
+      ansible.builtin.set_fact:
+        platform_restore_preserve_sites: >-
+          {{
+            (platform_restore_site_dirs.files
+             if (platform_restore_site_dirs is defined and platform_restore_site_dirs.files is defined)
+             else [])
+            | map(attribute='path')
+            | map('regex_replace', '^' ~ (platform_root | regex_escape) ~ '/web/sites/?', '')
+            | select('match', '^[^/]+$')
+            | reject('equalto', 'default')
+            | list
+          }}
+
+    - name: Ensure platform root directory exists
+      ansible.builtin.file:
+        path: "{{ platform_root }}"
+        state: directory
+        owner: "{{ platform_item.value.user }}"
+        group: "{{ platform_item.value.group }}"
+        mode: "{{ platform_item.value.drupal_root_permissions | default(drupal_root_permissions | default('0750')) }}"
+      become: true
+
+    - name: Create temporary directory for platform restore
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: platform-restore
+      register: platform_restore_tempdir
+      when: not ansible_check_mode
+
+    - name: Extract platform archive into temporary directory
+      ansible.builtin.unarchive:
+        src: "{{ platform_restore_archive_selected }}"
+        dest: "{{ platform_restore_tempdir.path }}"
+        remote_src: true
+      become: true
+      when: not ansible_check_mode
+
+    - name: Sync restored platform into place preserving client sites
+      ansible.builtin.command:
+        cmd: >-
+          rsync -a --delete
+          {% for site_dir in platform_restore_preserve_sites | default([]) %}
+          --exclude="/web/sites/{{ site_dir }}"
+          --exclude="/web/sites/{{ site_dir }}/**"
+          {% endfor %}
+          {{ platform_restore_tempdir.path }}/ {{ platform_root }}/
+      become: true
+      when: not ansible_check_mode
+
+    - name: Remove platform restore temporary directory
+      ansible.builtin.file:
+        path: "{{ platform_restore_tempdir.path }}"
+        state: absent
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_restore_tempdir is defined
+
+    - name: Report platform restore
+      ansible.builtin.debug:
+        msg: "Platform {{ platform_item.key }} restored from {{ platform_restore_archive_selected }} to {{ platform_root }} on {{ inventory_hostname }}."
+  when: platform_item is defined

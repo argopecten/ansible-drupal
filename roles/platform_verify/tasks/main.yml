@@ -1,12 +1,75 @@
 ---
 # Validates platform ownership/permissions and supporting directories.
 
-- name: Refresh platform accounts before verification
-  ansible.builtin.import_role:
-    name: platform_base
+- name: Verify Drupal platform "{{ platform_selected.key }}"
+  vars:
+    platform_root: "{{ platform_base_dir.path ~ '/' ~ platform_selected.value.name }}"
+    platform_backup_dir: >-
+      {{
+        '/home/' ~ platform_selected.value.user ~ '/backup/' ~ platform_selected.key
+        if platform_selected.value.user is defined
+        else ''
+      }}
+  block:
+    - name: Report platform metadata
+      ansible.builtin.debug:
+        msg:
+          - "Platform: {{ platform_selected.key }}"
+          - "Version: {{ platform_selected.value.version | default('n/a') }}"
+          - "Path: {{ platform_root }}"
 
-- name: Verify platform configurations
-  ansible.builtin.include_tasks: verify-platform-configurations.yml
-  loop: "{{ platforms | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+    - name: Ensure platform base directory exists
+      ansible.builtin.file:
+        path: "{{ platform_base_dir.path }}"
+        state: directory
+        owner: "{{ platform_base_dir.owner }}"
+        group: "{{ platform_base_dir.group }}"
+        mode: "{{ platform_base_dir.mode }}"
+      become: true
+
+    - name: Check if platform root exists
+      ansible.builtin.stat:
+        path: "{{ platform_root }}"
+      register: platform_root_stat
+
+    - name: Warn when platform root is missing
+      ansible.builtin.debug:
+        msg: "Platform root does not exist for {{ platform_selected.key }} on host {{ inventory_hostname }}"
+      when: not platform_root_stat.stat.exists
+
+    - name: Ensure platform root has correct ownership
+      ansible.builtin.file:
+        path: "{{ platform_root }}"
+        state: directory
+        owner: "{{ platform_selected.value.user }}"
+        group: "{{ platform_selected.value.group }}"
+        mode: "{{ platform_selected.value.drupal_root_permissions | default(drupal_root_permissions | default('0750')) }}"
+      become: true
+      changed_when: true
+      notify:
+        - Enforce Drupal platform ownership
+        - Enforce Drupal platform permissions
+
+    - name: Ensure platform backup directory exists
+      ansible.builtin.file:
+        path: "{{ platform_backup_dir }}"
+        state: directory
+        owner: "{{ platform_selected.value.user }}"
+        group: "{{ platform_selected.value.group }}"
+        mode: "0750"
+      become: true
+      when:
+        - not ansible_check_mode
+        - platform_selected.value.user is defined
+        - platform_selected.value.group is defined
+
+    - name: Restart PHP-FPM service for platform changes
+      ansible.builtin.service:
+        name: "{{ php_fpm_service_name | default('php' ~ (php_version | default('8.3')) ~ '-fpm') }}"
+        state: restarted
+      become: true
+      when:
+        - not ansible_check_mode
+  when:
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'

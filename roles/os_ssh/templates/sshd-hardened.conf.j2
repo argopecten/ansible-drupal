@@ -1,0 +1,49 @@
+# Hardened SSH Configuration Template
+# Location: /etc/ssh/sshd_config.d/60-ansible-ssh-hardening.conf
+
+# Listen on a hardened port
+Port {{ ssh_port }}
+
+# Restrict login sources
+PermitRootLogin {{ ssh_permit_root_login }}
+PasswordAuthentication {{ ssh_password_authentication }}
+KbdInteractiveAuthentication {{ ssh_kbdinteractive_authentication }}
+ChallengeResponseAuthentication no
+UsePAM {{ ssh_use_pam }}
+PubkeyAuthentication {{ ssh_pubkey_authentication }}
+AllowUsers {{ ssh_users | join(' ') }}
+
+# Disable unneeded forwarding features
+X11Forwarding {{ ssh_x11_forwarding }}
+AllowTcpForwarding {{ ssh_allow_tcp_forwarding }}
+AllowAgentForwarding {{ ssh_allow_agent_forwarding }}
+GatewayPorts {{ ssh_gateway_ports }}
+PermitTunnel {{ ssh_permit_tunnel }}
+
+# Limit authentication attempts and timing
+MaxAuthTries {{ ssh_maxauthtries | default(3) }}
+LoginGraceTime {{ ssh_login_gracetime | default(30) }}s
+MaxStartups {{ ssh_max_startups }}
+
+# Turn off DNS lookups to prevent delays
+UseDNS {{ ssh_use_dns }}
+
+# Cryptographic policy
+KexAlgorithms {{ ssh_kex_algorithms }}
+Ciphers {{ ssh_ciphers }}
+MACs {{ ssh_macs }}
+
+# Logging / banner
+LogLevel {{ ssh_log_level }}
+PrintMotd {{ ssh_print_motd }}
+Banner {{ ssh_banner }}
+
+# Environment
+AcceptEnv LANG LC_*
+
+Subsystem       sftp    /usr/lib/openssh/sftp-server
+
+# Additional hardening
+ClientAliveInterval 300
+ClientAliveCountMax 0
+Compression no

@@ -1,0 +1,178 @@
+- name: Set effective Cloudflare delegate host
+  ansible.builtin.set_fact:
+    cloudflare_delegate_host_effective: "{{ cloudflare_delegate_host | default(ansible_play_hosts_all[0]) }}"
+  run_once: true
+  changed_when: false
+
+- name: Check for Cloudflare stack vars file
+  ansible.builtin.stat:
+    path: "{{ cloudflare_stack_vars_path }}"
+  register: cloudflare_stack_vars_stat
+  delegate_to: "localhost"
+  run_once: true
+  changed_when: false
+
+- name: Abort if Cloudflare stack vars file is missing
+  ansible.builtin.fail:
+    msg: "Cloudflare stack vars file not found at {{ cloudflare_stack_vars_path }}"
+  when:
+    - not cloudflare_stack_vars_stat.stat.exists
+    - not cloudflare_write_stack_vars | bool
+  run_once: true
+
+- name: Load Cloudflare stack vars
+  ansible.builtin.include_vars:
+    file: "{{ cloudflare_stack_vars_path }}"
+  register: cloudflare_stack_vars_result
+  delegate_to: "localhost"
+  run_once: true
+  when: cloudflare_stack_vars_stat.stat.exists
+
+- name: Seed pinned CIDRs from stack vars
+  ansible.builtin.set_fact:
+    cloudflare_pinned_ipv4_cidrs: "{{ cloudflare_stack_vars_result.ansible_facts.cloudflare_ipv4_cidrs | default([]) }}"
+    cloudflare_pinned_ipv6_cidrs: "{{ cloudflare_stack_vars_result.ansible_facts.cloudflare_ipv6_cidrs | default([]) }}"
+  delegate_to: "{{ cloudflare_delegate_host_effective }}"
+  delegate_facts: true
+  run_once: true
+  changed_when: false
+  when: cloudflare_stack_vars_result is defined
+
+- name: Fetch Cloudflare IP ranges via API v4
+  ansible.builtin.uri:
+    url: "{{ cloudflare_ip_api }}"
+    method: GET
+    return_content: true
+    status_code: 200
+  register: cloudflare_ips_response
+  failed_when: false
+  changed_when: false
+  delegate_to: "{{ cloudflare_delegate_host_effective }}"
+  run_once: true
+  when: cloudflare_use_api | bool
+
+- name: Store Cloudflare IP response on delegate host
+  ansible.builtin.set_fact:
+    cloudflare_ips_response_result: "{{ cloudflare_ips_response }}"
+  delegate_to: "{{ cloudflare_delegate_host_effective }}"
+  delegate_facts: true
+  run_once: true
+  changed_when: false
+  when: cloudflare_use_api | bool
+
+- name: Compute Cloudflare CIDR candidates
+  ansible.builtin.set_fact:
+    cloudflare_ipv4_cidrs_candidate: >-
+      {{
+        (cloudflare_pinned_ipv4_cidrs
+         if (cloudflare_pinned_ipv4_cidrs | default([]) | length > 0)
+         else (hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.result.ipv4_cidrs
+               if (hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result is defined and
+                   hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json is defined and
+                   hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.success | default(false))
+               else []))
+      }}
+    cloudflare_ipv6_cidrs_candidate: >-
+      {{
+        (cloudflare_pinned_ipv6_cidrs
+         if (cloudflare_pinned_ipv6_cidrs | default([]) | length > 0)
+         else (hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.result.ipv6_cidrs
+               if (hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result is defined and
+                   hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json is defined and
+                   hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.success | default(false))
+               else []))
+      }}
+  run_once: true
+  delegate_to: "{{ cloudflare_delegate_host_effective }}"
+  delegate_facts: true
+  changed_when: false
+
+- name: Share Cloudflare CIDRs with all hosts
+  ansible.builtin.set_fact:
+    cloudflare_ipv4_cidrs: >-
+      {{
+        cloudflare_pinned_ipv4_cidrs
+        if (cloudflare_pinned_ipv4_cidrs | default([]) | length > 0)
+        else (cloudflare_ipv4_cidrs
+              | default(
+                  hostvars[cloudflare_delegate_host_effective].cloudflare_ipv4_cidrs_candidate
+                  | default([]),
+                  true
+                ))
+      }}
+    cloudflare_ipv6_cidrs: >-
+      {{
+        cloudflare_pinned_ipv6_cidrs
+        if (cloudflare_pinned_ipv6_cidrs | default([]) | length > 0)
+        else (cloudflare_ipv6_cidrs
+              | default(
+                  hostvars[cloudflare_delegate_host_effective].cloudflare_ipv6_cidrs_candidate
+                  | default([]),
+                  true
+                ))
+      }}
+    cacheable: "{{ cloudflare_fact_cacheable | bool }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  run_once: true
+  loop: "{{ ansible_play_hosts_all }}"
+  changed_when: false
+
+- name: Ensure Cloudflare stack vars directory exists
+  ansible.builtin.file:
+    path: "{{ cloudflare_stack_vars_path | dirname }}"
+    state: directory
+    mode: "0755"
+  delegate_to: "localhost"
+  run_once: true
+  when:
+    - cloudflare_write_stack_vars | bool
+    - cloudflare_use_api | bool
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result is defined
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json is defined
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.success | default(false)
+
+- name: Write Cloudflare CIDRs to stack vars file
+  ansible.builtin.copy:
+    dest: "{{ cloudflare_stack_vars_path }}"
+    mode: "0644"
+    content: |-
+      ---
+      {{ {
+           'cloudflare_ipv4_cidrs': hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.result.ipv4_cidrs | default([]),
+           'cloudflare_ipv6_cidrs': hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.result.ipv6_cidrs | default([])
+         } | to_nice_yaml(indent=2) | trim }}
+  delegate_to: "localhost"
+  run_once: true
+  when:
+    - cloudflare_write_stack_vars | bool
+    - cloudflare_use_api | bool
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result is defined
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json is defined
+    - hostvars[cloudflare_delegate_host_effective].cloudflare_ips_response_result.json.success | default(false)
+
+- name: Ensure Cloudflare Origin CA root certificate directory exists
+  ansible.builtin.file:
+    path: "/etc/ssl/certs"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Download Cloudflare Origin CA root certificate
+  ansible.builtin.uri:
+    url: "{{ cloudflare_origin_ca_url }}"
+    method: GET
+    return_content: true
+  register: cloudflare_origin_ca_root
+
+- name: Install Cloudflare Origin CA root certificate
+  ansible.builtin.copy:
+    content: "{{ cloudflare_origin_ca_root.content }}"
+    dest: "{{ cloudflare_origin_ca_dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: cloudflare_origin_ca_root.content is defined
+  become: true

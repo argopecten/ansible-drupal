@@ -1,0 +1,95 @@
+[DEFAULT]
+backend = {{ fail2ban_backend | default('systemd') }}
+action  = {{ fail2ban_default_action | default('nftables-multiport[port=\"%(port)s\", protocol=\"%(protocol)s\"]') }}
+
+
+####################
+# SSH
+####################
+[sshd]
+enabled  = true
+filter   = sshd
+port     = {{ ssh_port }}
+journalmatch = {{ fail2ban_sshd_journalmatch | default('_SYSTEMD_UNIT=sshd.service') }}
+
+maxretry = {{ fail2ban_sshd_maxretry | default('3') }}
+findtime = {{ fail2ban_sshd_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime  = {{ fail2ban_sshd_bantime | default(fail2ban_bantime | default('1h')) }}
+
+action = {{ fail2ban_sshd_action | default("nftables-multiport[port=\"" ~ (ssh_port | string) ~ "\", protocol=tcp, priority=" ~ (fail2ban_nftables_priority | default('10')) ~ "]") }}
+
+
+####################
+# Apache HTTP Auth
+####################
+[apache-http-auth]
+enabled  = true
+filter   = apache-auth
+port     = http,https
+journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+
+maxretry = {{ fail2ban_apache_maxretry | default(fail2ban_maxretry | default('5')) }}
+findtime = {{ fail2ban_apache_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime  = {{ fail2ban_apache_bantime | default(fail2ban_bantime | default('1h')) }}
+
+
+####################
+# PHP-FPM (via Apache)
+####################
+[php-fpm]
+enabled  = {{ (fail2ban_php_fpm_enabled | default(true)) | ternary('true', 'false') }}
+filter   = php-fpm
+port     = http,https
+journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+
+maxretry = {{ fail2ban_php_fpm_maxretry | default(fail2ban_maxretry | default('5')) }}
+findtime = {{ fail2ban_php_fpm_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime  = {{ fail2ban_php_fpm_bantime | default(fail2ban_bantime | default('1h')) }}
+
+
+####################
+# MySQL Auth
+####################
+[mysqld-auth]
+enabled  = {{ (fail2ban_mysql_enabled | default(true)) | ternary('true', 'false') }}
+filter   = mysqld-auth
+port     = {{ mysql_port | default('3306') }}
+journalmatch = {{ fail2ban_mysql_journalmatch | default('_SYSTEMD_UNIT=mysql.service') }}
+
+maxretry = {{ fail2ban_mysql_maxretry | default(fail2ban_maxretry | default('5')) }}
+findtime = {{ fail2ban_mysql_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime  = {{ fail2ban_mysql_bantime | default(fail2ban_bantime | default('1h')) }}
+
+ignoreip = {{ fail2ban_mysql_ignoreips | default(['127.0.0.1/8', '::1']) | join(' ') }}
+action = {{ fail2ban_mysql_action | default('nftables-multiport[port=3306, protocol=tcp, priority=' ~ (fail2ban_nftables_priority | default('10')) ~ ']') }}
+
+
+####################
+# Drupal Auth (application-level)
+####################
+[drupal-auth]
+enabled  = {{ (fail2ban_drupal_enabled | default(true)) | ternary('true', 'false') }}
+filter   = drupal-auth
+port     = http,https
+journalmatch = {{ fail2ban_drupal_journalmatch | default('SYSLOG_IDENTIFIER=drupal') }}
+
+maxretry = {{ fail2ban_drupal_maxretry | default('5') }}
+findtime = {{ fail2ban_drupal_findtime | default(fail2ban_findtime | default('10m')) }}
+bantime  = {{ fail2ban_drupal_bantime | default(fail2ban_bantime | default('1h')) }}
+
+action = {{ fail2ban_drupal_action | default('nftables-multiport[port=\"http,https\", protocol=tcp, priority=' ~ (fail2ban_nftables_priority | default('10')) ~ ']') }}
+
+
+####################
+# Recidive (repeat offenders)
+####################
+[recidive]
+enabled  = {{ (fail2ban_recidive_enabled | default(true)) | ternary('true', 'false') }}
+filter   = recidive
+journalmatch = _SYSTEMD_UNIT=fail2ban.service
+
+findtime = {{ fail2ban_recidive_findtime | default('24h') }}
+bantime  = {{ fail2ban_recidive_bantime | default('7d') }}
+maxretry = {{ fail2ban_recidive_maxretry | default('5') }}
+
+action = {{ fail2ban_recidive_action | default('nftables-allports[name=recidive, priority=' ~ (fail2ban_nftables_priority | default('10')) ~ ']') }}

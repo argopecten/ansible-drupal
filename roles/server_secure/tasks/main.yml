@@ -1,0 +1,22 @@
+---
+# Applies security-focused configuration and verification tasks.
+
+- name: Refresh Cloudflare edge CIDRs
+  ansible.builtin.import_role:
+    name: os_cloudflare
+
+- name: Apply logging configuration
+  ansible.builtin.import_role:
+    name: os_logging
+
+- name: Apply SSH hardening
+  ansible.builtin.import_role:
+    name: os_ssh
+
+- name: Configure UFW firewall
+  ansible.builtin.import_role:
+    name: os_ufw
+
+- name: Configure fail2ban
+  ansible.builtin.import_role:
+    name: os_fail2ban

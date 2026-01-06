@@ -1,20 +1,29 @@
----
 # Verifies Drupal site configuration/filesystem/vhost state.
 
-- name: Gather verification context for Drupal sites
-  ansible.builtin.include_tasks: verify-site-configurations.yml
-  loop: "{{ sites | dict2items }}"
-  loop_control:
-    label: "{{ item.key }}"
+- name: Prepare site and platform context
+  ansible.builtin.include_role:
+    name: site_context
+  when: not site_context_cached | default(false)
+
+- block:
+    - name: Summarize verification context
+      ansible.builtin.debug:
+        msg:
+          - "Verifying site configurations for:"
+          - "- Platform path: {{ site_context_platform_root }}"
+          - "- Site name: {{ site_context_site_name }}"
+
+    - name: Enforce permissions during verification
+      ansible.builtin.include_tasks: permissions.yml
+
+    - name: Ensure vhosts are configured during verification
+      ansible.builtin.include_tasks: vhosts.yml
+
+    - name: Provision SSL certificates during verification
+      ansible.builtin.include_tasks: ssl-site.yml
+
+    - name: Configure per-site Fail2ban jail during verification
+      ansible.builtin.include_tasks: fail2ban.yml
   when:
-    - (site is defined and site == sites[item.key].name and inventory_hostname == sites[item.key].server)
-      or
-      (site is not defined and inventory_hostname == sites[item.key].server)
-
-- name: Enforce permissions during verification
-  ansible.builtin.import_role:
-    name: site_permissions
-
-- name: Ensure vhosts are configured during verification
-  ansible.builtin.import_role:
-    name: site_vhost
+    - site_context_should_process
+    - site_context_site_exists

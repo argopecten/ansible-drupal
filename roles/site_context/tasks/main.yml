@@ -1,0 +1,10 @@
+- name: Normalize site selection and metadata
+  ansible.builtin.import_tasks: site.yml
+
+- name: Build platform context for eligible sites
+  ansible.builtin.import_tasks: platform.yml
+  when: site_context_should_process | default(false)
+
+- name: Cache site_context context for downstream roles
+  ansible.builtin.set_fact:
+    site_context_cached: true

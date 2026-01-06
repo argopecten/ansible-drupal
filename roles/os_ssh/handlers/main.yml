@@ -1,0 +1,7 @@
+---
+- name: Reload SSH service
+  ansible.builtin.service:
+    name: ssh
+    state: reloaded
+  become: true
+  when: ansible_os_family == "Debian"

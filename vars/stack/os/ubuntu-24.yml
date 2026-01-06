@@ -1,0 +1,29 @@
+---
+# Variables for Ubuntu 24.04 LTS servers
+
+# OS details
+os_name: "Ubuntu 24.04 LTS"
+os_family: "Debian"
+os_distribution: "Ubuntu"
+os_release: "24.04"
+
+# Admin user defaults
+root_user: "root"
+root_group: "root"
+root_home: "/root"
+script_install_dir: "/usr/local/bin"
+
+# SSL certificate directories
+ssl_cert_dir: "/etc/ssl/certs"
+ssl_key_dir: "/etc/ssl/private"
+
+# Additional APT repositories
+additional_repositories:
+  - { repo: 'ppa:ondrej/php' }
+  - { repo: 'ppa:ondrej/apache2' }
+
+# Packages to install
+common_packages:
+  - unzip
+  - mc
+  - acl

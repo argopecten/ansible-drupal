@@ -1,0 +1,21 @@
+# {{ apache_conf_dir }}/conf-available/php{{ apache_php_version }}-fpm.conf
+# Apache PHP-FPM configuration on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# Pass http authorization headers to PHP-FPM.
+SetEnvIfNoCase ^Authorization$ "(.+)" HTTP_AUTHORIZATION=$1
+
+# Route PHP execution through PHP-FPM.
+<FilesMatch "\.php$">
+    SetHandler "{{ apache_php_handler }}"
+</FilesMatch>
+
+# Deny access to raw PHP source files.
+<FilesMatch "\.phps$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to files that start with a dot and have PHP-like extensions.
+<FilesMatch "^\.ph(?:p|ps|tml|ar)$">
+    Require all denied
+</FilesMatch>

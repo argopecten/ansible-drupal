@@ -1,0 +1,24 @@
+---
+# Variables for MariaDB 10.6 servers
+
+mysql_packages:
+  - mariadb-server
+  - python3-pymysql
+
+mysql_config:
+  version: 10.6
+  innodb_buffer_pool_size: "2G"
+  max_connections: 400
+  isolation_level: READ-COMMITTED
+
+mysql_root_user: root
+mysql_bind_address: 127.0.0.1
+mysql_port: 3306
+mysql_data_dir: /var/lib/mysql
+mysql_unix_socket: /run/mysqld/mysqld.sock
+mysql_error_log: "stderr"
+mysql_service_name: "mariadb"
+
+mysql_custom_settings:
+  transaction-isolation: READ-COMMITTED
+  log_bin_trust_function_creators: 1

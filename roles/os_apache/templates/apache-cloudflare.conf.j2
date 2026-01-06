@@ -1,0 +1,17 @@
+# /etc/apache2/conf-available/cloudflare.conf
+# Apache Cloudflare proxy awareness on {{ inventory_hostname }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# Trust Cloudflare edge IPs for client identity
+RemoteIPHeader CF-Connecting-IP
+{% for cidr in apache_cloudflare_ipv4_cidrs | default([]) %}
+RemoteIPTrustedProxy {{ cidr }}
+{% endfor %}
+{% for cidr in apache_cloudflare_ipv6_cidrs | default([]) %}
+RemoteIPTrustedProxy {{ cidr }}
+{% endfor %}
+
+# Ensure downstream apps and redirects treat requests as HTTPS
+RequestHeader set X-Forwarded-Proto "https"
+RequestHeader set X-Forwarded-Ssl "on"
+RequestHeader set CF-Visitor "{\"scheme\":\"https\"}"

@@ -1,0 +1,35 @@
+---
+- name: Update Drupal platform "{{ platform_item.key }}"
+  vars:
+    platform_root: "{{ (platform_item.value.path | default(platform_base_dir.path | default('/var/www/drupal')) | regex_replace('\\/+$', '')) ~ '/' ~ platform_item.value.name }}"
+  block:
+    - name: Validate platform definition
+      ansible.builtin.assert:
+        that:
+          - platform_item.value.name is defined
+        fail_msg: "Platform {{ platform_item.key }} must define a name to run updates."
+
+    - name: Check platform root before update
+      ansible.builtin.stat:
+        path: "{{ platform_root }}"
+      register: platform_root_stat
+
+    - name: Skip update when platform root is missing
+      ansible.builtin.debug:
+        msg: "Skipping update for {{ platform_item.key }} because {{ platform_root }} does not exist."
+      when: not platform_root_stat.stat.exists
+
+    - name: Run composer update for {{ platform_item.key }}
+      community.general.composer:
+        command: update
+        working_dir: "{{ platform_root }}"
+        optimize_autoloader: true
+      become_user: "{{ platform_item.value.user }}"
+      environment:
+        COMPOSER_PROCESS_TIMEOUT: "1200"
+        COMPOSER_MEMORY_LIMIT: "-1"
+        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+      when:
+        - platform_root_stat.stat.exists
+        - not ansible_check_mode
+  when: platform_item is defined

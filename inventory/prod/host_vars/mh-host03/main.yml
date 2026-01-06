@@ -1,0 +1,40 @@
+# Secrets in inventory/prod/group_vars/clientMH/vault.yml
+  
+ansible_host: "{{ vault_mh_host03.ip }}"
+ansible_port: "{{ vault_mh_host03.port }}"
+fqdn: "{{ vault_mh_host03.fqdn }}"
+hardware: "{{ vault_mh_host03.hardware }}"
+cloudflare_enabled: true
+host_secured: true
+
+# Client info
+env: prod               # environment for playbooks
+client_name: clientMH   # client name for playbooks
+
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+platforms:
+  drupal11:
+    user: drupal11
+    group: drupal11
+  drupal11.2:
+    user: drupal11_2
+    group: drupal11_2
+  drupal10.4:
+    user: drupal10_4
+    group: drupal10_4
+
+# Catch-all Apache/SSL settings for this host
+# CF is defined for the fqdn apex domain only.
+apache_catch_all_cf:
+  zone_id: "{{ vault_mh_host03.catchall.cf.zone_id | default('dummy') }}"
+  api_key: "{{ vault_mh_host03.catchall.cf.api_key | default('') }}"
+apache_catch_all_ssl:
+  provider: cloudflare
+  renewal_days: 365   # choose your window
+  force_renew: false

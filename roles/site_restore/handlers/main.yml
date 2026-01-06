@@ -1,0 +1,22 @@
+---
+# Handlers to enforce Drupal site ownership and permissions after restore.
+
+- name: Enforce Drupal site ownership
+  ansible.builtin.command: >
+    {{ script_install_dir | default('/usr/local/bin') }}/site-ownership.sh
+    --root="{{ site_context_platform_root }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
+    --user="{{ site_context_platform_user }}"
+    --group="{{ apache_group | default('www-data') }}"
+  args:
+    chdir: "{{ site_context_platform_root }}"
+  become: true
+
+- name: Enforce Drupal site permissions
+  ansible.builtin.command: >
+    {{ script_install_dir | default('/usr/local/bin') }}/site-permissions.sh
+    --root="{{ site_context_platform_root }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
+    --user="{{ site_context_platform_user }}"
+    --group="{{ apache_group | default('www-data') }}"
+  args:
+    chdir: "{{ site_context_platform_root }}"
+  become: true

@@ -1,0 +1,11 @@
+---
+# Clones Drupal platforms to a new directory while preserving client sites.
+
+- name: Clone Drupal platform
+  ansible.builtin.include_tasks:
+    file: clone.yml
+  vars:
+    platform_item: "{{ platform_selected }}"
+  when:
+    - platform_selected is defined
+    - (platform_selected.value.state | default('present')) != 'absent'

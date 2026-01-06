@@ -1,0 +1,3 @@
+{% for cidr in fail2ban_cloudflare_ignoreips | default([]) %}
+{{ cidr }}
+{% endfor %}
