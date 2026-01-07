@@ -5,10 +5,10 @@ php_cli_configurations: []
 php_fpm_configurations: []
 php_fpm_config_file: "/etc/php/{{ php_version }}/fpm/php-fpm.conf"
 php_fpm_pool_config_file: "/etc/php/{{ php_version }}/fpm/pool.d/www.conf"
-php_fpm_error_log: "/proc/self/fd/2"
+php_fpm_error_log: "syslog"
 php_fpm_log_level: "notice"
-php_fpm_access_log: "/proc/self/fd/2"
+php_fpm_access_log: ""
 php_fpm_catch_workers_output: "yes"
 php_fpm_decorate_workers_output: "yes"
-php_fpm_slowlog: "/proc/self/fd/2"
+php_fpm_slowlog: ""
 php_fpm_request_slowlog_timeout: "5s"

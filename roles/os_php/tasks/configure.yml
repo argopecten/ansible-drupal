@@ -28,15 +28,30 @@
   notify: Restart PHP-FPM
   become: true
 
-- name: Configure PHP-FPM logging
-  ansible.builtin.lineinfile:
+- name: Configure PHP-FPM logging overrides in pool.d
+  ansible.builtin.copy:
+    dest: "{{ php_fpm_pool_config_file | dirname }}/00-ansible-logging.conf"
+    owner: "{{ root_user | default('root') }}"
+    group: "{{ root_group | default('root') }}"
+    mode: "0644"
+    content: |-
+      [global]
+      error_log = {{ php_fpm_error_log }}
+      log_level = {{ php_fpm_log_level }}
+  when:
+    - (php_fpm_error_log | default('')) | length > 0
+      or (php_fpm_log_level | default('')) | length > 0
+  notify: Restart PHP-FPM
+  become: true
+
+- name: Comment out PHP-FPM global log directives
+  ansible.builtin.replace:
     path: "{{ php_fpm_config_file }}"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    create: false
-  loop:
-    - { regexp: '^;?error_log\\s*=', line: 'error_log = {{ php_fpm_error_log }}' }
-    - { regexp: '^;?log_level\\s*=', line: 'log_level = {{ php_fpm_log_level }}' }
+    regexp: '^([[:space:]]*)(error_log|log_level)([[:space:]]*=.*)$'
+    replace: '\\1;\\2\\3'
+  when:
+    - (php_fpm_error_log | default('')) | length > 0
+      or (php_fpm_log_level | default('')) | length > 0
   notify: Restart PHP-FPM
   become: true
 
@@ -47,10 +62,11 @@
     line: "{{ item.line }}"
     create: false
   loop:
-    - { regexp: '^;?access\\.log\\s*=', line: 'access.log = {{ php_fpm_access_log }}' }
+    - { regexp: '^;?access\\.log\\s*=', line: 'access.log = {{ php_fpm_access_log }}', enabled: "{{ (php_fpm_access_log | default('')) | length > 0 }}" }
     - { regexp: '^;?catch_workers_output\\s*=', line: 'catch_workers_output = {{ php_fpm_catch_workers_output }}' }
     - { regexp: '^;?decorate_workers_output\\s*=', line: 'decorate_workers_output = {{ php_fpm_decorate_workers_output }}' }
-    - { regexp: '^;?slowlog\\s*=', line: 'slowlog = {{ php_fpm_slowlog }}' }
-    - { regexp: '^;?request_slowlog_timeout\\s*=', line: 'request_slowlog_timeout = {{ php_fpm_request_slowlog_timeout }}' }
+    - { regexp: '^;?slowlog\\s*=', line: 'slowlog = {{ php_fpm_slowlog }}', enabled: "{{ (php_fpm_slowlog | default('')) | length > 0 }}" }
+    - { regexp: '^;?request_slowlog_timeout\\s*=', line: 'request_slowlog_timeout = {{ php_fpm_request_slowlog_timeout }}', enabled: "{{ (php_fpm_slowlog | default('')) | length > 0 }}" }
+  when: item.enabled | default(true) | bool
   notify: Restart PHP-FPM
   become: true

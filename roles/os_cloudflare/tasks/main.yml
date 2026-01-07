@@ -118,6 +118,23 @@
   loop: "{{ ansible_play_hosts_all }}"
   changed_when: false
 
+- name: Normalize Cloudflare CIDRs for UFW
+  ansible.builtin.set_fact:
+    ufw_cloudflare_cidrs: >-
+      {{
+        ((hostvars[item].cloudflare_ipv4_cidrs | default([])) + (hostvars[item].cloudflare_ipv6_cidrs | default([])))
+        | select('string')
+        | map('trim')
+        | reject('equalto', '')
+        | select('match', '^[0-9a-fA-F:.]+/[0-9]+$')
+        | list
+      }}
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  run_once: true
+  loop: "{{ ansible_play_hosts_all }}"
+  changed_when: false
+
 - name: Ensure Cloudflare stack vars directory exists
   ansible.builtin.file:
     path: "{{ cloudflare_stack_vars_path | dirname }}"

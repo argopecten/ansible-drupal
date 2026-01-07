@@ -19,14 +19,14 @@
       disabling restriction for this run. Ensure os_cloudflare ran earlier or pin CIDRs.
   when:
     - ufw_cloudflare_restrict_http | default(false)
-    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) == 0
+    - (ufw_cloudflare_cidrs | default([])) | length == 0
 
 - name: Disable Cloudflare restriction when no CIDRs are available
   ansible.builtin.set_fact:
     ufw_cloudflare_restrict_http: false
   when:
     - ufw_cloudflare_restrict_http | default(false)
-    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) == 0
+    - (ufw_cloudflare_cidrs | default([])) | length == 0
   changed_when: false
 
 # Set up UFW default configuration
@@ -54,17 +54,15 @@
   become: true
 
 - name: Allow SSH through UFW
-  community.general.ufw:
-    rule: allow
-    port: "{{ ssh_port }}"
-    proto: tcp
+  ansible.builtin.command: "ufw allow {{ ssh_port }}/tcp"
+  register: ufw_allow_ssh
+  changed_when: "'Skipping' not in ufw_allow_ssh.stdout"
   become: true
 
 - name: Allow HTTP/HTTPS from anywhere when Cloudflare restriction is off
-  community.general.ufw:
-    rule: allow
-    port: "{{ item }}"
-    proto: tcp
+  ansible.builtin.command: "ufw allow {{ item }}/tcp"
+  register: ufw_allow_web
+  changed_when: "'Skipping' not in ufw_allow_web.stdout"
   loop:
     - "80"
     - "443"
@@ -73,15 +71,13 @@
   become: true
 
 - name: Allow HTTP/HTTPS from Cloudflare only
-  community.general.ufw:
-    rule: allow
-    port: "{{ item.1 }}"
-    proto: tcp
-    src: "{{ item.0 }}"
-  loop: "{{ ((cloudflare_ipv4_cidrs | default([])) + (cloudflare_ipv6_cidrs | default([]))) | product(['80', '443']) | list }}"
+  ansible.builtin.command: "ufw allow from {{ item.0 }} to any port {{ item.1 }} proto tcp"
+  register: ufw_allow_cf
+  changed_when: "'Skipping' not in ufw_allow_cf.stdout"
+  loop: "{{ (ufw_cloudflare_cidrs | default([])) | product(['80', '443']) | list }}"
   when:
     - ufw_cloudflare_restrict_http | default(false)
-    - (cloudflare_ipv4_cidrs | default([]) | length) + (cloudflare_ipv6_cidrs | default([]) | length) > 0
+    - (ufw_cloudflare_cidrs | default([])) | length > 0
   become: true
 
 # Enable UFW

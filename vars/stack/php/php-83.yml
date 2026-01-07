@@ -31,6 +31,7 @@ php_fpm_request_terminate_timeout: 900  # align with max_execution_time plus buf
 php_fpm_display_errors: "Off"
 php_fpm_log_errors: "On"
 php_fpm_error_reporting: "E_ALL & ~E_DEPRECATED & ~E_STRICT"
+php_fpm_error_log: "syslog"
 
 php_cli_configurations:
   - { regexp: '^;date.timezone =', line: 'date.timezone = {{ php_date_timezone }}' }
