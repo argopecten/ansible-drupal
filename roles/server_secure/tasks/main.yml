@@ -2,8 +2,9 @@
 # Applies security-focused configuration and verification tasks.
 
 - name: Refresh Cloudflare edge CIDRs
-  ansible.builtin.import_role:
+  ansible.builtin.include_role:
     name: os_cloudflare
+  when: cloudflare_enabled | default(false) | bool
 
 - name: Apply logging configuration
   ansible.builtin.import_role:

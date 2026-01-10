@@ -6,8 +6,5 @@
     name: "{{ mysql_service_name | default('mysql') }}"
     state: restarted
 
-- name: "Reload AppArmor"
-  ansible.builtin.service:
-    name: apparmor
-    state: reloaded
-  become: true
+- name: Reload AppArmor
+  ansible.builtin.command: apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld
