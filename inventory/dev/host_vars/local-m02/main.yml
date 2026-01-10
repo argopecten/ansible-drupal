@@ -1,0 +1,31 @@
+# Ansible host variables for local-m02
+# Secrets in inventory/dev/host_vars/local-m02/vault.yml
+
+ansible_host: "{{ vault_local_m02.ip }}"
+ansible_port: "{{ vault_local_m02.port }}"
+fqdn: "{{ vault_local_m02.fqdn }}"
+hardware: "{{ vault_local_m02.hardware }}"
+cloudflare_enabled: false
+host_secured: false
+
+# Client info
+env: dev               # environment for playbooks
+client_name: clientAP  # client name for playbooks
+
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+platforms:
+  drupal11:
+    user: drupal11
+    group: drupal11
+  drupal11.2:
+    user: drupal11_2
+    group: drupal11_2
+  drupal10.4:
+    user: drupal10_4
+    group: drupal10_4

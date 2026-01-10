@@ -3,7 +3,9 @@
 
 # Base directory for all Drupal platforms
 platform_base_dir:
-  path: "/var/www/drupal"
+  path: >-
+    {{ (data_volume_root | default('') | length > 0)
+      | ternary((data_volume_root | regex_replace('/+$', '')) ~ '/drupal', '/var/www/drupal') }}
   owner: "{{ ansible_user | default('ansible') }}"
   group: "{{ ansible_user | default('ansible') }}"
   mode: "0755"

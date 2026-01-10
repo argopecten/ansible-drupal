@@ -8,7 +8,86 @@
     update_cache: yes
   become: true
 
-# Copy MySQL configurations.
+- name: Configure non-standard MySQL data directory
+  when: mysql_data_dir != "/var/lib/mysql"
+  become: true
+  block:
+    # Prepare directory structure
+    - name: Ensure parent directory exists with root ownership
+      ansible.builtin.file:
+        path: "{{ mysql_data_dir | dirname }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Check if MySQL data directory is initialized
+      ansible.builtin.stat:
+        path: "{{ mysql_data_dir }}/mysql/user.MYD"
+      register: mysql_system_db
+
+    - name: Configure AppArmor and initialize MySQL
+      when: not mysql_system_db.stat.exists
+      block:
+        # Temporarily disable AppArmor for initialization
+        - name: Unload AppArmor profile for MySQL initialization
+          ansible.builtin.command:
+            cmd: apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+          failed_when: false
+          changed_when: true
+
+        # Configure AppArmor permissions for custom data directory
+        - name: Configure AppArmor to allow custom MySQL data directory parent
+          ansible.builtin.lineinfile:
+            path: /etc/apparmor.d/usr.sbin.mysqld
+            regexp: '^\s*{{ mysql_data_dir | dirname | regex_escape }}/ rwk,'
+            insertafter: '^# Allow data dir access'
+            line: '  {{ mysql_data_dir | dirname }}/ rwk,'
+            state: present
+
+        - name: Configure AppArmor to allow custom MySQL data directory
+          ansible.builtin.lineinfile:
+            path: /etc/apparmor.d/usr.sbin.mysqld
+            regexp: '^\s*{{ mysql_data_dir | regex_escape }}/ r,'
+            insertafter: '^\s*/var/lib/mysql/ r,'
+            line: '  {{ mysql_data_dir }}/ r,'
+            state: present
+
+        - name: Configure AppArmor to allow custom MySQL data directory contents
+          ansible.builtin.lineinfile:
+            path: /etc/apparmor.d/usr.sbin.mysqld
+            regexp: '^\s*{{ mysql_data_dir | regex_escape }}/\*\* rwk,'
+            insertafter: '^\s*{{ mysql_data_dir | regex_escape }}/ r,'
+            line: '  {{ mysql_data_dir }}/** rwk,'
+            state: present
+
+        # Create and initialize MySQL data directory
+        - name: Create MySQL data directory with mysql ownership
+          ansible.builtin.file:
+            path: "{{ mysql_data_dir }}"
+            state: directory
+            owner: mysql
+            group: mysql
+            mode: "0750"
+
+        - name: Initialize MySQL data directory
+          ansible.builtin.shell: "mysqld --initialize-insecure --user=mysql --datadir={{ mysql_data_dir }}"
+
+        - name: Ensure MySQL data directory has correct ownership
+          ansible.builtin.file:
+            path: "{{ mysql_data_dir }}"
+            state: directory
+            owner: mysql
+            group: mysql
+            mode: "0750"
+            recurse: yes
+
+        # Re-enable AppArmor with updated configuration
+        - name: Reload AppArmor profile after initialization
+          ansible.builtin.command:
+            cmd: apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld
+
+# Copy MySQL configurations BEFORE initialization to avoid restart handlers
 - name: Copy MySQL global configuration
   ansible.builtin.template:
     src: "mysql-global.conf.j2"

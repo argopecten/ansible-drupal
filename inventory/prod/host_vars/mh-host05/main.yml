@@ -8,6 +8,7 @@ fqdn: "{{ vault_mh_host05.fqdn }}"
 hardware: "{{ vault_mh_host05.hardware }}"
 cloudflare_enabled: true
 host_secured: true
+data_volume_root: "/var/data"
 
 # Client info
 env: prod               # environment for playbooks

@@ -1,0 +1,3 @@
+---
+# Default data volume mount point (empty means use standard paths).
+data_volume_root: ""

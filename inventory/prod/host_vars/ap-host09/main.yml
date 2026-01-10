@@ -43,8 +43,8 @@ platforms:
     user: drupal11_3
     group: drupal11_3
   d11.2:
-    user: ubuntu
-    group: ubuntu
+    user: d11_2
+    group: d11_2
 
 # Groups
 Belongs to groups: clientAP, managed, secured, lamp, lts2404

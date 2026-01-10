@@ -1,0 +1,11 @@
+# Host variables for dev control node
+# Secrets in inventory/dev/host_vars/local-ctrl01/vault.yml
+
+ansible_host: "{{ vault_local_ctrl01.ip }}"
+ansible_port: "{{ vault_local_ctrl01.port }}"
+fqdn: "{{ vault_local_ctrl01.fqdn }}"
+hardware: "{{ vault_local_ctrl01.hardware }}"
+cloudflare_enabled: false
+host_secured: false
+
+env: dev

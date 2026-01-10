@@ -51,5 +51,8 @@
       - (platform_context_entry.state | default('present')) != 'absent'
       - platform_context_entry.user is defined
       - platform_context_entry.group is defined
+      - platform_context_entry.user not in ['ansible', 'ubuntu', (ansible_user | default('ansible'))]
+      - platform_context_entry.group not in ['ansible', 'ubuntu', (ansible_user | default('ansible'))]
     fail_msg: >-
-      Platform '{{ platform_identifier }}' is not usable on host {{ inventory_hostname }}. Check host_vars definition.
+      Platform '{{ platform_identifier }}' is not usable on host {{ inventory_hostname }}. Use a dedicated
+      platform user/group and avoid ansible/ubuntu accounts in host_vars.
