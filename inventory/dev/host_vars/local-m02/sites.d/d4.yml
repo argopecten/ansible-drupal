@@ -1,0 +1,12 @@
+---
+sites:
+  d4:
+    host: "local-m02"
+    name: "{{ vault_local_m02.d4.name }}"
+    platform: drupal11.2
+    profile: standard
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    state: present

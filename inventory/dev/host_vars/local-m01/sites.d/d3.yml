@@ -1,0 +1,12 @@
+---
+sites:
+  d3:
+    host: "local-m01"
+    name: "{{ vault_local_m01.d3.name }}"
+    platform: drupal11.2
+    profile: standard
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    state: present
