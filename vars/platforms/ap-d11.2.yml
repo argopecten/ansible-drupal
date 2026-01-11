@@ -4,7 +4,6 @@
 ap-d11.2:
   name: "ap-d11.2"
   composer_project: "https://github.com/argopecten/drupal-project.git"
-  version: "d11.2"
-  dependencies:
-    - "drush/drush:^13.6"
+  version: "d11.2"              # Specific branch or tag in the git repository
+  dependencies: []              # No additional dependencies to composer.json
   state: present

@@ -63,6 +63,7 @@
             site_context_modules_enable_raw: "{{ sites[site_context_site_identifier].modules_enable | default(sites[site_context_site_identifier].modules | default(site_install_default_modules | default([]))) }}"
             site_context_modules_disable_raw: "{{ sites[site_context_site_identifier].modules_disable | default([]) }}"
             site_context_site_subdir: "{{ sites[site_context_site_identifier].sites_subdir | default(sites[site_context_site_identifier].name | default(site_context_site_identifier)) }}"
+            site_context_civicrm_install: "{{ sites[site_context_site_identifier].civicrm_install | default(false) }}"
 
         - name: Validate required site attributes
           ansible.builtin.assert:

@@ -5,6 +5,7 @@ sites:
     name: "{{ vault_local_m01.d3.name }}"
     platform: crm-2508
     profile: standard
+    civicrm_install: true         # Enable CiviCRM installation
     modules_enable:
       - syslog
     modules_disable:

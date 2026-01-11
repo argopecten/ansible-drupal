@@ -15,6 +15,12 @@
           ansible.builtin.include_tasks: install-site-drush.yml
           when: not site_install_site_exists
 
+        - name: Install CiviCRM
+          ansible.builtin.include_tasks: install-civicrm.yml
+          when:
+            - not site_install_site_exists
+            - site_context_civicrm_install | default(false)
+
         - name: Update site context after installation
           ansible.builtin.set_fact:
             site_context_site_exists: true

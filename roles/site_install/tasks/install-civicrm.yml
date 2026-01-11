@@ -1,0 +1,33 @@
+---
+# Install CiviCRM using cv tool
+
+- name: Set CiviCRM installation context
+  ansible.builtin.set_fact:
+    civicrm_web_root: "{{ site_install_platform_path }}/web"
+    civicrm_site_dir: "{{ site_install_platform_path }}/web/sites/{{ site_install_site_name }}"
+    civicrm_settings_path: "{{ site_install_platform_path }}/web/sites/{{ site_install_site_name }}/civicrm.settings.php"
+    civicrm_cv_path: "{{ site_install_platform_path }}/vendor/bin/cv"
+    civicrm_site_url: "http://{{ site_install_site_name }}"
+
+- name: Ensure site directory is writable for CiviCRM installation
+  ansible.builtin.file:
+    path: "{{ civicrm_site_dir }}"
+    owner: "{{ site_install_platform_user }}"
+    group: "{{ site_context_platform_group }}"
+    mode: "0775"
+    state: directory
+  become: true
+
+- name: Install CiviCRM with cv tool
+  ansible.builtin.command: >
+    {{ civicrm_cv_path }} core:install --url="{{ civicrm_site_url }}"
+  args:
+    chdir: "{{ civicrm_web_root }}"
+  environment:
+    CIVICRM_SETTINGS: "{{ civicrm_settings_path }}"
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Log CiviCRM installation success
+  ansible.builtin.debug:
+    msg: "CiviCRM installed successfully for {{ site_install_site_name }}"
