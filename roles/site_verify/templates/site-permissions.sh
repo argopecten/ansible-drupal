@@ -1,7 +1,5 @@
-{%- set default_site_user = site_default_user
-    | default(platform_default_user | default(ansible_user | default("ubuntu"))) -%}
-{%- set default_site_group = site_default_group
-    | default(apache_group | default("www-data")) -%}
+{%- set default_site_user = site_default_user | default(platform_default_user) -%}
+{%- set default_site_group = site_default_group | default(platform_default_group) -%}
 #!/bin/bash
 
 # Help menu
@@ -98,7 +96,14 @@ for dir in "${DIRECTORIES[@]}"; do
 done
 
 printf "Setting strict permissions on settings files under ${SITE_ROOT} ...\n"
-find . -type f -name 'settings.php' -exec chmod "${settings_perm}" '{}' \;
-find . -type f -name 'settings.local.php' -exec chmod "${settings_perm}" '{}' \;
+SETTINGS_FILES=("settings.php" "settings.local.php" "civicrm.settings.php" "services.yml")
+for file in "${SETTINGS_FILES[@]}"; do
+  if [ -f "./$file" ]; then
+    echo "   Setting permissions on ./$file"
+    chmod "${settings_perm}" "./$file"
+  else
+    echo "   Skipping: ./$file not found."
+  fi
+done
 
 echo "Done ensuring permissions for Drupal site at ${SITE_ROOT}."

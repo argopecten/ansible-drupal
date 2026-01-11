@@ -28,6 +28,48 @@
   become: true
   become_user: "{{ site_install_platform_user }}"
 
+- name: Create CiviCRM private subdirectories
+  ansible.builtin.file:
+    path: "{{ civicrm_site_dir }}/private/civicrm/{{ item }}"
+    state: directory
+    owner: "{{ site_install_platform_user }}"
+    group: "{{ site_context_platform_group }}"
+    mode: "2770"
+  become: true
+  loop:
+    - templates_c
+    - upload
+    - persist/contribute
+    - custom
+
+- name: Deploy .htaccess to CiviCRM private subdirectories for security
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../roles/site_verify/templates/private-htaccess.j2"
+    dest: "{{ civicrm_site_dir }}/private/civicrm/{{ item }}/.htaccess"
+    owner: "{{ site_install_platform_user }}"
+    group: "{{ site_context_platform_group }}"
+    mode: "0640"
+  become: true
+  loop:
+    - templates_c
+    - upload
+    - persist/contribute
+    - custom
+
+- name: Configure CiviCRM private directories in civicrm.settings.php
+  ansible.builtin.blockinfile:
+    path: "{{ civicrm_settings_path }}"
+    marker: "// {mark} ANSIBLE MANAGED BLOCK - CiviCRM Private Directories"
+    block: |
+      // CiviCRM private file directories
+      define('CIVICRM_TEMPLATE_COMPILEDIR', '{{ civicrm_site_dir }}/private/civicrm/templates_c/');
+      define('CIVICRM_UPLOAD_DIR', '{{ civicrm_site_dir }}/private/civicrm/upload/');
+      define('CIVICRM_IMAGE_UPLOADDIR', '{{ civicrm_site_dir }}/private/civicrm/persist/contribute/');
+      define('CIVICRM_CUSTOM_FILES_UPLOADDIR', '{{ civicrm_site_dir }}/private/civicrm/custom/');
+    insertbefore: "^\\?>"
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
 - name: Log CiviCRM installation success
   ansible.builtin.debug:
     msg: "CiviCRM installed successfully for {{ site_install_site_name }}"

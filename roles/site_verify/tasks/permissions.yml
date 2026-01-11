@@ -13,7 +13,7 @@
         site_verify_platform_user: "{{ site_context_platform_user }}"
         site_verify_platform_group: "{{ site_context_platform_group }}"
 
-    - name: Enforce Drupal site permissions
+    - name: Enforce Drupal site permissions and ownership
       vars:
         site_name: "{{ site_verify_site_name }}"
         site_subdir: "{{ site_verify_site_subdir }}"
@@ -26,7 +26,7 @@
             {{ script_install_dir | default('/usr/local/bin') }}/site-ownership.sh
             --root="{{ platform_path }}/web/sites/{{ site_subdir }}"
             --user="{{ platform_user }}"
-            --group="{{ apache_group | default('www-data') }}"
+            --group="{{ platform_group }}"
           args:
             chdir: "{{ platform_path }}"
           become: true
@@ -36,30 +36,10 @@
             {{ script_install_dir | default('/usr/local/bin') }}/site-permissions.sh
             --root="{{ platform_path }}/web/sites/{{ site_subdir }}"
             --user="{{ platform_user }}"
-            --group="{{ apache_group | default('www-data') }}"
+            --group="{{ platform_group }}"
           args:
             chdir: "{{ platform_path }}"
           become: true
-
-        - name: Ensure settings.php is temporarily writable
-          ansible.builtin.file:
-            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/settings.php"
-            mode: "0640"
-
-        - name: Add trusted host patterns
-          ansible.builtin.lineinfile:
-            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/settings.php"
-            regexp: "^# \\$settings\\['trusted_host_patterns'\\] = \\[\\];$"
-            line: |
-              $settings['trusted_host_patterns'] = [
-                '^{{ site_name }}$',
-              ];
-            state: present
-
-        - name: Restore strict permissions on settings.php
-          ansible.builtin.file:
-            path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
-            mode: "0440"
   when:
     - site_context_should_process | default(false)
     - site_verify_site_dir.stat.exists | default(false)

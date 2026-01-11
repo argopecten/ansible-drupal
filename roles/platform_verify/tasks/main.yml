@@ -37,6 +37,28 @@
         msg: "Platform root does not exist for {{ platform_selected.key }} on host {{ inventory_hostname }}"
       when: not platform_root_stat.stat.exists
 
+    - name: Verify Apache user is member of platform group
+      ansible.builtin.command:
+        cmd: "id -nG {{ apache_group | default('www-data') }}"
+      register: apache_groups_result
+      changed_when: false
+      become: true
+      when: platform_root_stat.stat.exists
+
+    - name: Assert Apache user has platform group membership
+      ansible.builtin.assert:
+        that:
+          - "platform_selected.value.group in apache_groups_result.stdout.split()"
+        fail_msg: >-
+          Apache user {{ apache_group | default('www-data') }} is not a member of platform group {{ platform_selected.value.group }}.
+          This will cause permission issues when Apache tries to access platform code.
+          Run platform_context tasks to add Apache to the platform group.
+        success_msg: >-
+          Verified: Apache user {{ apache_group | default('www-data') }} is a member of platform group {{ platform_selected.value.group }}.
+      when:
+        - platform_root_stat.stat.exists
+        - apache_groups_result is defined
+
     - name: Ensure platform root has correct ownership
       ansible.builtin.file:
         path: "{{ platform_root }}"

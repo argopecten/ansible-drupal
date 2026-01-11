@@ -16,6 +16,9 @@
     - name: Enforce permissions during verification
       ansible.builtin.include_tasks: permissions.yml
 
+    - name: Configure site settings during verification
+      ansible.builtin.include_tasks: settings.yml
+
     - name: Ensure vhosts are configured during verification
       ansible.builtin.include_tasks: vhosts.yml
 
@@ -24,6 +27,17 @@
 
     - name: Configure per-site Fail2ban jail during verification
       ansible.builtin.include_tasks: fail2ban.yml
+
+    - name: Rebuild Drupal cache after verification
+      ansible.builtin.command: >
+        {{ site_context_platform_root }}/vendor/bin/drush cache:rebuild
+        --uri={{ site_context_site_name }}
+        --root={{ site_context_platform_root }}
+      args:
+        chdir: "{{ site_context_platform_root }}"
+      become: true
+      become_user: "{{ site_context_platform_user }}"
+      changed_when: false
   when:
     - site_context_should_process
     - site_context_site_exists

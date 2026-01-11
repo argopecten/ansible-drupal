@@ -87,3 +87,21 @@
   when: site_install_modules_enable | length > 0
   become: true
   become_user: "{{ site_install_platform_user }}"
+
+- name: Create private files directory
+  ansible.builtin.file:
+    path: "{{ site_install_platform_path }}/web/sites/{{ site_install_site_name }}/private"
+    state: directory
+    owner: "{{ site_install_platform_user }}"
+    group: "{{ apache_group | default('www-data') }}"
+    mode: "2770"
+  become: true
+
+- name: Deploy .htaccess to private directory for security
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../roles/site_verify/templates/private-htaccess.j2"
+    dest: "{{ site_install_platform_path }}/web/sites/{{ site_install_site_name }}/private/.htaccess"
+    owner: "{{ site_install_platform_user }}"
+    group: "{{ apache_group | default('www-data') }}"
+    mode: "0640"
+  become: true

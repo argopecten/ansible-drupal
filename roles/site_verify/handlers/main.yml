@@ -6,7 +6,7 @@
     {{ script_install_dir | default('/usr/local/bin') }}/site-ownership.sh
     --root="{{ site_context_platform_root }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
     --user="{{ site_context_platform_user }}"
-    --group="{{ apache_group | default('www-data') }}"
+    --group="{{ site_context_platform_group }}"
   args:
     chdir: "{{ site_context_platform_root }}"
   become: true
@@ -16,7 +16,7 @@
     {{ script_install_dir | default('/usr/local/bin') }}/site-permissions.sh
     --root="{{ site_context_platform_root }}/web/sites/{{ site_context_site_subdir | default(site_context_site_name) }}"
     --user="{{ site_context_platform_user }}"
-    --group="{{ apache_group | default('www-data') }}"
+    --group="{{ site_context_platform_group }}"
   args:
     chdir: "{{ site_context_platform_root }}"
   become: true

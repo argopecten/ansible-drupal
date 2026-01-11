@@ -72,8 +72,7 @@ code_dir_perms='0750'          # Code directories:    rwxr-x---
 code_file_perms='0640'         # Code files:          rw-r-----
 vendor_code_other_mask='0007'  # Vendor files:        detect permissions granted to others
 vendor_code_other_mode='o-rwx' # Vendor files:        remove permissions for others, do not use numeric mode here!
-site_dir_perms='0750'          # Site directories:    rwxr-x--- (platform user can write)
-site_file_perms='0640'         # Site files:          rw-r-----
+web_sites_dir_perms='2750'     # web/sites directory: rwxr-s--- (with setgid for group inheritance)
 
 cd "${PLATFORM_ROOT}"
 
@@ -87,9 +86,8 @@ printf "Removing other permissions from files inside ${PLATFORM_ROOT}/vendor (ma
 find ./vendor -type f -perm "/${vendor_code_other_mask}" -exec chmod "${vendor_code_other_mode}" '{}' \+
 
 if [ -d "./web/sites" ]; then
-  printf "Setting permissions inside ${PLATFORM_ROOT}/web/sites to directories=${site_dir_perms} files=${site_file_perms} ...\n"
-  find ./web/sites -type d ! -perm "${site_dir_perms}" -exec chmod "${site_dir_perms}" '{}' \+
-  find ./web/sites -type f ! -perm "${site_file_perms}" -exec chmod "${site_file_perms}" '{}' \+
+  printf "Setting permissions on ./web/sites directory (not contents) to ${web_sites_dir_perms} with setgid for group inheritance...\n"
+  chmod "${web_sites_dir_perms}" "./web/sites"
 fi
 
 echo "Done ensuring permissions for Drupal platform at ${PLATFORM_ROOT}."

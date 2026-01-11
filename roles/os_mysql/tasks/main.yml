@@ -95,3 +95,28 @@
     state: started
     enabled: true
   become: true
+
+- name: Load timezone data into MySQL
+  ansible.builtin.shell: |
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
+  args:
+    executable: /bin/bash
+  become: true
+  register: mysql_tzinfo_result
+  changed_when: '"Data loaded" not in mysql_tzinfo_result.stdout'
+  failed_when: false
+  ignore_errors: yes
+
+- name: Verify timezone data is loaded
+  community.mysql.mysql_query:
+    login_unix_socket: "{{ mysql_unix_socket }}"
+    login_db: mysql
+    query: "SELECT COUNT(*) as count FROM time_zone_name"
+  become: true
+  register: mysql_tz_check
+  ignore_errors: yes
+
+- name: Log timezone data status
+  ansible.builtin.debug:
+    msg: "MySQL timezone data: {{ 'loaded (' + (mysql_tz_check.query_result[0][0].count | string) + ' timezones)' if mysql_tz_check.query_result[0][0].count | default(0) > 0 else 'not loaded or needs manual update' }}"
+  when: mysql_tz_check.query_result is defined

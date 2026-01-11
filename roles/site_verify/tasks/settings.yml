@@ -1,0 +1,68 @@
+- name: Check if site directory exists
+  ansible.builtin.stat:
+    path: "{{ site_context_site_path }}"
+  become: true
+  register: site_verify_site_dir_settings
+
+- block:
+    - name: Set settings context facts
+      ansible.builtin.set_fact:
+        site_verify_site_name: "{{ site_context_site_name }}"
+        site_verify_site_subdir: "{{ site_context_site_subdir | default(site_context_site_name) }}"
+        site_verify_platform_path: "{{ site_context_platform_root }}"
+        site_verify_platform_user: "{{ site_context_platform_user }}"
+        site_verify_platform_group: "{{ site_context_platform_group }}"
+
+    - name: Configure Drupal site settings
+      vars:
+        site_name: "{{ site_verify_site_name }}"
+        site_subdir: "{{ site_verify_site_subdir }}"
+        platform_path: "{{ site_verify_platform_path }}"
+        platform_user: "{{ site_verify_platform_user }}"
+        platform_group: "{{ site_verify_platform_group }}"
+      block:
+        - name: Ensure settings.php is temporarily writable
+          ansible.builtin.file:
+            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/settings.php"
+            mode: "0640"
+
+        - name: Ensure private files directory exists
+          ansible.builtin.file:
+            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/private"
+            state: directory
+            owner: "{{ platform_user }}"
+            group: "{{ apache_group | default('www-data') }}"
+            mode: "2770"
+          become: true
+
+        - name: Deploy .htaccess to private directory for security
+          ansible.builtin.template:
+            src: private-htaccess.j2
+            dest: "{{ platform_path }}/web/sites/{{ site_subdir }}/private/.htaccess"
+            owner: "{{ platform_user }}"
+            group: "{{ apache_group | default('www-data') }}"
+            mode: "0640"
+          become: true
+
+        - name: Configure Drupal settings (private files and trusted hosts)
+          ansible.builtin.blockinfile:
+            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/settings.php"
+            marker: "// {mark} ANSIBLE MANAGED BLOCK - Drupal Settings"
+            block: |
+              // Private file system path
+              $settings['file_private_path'] = 'sites/' . basename(__DIR__) . '/private';
+              
+              // Trusted host patterns
+              $settings['trusted_host_patterns'] = [
+                '^{{ site_name | regex_escape }}$',
+              ];
+            insertafter: EOF
+            create: no
+
+        - name: Restore strict permissions on settings.php
+          ansible.builtin.file:
+            path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
+            mode: "0440"
+  when:
+    - site_context_should_process | default(false)
+    - site_verify_site_dir_settings.stat.exists | default(false)

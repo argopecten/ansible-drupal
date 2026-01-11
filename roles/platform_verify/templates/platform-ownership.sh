@@ -76,8 +76,8 @@ find . -path "./web/sites" -prune -o \
   -exec chown "${USER}:${GROUP}" '{}' \+
 
 if [ -d "./web/sites" ]; then
-  printf "Ensuring ownership of ./web/sites is set to ${USER}:${GROUP} for write access...\n"
-  chown -R "${USER}:${GROUP}" "./web/sites"
+  printf "Setting ownership on ./web/sites directory (not contents) to ${USER}:${GROUP}...\n"
+  chown "${USER}:${GROUP}" "./web/sites"
 fi
 
 echo "Done ensuring ownership for Drupal platform at ${PLATFORM_ROOT}."
