@@ -3,7 +3,7 @@ sites:
   d2:
     host: "local-m01"
     name: "{{ vault_local_m01.d2.name }}"
-    platform: drupal11.2
+    platform: ap-d11.2
     profile: standard
     modules_enable:
       - syslog

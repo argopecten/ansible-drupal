@@ -3,7 +3,7 @@ sites:
   d3:
     host: "local-m01"
     name: "{{ vault_local_m01.d3.name }}"
-    platform: drupal11.2
+    platform: crm-2508
     profile: standard
     modules_enable:
       - syslog

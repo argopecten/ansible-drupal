@@ -26,6 +26,15 @@ platforms:
   drupal11.2:
     user: drupal11_2
     group: drupal11_2
+  drupal11.3:
+    user: drupal11_3
+    group: drupal11_3
   drupal10.4:
     user: drupal10_4
     group: drupal10_4
+  ap-d11.2:
+    user: ap_d11_2
+    group: ap_d11_2
+  crm-2508:
+    user: crm_2508
+    group: crm_2508

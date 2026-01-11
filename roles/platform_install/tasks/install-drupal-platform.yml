@@ -32,6 +32,50 @@
         state: absent
       become: true
 
+    - name: Clone Drupal project from Git repository
+      ansible.builtin.git:
+        repo: "{{ drupal_project }}"
+        dest: "{{ tmp_build_dir }}"
+        version: "{{ drupal_version }}"
+        force: true
+      become_user: "{{ platform_item.value.user }}"
+      when:
+        - not ansible_check_mode
+        - drupal_project is search('\.git$')
+
+    - name: Update composer.json for pre-install dependencies
+      community.general.composer:
+        command: require
+        arguments: "{{ dependency }} --no-install"
+        working_dir: "{{ tmp_build_dir }}"
+      become_user: "{{ platform_item.value.user }}"
+      environment:
+        COMPOSER_PROCESS_TIMEOUT: "1200"
+        COMPOSER_MEMORY_LIMIT: "-1"
+        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+      loop: "{{ platform_item.value.dependencies | default([]) }}"
+      loop_control:
+        loop_var: dependency
+        label: "{{ dependency }}"
+      when:
+        - not ansible_check_mode
+        - drupal_project is search('\.git$')
+        - (platform_item.value.dependencies | default([])) | length > 0
+
+    - name: Install Composer dependencies for Git project
+      community.general.composer:
+        command: install
+        working_dir: "{{ tmp_build_dir }}"
+        optimize_autoloader: true
+      become_user: "{{ platform_item.value.user }}"
+      environment:
+        COMPOSER_PROCESS_TIMEOUT: "1200"
+        COMPOSER_MEMORY_LIMIT: "-1"
+        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+      when:
+        - not ansible_check_mode
+        - drupal_project is search('\.git$')
+
     - name: Generate Drupal project with Composer
       community.general.composer:
         command: create-project
@@ -43,9 +87,11 @@
         COMPOSER_PROCESS_TIMEOUT: "1200"
         COMPOSER_MEMORY_LIMIT: "-1"
         COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
-      when: not ansible_check_mode
+      when:
+        - not ansible_check_mode
+        - drupal_project is not search('\.git$')
 
-    - name: Install additional Composer dependencies
+    - name: Install additional Composer dependencies for Packagist projects
       community.general.composer:
         command: require
         arguments: "{{ dependency }}"
@@ -61,6 +107,7 @@
         label: "{{ dependency }}"
       when:
         - not ansible_check_mode
+        - drupal_project is not search('\.git$')
         - (platform_item.value.dependencies | default([])) | length > 0
 
     - name: Check current platform root

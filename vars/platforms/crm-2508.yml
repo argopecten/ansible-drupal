@@ -3,7 +3,7 @@
 
 crm-2508:
   name: "crm-2508"
-  composer_project: "argopecten/drupal-project"  # https://github.com/argopecten/drupal-project
+  composer_project: "https://github.com/argopecten/drupal-project.git"
   version: "civicrm/d11.2-com3"
   dependencies:
     - "drush/drush:^13.6"

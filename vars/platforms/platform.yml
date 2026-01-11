@@ -13,6 +13,6 @@ platform_base_dir:
 # Default Drupal platform settings
 default_drupal_composer_project: "drupal/recommended-project"
 default_drupal_profile: "standard"
-default_drupal_version: "11.2"
+default_drupal_version: "11.3"
 drupal_root_permissions: "0750"
 drupal_site_install_extra_args: []

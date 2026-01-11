@@ -1,9 +1,9 @@
 # Supported Drupal platform:
 # Drupal 11 release from argopecten/drupal-project
 
-d11.2:
-  name: "d11.2"
-  composer_project: "argopecten/drupal-project"  # https://github.com/argopecten/drupal-project
+ap-d11.2:
+  name: "ap-d11.2"
+  composer_project: "https://github.com/argopecten/drupal-project.git"
   version: "d11.2"
   dependencies:
     - "drush/drush:^13.6"

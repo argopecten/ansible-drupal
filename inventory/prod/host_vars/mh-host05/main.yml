@@ -33,6 +33,9 @@ platforms:
   drupal10.6:
     user: drupal10_6
     group: drupal10_6
+  crm-2508:
+    user: crm
+    group: crm
 
 # Groups
 Belongs to groups: clientMH, managed, secured, lamp, lts2404
