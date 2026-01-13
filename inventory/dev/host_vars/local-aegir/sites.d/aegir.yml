@@ -1,0 +1,12 @@
+---
+sites:
+  aegir:
+    host: "local-aegir"
+    name: "{{ vault_local_aegir.aegir.name }}"
+    platform: aegir-2601
+    profile: standard
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    state: present

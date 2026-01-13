@@ -1,0 +1,28 @@
+# Ansible host variables for local-aegir
+# Secrets in inventory/dev/host_vars/local-aegir/vault.yml
+
+ansible_host: "{{ vault_local_aegir.ip }}"
+ansible_port: "{{ vault_local_aegir.port }}"
+fqdn: "{{ vault_local_aegir.fqdn }}"
+hardware: "{{ vault_local_aegir.hardware }}"
+cloudflare_enabled: false
+host_secured: false
+
+# Client info
+env: dev               # environment for playbooks
+client_name: clientAP  # client name for playbooks
+
+stack:
+  os: ubuntu-24
+  php: php-83
+  mysql: mysql-80
+  apache: apache-24
+  drupal: drupal11
+
+platforms:
+  drupal11.3:
+    user: drupal11_3
+    group: drupal11_3
+  aegir-2601:
+    user: aegir
+    group: aegir
