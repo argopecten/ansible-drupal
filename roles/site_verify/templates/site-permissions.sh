@@ -1,5 +1,5 @@
-{%- set default_site_user = site_default_user | default(platform_default_user) -%}
-{%- set default_site_group = site_default_group | default(platform_default_group) -%}
+{%- set default_site_user = site_default_user | default(ansible_user | default("ubuntu")) -%}
+{%- set default_site_group = site_default_group | default(default_site_user) -%}
 #!/bin/bash
 
 # Help menu
