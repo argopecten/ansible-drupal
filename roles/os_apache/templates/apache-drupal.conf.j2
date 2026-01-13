@@ -18,8 +18,38 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 
 ### Block access to Drupal's sensitive files and directories
+# Deny access to any dotfiles (optional catch-all)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Deny access to composer and configuration files
+<FilesMatch "^(composer\.json|composer\.lock|\.env.*|\.htaccess|web\.config)$">
+    Require all denied
+</FilesMatch>
+
+# Block access to Drupal's autoload file
+<FilesMatch "^autoload\.php$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to .git directories
+<DirectoryMatch "^.*/\.git/.*$">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to vendor directory (exclude Drupal public assets vendor path)
+<DirectoryMatch "^(?!.*\/web\/core\/assets\/vendor\/).*\/vendor\/.*$">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to private config directories if present
+<DirectoryMatch "^.*/(config|sites)/.*\.yml$">
+    Require all denied
+</DirectoryMatch>
+
 # Block direct access to Drupal private files
-<DirectoryMatch "^.*/sites/.*/files/private/">
+<DirectoryMatch "^.*/sites/.*/(private|files/private)/">
     Require all denied
 </DirectoryMatch>
 
@@ -27,11 +57,6 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 #<DirectoryMatch "^.*/sites/.*/files/(backups|staging|tmp|logs)/">
 #    Require all denied
 #</DirectoryMatch>
-
-# Block .env files (if using dotenv or other env file formats)
-<FilesMatch "^\.env.*$">
-    Require all denied
-</FilesMatch>
 
 # Disable PHP execution in public files directories
 <DirectoryMatch "^.*/sites/.*/files/">
@@ -41,35 +66,5 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
         Require all denied
     </FilesMatch>
 </DirectoryMatch>
-
-# Block Composer files
-<FilesMatch "^(composer\.json|composer\.lock)$">
-    Require all denied
-</FilesMatch>
-
-# Block access to Drupal's autoload and config files
-<FilesMatch "^(autoload\.php|web\.config)$">
-    Require all denied
-</FilesMatch>
-
-# Deny access to vendor directory
-<DirectoryMatch "^.*/vendor/.*$">
-    Require all denied
-</DirectoryMatch>
-
-# Deny access to private config directories if present
-<DirectoryMatch "^.*/(config|sites)/.*\.yml$">
-    Require all denied
-</DirectoryMatch>
-
-# Deny access to .git directories
-<DirectoryMatch "^.*/\.git/.*$">
-    Require all denied
-</DirectoryMatch>
-
-# Deny access to any dotfiles (optional catch-all)
-<FilesMatch "^\.">
-    Require all denied
-</FilesMatch>
 
 ### End of sensitive files and directories access restrictions
