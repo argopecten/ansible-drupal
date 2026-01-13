@@ -30,8 +30,11 @@
     ErrorDocument 421 {{ error_doc }}421.html
 
     RewriteEngine On
+    # Redirect allowed hosts to HTTPS
+    RewriteCond %{HTTP_HOST} ^(?:{{ allowed_pattern }})$
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    # Serve error page for unknown hosts
     RewriteCond %{REQUEST_URI} !^/error/
-    RewriteCond %{HTTP_HOST} !^(?:{{ allowed_pattern }})$
     RewriteRule ^ - [R=421,L]
 
     ErrorLog /proc/self/fd/2
@@ -39,7 +42,7 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName {{ error_hostname }}
+    ServerName _
     DocumentRoot {{ error_root }}
 
     <Directory {{ error_root }}>
@@ -58,11 +61,6 @@
     ErrorDocument 404 {{ error_doc }}404.html
     ErrorDocument 500 {{ error_doc }}500.html
     ErrorDocument 421 {{ error_doc }}421.html
-
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} !^/error/
-    RewriteCond %{HTTP_HOST} !^(?:{{ allowed_pattern }})$
-    RewriteRule ^ - [R=421,L]
 
     ErrorLog /proc/self/fd/2
     CustomLog /proc/self/fd/1 vhost_journal

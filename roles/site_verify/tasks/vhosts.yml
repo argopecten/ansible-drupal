@@ -1,4 +1,8 @@
 - block:
+    - name: Collect all configured site names for this host
+      ansible.builtin.set_fact:
+        apache_catch_all_allowed_hostnames: "{{ (sites | default({}) | dict2items | map(attribute='value.name') | list) + [fqdn | default(inventory_hostname)] }}"
+
     - name: Deploy Apache vhost configuration
       vars:
         site_name: "{{ site_context_site_name }}"
@@ -6,6 +10,27 @@
       ansible.builtin.template:
         src: "{{ role_path }}/../os_apache/templates/apache-vhost.conf.j2"
         dest: "{{ apache_vhost_path | default('/etc/apache2/sites-available') }}/{{ site_name }}.conf"
+        owner: "{{ root_user }}"
+        group: "{{ root_group }}"
+        mode: "0644"
+        force: true
+      notify: Reload Apache service
+
+    - name: Update catchall configuration with allowed hostnames
+      vars:
+        apache_conf_dir: "/etc/apache2"
+        apache_catch_all_site_id: "000-catchall-ssl"
+        apache_catch_all_server_name: "{{ fqdn | default(inventory_hostname) }}"
+        apache_catch_all_ssl_apex: "{{ apache_catch_all_server_name.split('.')[-2:] | join('.') }}"
+        apache_catch_all_document_root: "/var/www/html"
+        apache_catch_all_page: "index.html"
+        apache_catch_all_ssl_cert_dir: "/etc/ssl/certs"
+        apache_catch_all_ssl_key_dir: "/etc/ssl/private"
+        apache_catch_all_ssl_certificate: "{{ apache_catch_all_ssl_cert_dir }}/{{ apache_catch_all_ssl_apex }}.pem"
+        apache_catch_all_ssl_key: "{{ apache_catch_all_ssl_key_dir }}/{{ apache_catch_all_ssl_apex }}.key"
+      ansible.builtin.template:
+        src: "{{ role_path }}/../os_apache/templates/apache-default.conf.j2"
+        dest: "{{ apache_conf_dir }}/sites-available/{{ apache_catch_all_site_id }}.conf"
         owner: "{{ root_user }}"
         group: "{{ root_group }}"
         mode: "0644"
