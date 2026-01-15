@@ -1,0 +1,9 @@
+# Supported Drupal platform:
+# Drupal 11 release from argopecten/drupal-project
+
+ap-d11.3:
+  name: "ap-d11.3"
+  composer_project: "https://github.com/argopecten/drupal-project.git"
+  version: "d11.3"              # Specific branch or tag in the git repository
+  dependencies: []              # No additional dependencies to composer.json
+  state: present

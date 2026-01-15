@@ -1,0 +1,9 @@
+# Supported Drupal platform:
+# Drupal 11 release from argopecten/drupal-project
+
+mh:
+  name: "mh-2601"
+  composer_project: "https://github.com/argopecten/drupal-project.git"
+  version: "mh/2601"            # Specific branch or tag in the git repository
+  dependencies: []              # No additional dependencies to composer.json
+  state: present

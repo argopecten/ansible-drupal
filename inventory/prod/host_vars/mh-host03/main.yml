@@ -16,18 +16,22 @@ stack:
   php: php-83
   mysql: mysql-80
   apache: apache-24
-  drupal: drupal11
+  drupal: drupal11.3
 
+# Supported platforms for this host
 platforms:
-  drupal11:
-    user: drupal11
-    group: drupal11
   drupal11.2:
     user: drupal11_2
     group: drupal11_2
-  drupal10.4:
-    user: drupal10_4
-    group: drupal10_4
+  drupal11.3:
+    user: drupal11_3
+    group: drupal11_3
+  crm-2508:
+    user: crm
+    group: crm
+  crm-2601:
+    user: crm
+    group: crm
 
 # Catch-all Apache/SSL settings for this host
 # CF is defined for the fqdn apex domain only.
