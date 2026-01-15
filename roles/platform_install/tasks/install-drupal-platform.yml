@@ -52,8 +52,10 @@
         - name: Generate Composer lock file (Git project)
           community.general.composer:
             command: update
+            arguments: "--no-interaction --no-progress"
             working_dir: "{{ tmp_build_dir }}"
             optimize_autoloader: true
+            prefer_dist: true
           become_user: "{{ platform_item.value.user }}"
           environment:
             COMPOSER_PROCESS_TIMEOUT: "1200"
@@ -64,8 +66,10 @@
         - name: Install Composer dependencies (Git project)
           community.general.composer:
             command: install
+            arguments: "--no-interaction --no-progress"
             working_dir: "{{ tmp_build_dir }}"
             optimize_autoloader: true
+            prefer_dist: true
           become_user: "{{ platform_item.value.user }}"
           environment:
             COMPOSER_PROCESS_TIMEOUT: "1200"

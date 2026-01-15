@@ -26,6 +26,12 @@ platforms:
   drupal11.3:
     user: drupal11_3
     group: drupal11_3
+  ap-d11.3:
+    user: ap
+    group: ap
+  mh-2601:
+    user: mh
+    group: mh
   crm-2508:
     user: crm
     group: crm
