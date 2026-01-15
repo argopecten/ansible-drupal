@@ -1,13 +1,14 @@
 ---
-- name: Install Drupal platform "{{ platform_item.key }}"
+- name: Install Drupal platform definition "{{ platform_item.key }}"
   vars:
     platform_root: "{{ platform_base_dir.path ~ '/' ~ platform_item.value.name }}"
     tmp_build_dir: "/tmp/{{ platform_item.key }}"
     drupal_project: "{{ platform_item.value.composer_project | default(default_drupal_composer_project | default('drupal/recommended-project')) }}"
     drupal_version: "{{ platform_item.value.version | default(default_drupal_version | default('')) }}"
     drupal_site_dir: "{{ tmp_build_dir }}"
+    drupal_project_is_git: "{{ drupal_project is search('(^[a-z]+://|^git@|\\.git$)') }}"
   block:
-    - name: Validate platform definition
+    - name: Validate platform attributes
       ansible.builtin.assert:
         that:
           - platform_item.value.name is defined
@@ -17,7 +18,7 @@
           - drupal_version | length > 0
         fail_msg: "Platform {{ platform_item.key }} is missing name/user/group or version/composer_project attributes."
 
-    - name: Ensure platform base directory exists
+    - name: Ensure platform base directory
       ansible.builtin.file:
         path: "{{ platform_base_dir.path }}"
         state: directory
@@ -26,96 +27,94 @@
         mode: "{{ platform_base_dir.mode }}"
       become: true
 
-    - name: Remove previous temporary build directory
+    - name: Remove temporary build directory
       ansible.builtin.file:
         path: "{{ tmp_build_dir }}"
         state: absent
       become: true
 
-    - name: Clone Drupal project from Git repository
-      ansible.builtin.git:
-        repo: "{{ drupal_project }}"
-        dest: "{{ tmp_build_dir }}"
-        version: "{{ drupal_version }}"
-        force: true
-      become_user: "{{ platform_item.value.user }}"
+    - name: Build Drupal project from Git repository
+      block:
+        - name: Clone Drupal project from Git
+          ansible.builtin.git:
+            repo: "{{ drupal_project }}"
+            dest: "{{ tmp_build_dir }}"
+            version: "{{ drupal_version }}"
+            force: true
+          become_user: "{{ platform_item.value.user }}"
+
+        - name: Check Composer lock file (Git project)
+          ansible.builtin.stat:
+            path: "{{ tmp_build_dir }}/composer.lock"
+          register: composer_lock_stat
+          become: true
+
+        - name: Generate Composer lock file (Git project)
+          community.general.composer:
+            command: update
+            working_dir: "{{ tmp_build_dir }}"
+            optimize_autoloader: true
+          become_user: "{{ platform_item.value.user }}"
+          environment:
+            COMPOSER_PROCESS_TIMEOUT: "1200"
+            COMPOSER_MEMORY_LIMIT: "-1"
+            COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+          when: not composer_lock_stat.stat.exists | default(false)
+
+        - name: Install Composer dependencies (Git project)
+          community.general.composer:
+            command: install
+            working_dir: "{{ tmp_build_dir }}"
+            optimize_autoloader: true
+          become_user: "{{ platform_item.value.user }}"
+          environment:
+            COMPOSER_PROCESS_TIMEOUT: "1200"
+            COMPOSER_MEMORY_LIMIT: "-1"
+            COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+          when: composer_lock_stat.stat.exists | default(false)
       when:
         - not ansible_check_mode
-        - drupal_project is search('\.git$')
+        - drupal_project_is_git
 
-    - name: Update composer.json for pre-install dependencies
-      community.general.composer:
-        command: require
-        arguments: "{{ dependency }} --no-install"
-        working_dir: "{{ tmp_build_dir }}"
-      become_user: "{{ platform_item.value.user }}"
-      environment:
-        COMPOSER_PROCESS_TIMEOUT: "1200"
-        COMPOSER_MEMORY_LIMIT: "-1"
-        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
-      loop: "{{ platform_item.value.dependencies | default([]) }}"
-      loop_control:
-        loop_var: dependency
-        label: "{{ dependency }}"
+    - name: Build Drupal project from Composer project
+      block:
+        - name: Generate Drupal project from Composer package
+          community.general.composer:
+            command: create-project
+            arguments: "{{ drupal_project }}:{{ drupal_version }} {{ drupal_site_dir }} {{ composer_project_options | default('') }}"
+            working_dir: "/tmp"
+            optimize_autoloader: true
+          become_user: "{{ platform_item.value.user }}"
+          environment:
+            COMPOSER_PROCESS_TIMEOUT: "1200"
+            COMPOSER_MEMORY_LIMIT: "-1"
+            COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+
+        - name: Install additional Composer dependencies (package project)
+          community.general.composer:
+            command: require
+            arguments: "{{ dependency }}"
+            working_dir: "{{ tmp_build_dir }}"
+          become_user: "{{ platform_item.value.user }}"
+          environment:
+            COMPOSER_PROCESS_TIMEOUT: "1200"
+            COMPOSER_MEMORY_LIMIT: "-1"
+            COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
+          loop: "{{ platform_item.value.dependencies | default([]) }}"
+          loop_control:
+            loop_var: dependency
+            label: "{{ dependency }}"
+          when: (platform_item.value.dependencies | default([])) | length > 0
       when:
         - not ansible_check_mode
-        - drupal_project is search('\.git$')
-        - (platform_item.value.dependencies | default([])) | length > 0
+        - not drupal_project_is_git
 
-    - name: Install Composer dependencies for Git project
-      community.general.composer:
-        command: install
-        working_dir: "{{ tmp_build_dir }}"
-        optimize_autoloader: true
-      become_user: "{{ platform_item.value.user }}"
-      environment:
-        COMPOSER_PROCESS_TIMEOUT: "1200"
-        COMPOSER_MEMORY_LIMIT: "-1"
-        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
-      when:
-        - not ansible_check_mode
-        - drupal_project is search('\.git$')
-
-    - name: Generate Drupal project with Composer
-      community.general.composer:
-        command: create-project
-        arguments: "{{ drupal_project }}:{{ drupal_version }} {{ drupal_site_dir }} {{ composer_project_options | default('') }}"
-        working_dir: "/tmp"
-        optimize_autoloader: true
-      become_user: "{{ platform_item.value.user }}"
-      environment:
-        COMPOSER_PROCESS_TIMEOUT: "1200"
-        COMPOSER_MEMORY_LIMIT: "-1"
-        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
-      when:
-        - not ansible_check_mode
-        - drupal_project is not search('\.git$')
-
-    - name: Install additional Composer dependencies for Packagist projects
-      community.general.composer:
-        command: require
-        arguments: "{{ dependency }}"
-        working_dir: "{{ tmp_build_dir }}"
-      become_user: "{{ platform_item.value.user }}"
-      environment:
-        COMPOSER_PROCESS_TIMEOUT: "1200"
-        COMPOSER_MEMORY_LIMIT: "-1"
-        COMPOSER_HOME: "/home/{{ platform_item.value.user }}/.composer"
-      loop: "{{ platform_item.value.dependencies | default([]) }}"
-      loop_control:
-        loop_var: dependency
-        label: "{{ dependency }}"
-      when:
-        - not ansible_check_mode
-        - drupal_project is not search('\.git$')
-        - (platform_item.value.dependencies | default([])) | length > 0
-
-    - name: Check current platform root
+    - name: Check platform root
       ansible.builtin.stat:
         path: "{{ platform_root }}"
       register: platform_root_stat
 
-    - name: Remove existing platform root before reinstalling
+    - name: Remove existing platform root
       ansible.builtin.file:
         path: "{{ platform_root }}"
         state: absent
@@ -124,7 +123,7 @@
         - not ansible_check_mode
         - platform_root_stat.stat.exists
 
-    - name: Ensure new platform root exists
+    - name: Ensure platform root exists
       ansible.builtin.file:
         path: "{{ platform_root }}"
         state: directory
@@ -133,7 +132,7 @@
         mode: "{{ platform_item.value.drupal_root_permissions | default(drupal_root_permissions | default('0750')) }}"
       become: true
 
-    - name: Move Drupal project files into place
+    - name: Copy Drupal project files into place
       ansible.builtin.command:
         cmd: "cp -r {{ tmp_build_dir }}/. {{ platform_root }}/"
         creates: "{{ platform_root }}/web/index.php"

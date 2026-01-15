@@ -91,9 +91,15 @@
 
 - name: Ensure MySQL is running
   ansible.builtin.service:
-    name: mysql
+    name: "{{ mysql_service_name | default('mysql') }}"
     state: started
     enabled: true
+  become: true
+
+- name: Check MySQL socket availability
+  ansible.builtin.stat:
+    path: "{{ mysql_unix_socket | default('/run/mysqld/mysqld.sock') }}"
+  register: mysql_socket_stat
   become: true
 
 - name: Load timezone data into MySQL
@@ -106,6 +112,7 @@
   changed_when: '"Data loaded" not in mysql_tzinfo_result.stdout'
   failed_when: false
   ignore_errors: yes
+  when: mysql_socket_stat.stat.exists | default(false)
 
 - name: Verify timezone data is loaded
   community.mysql.mysql_query:
@@ -115,6 +122,7 @@
   become: true
   register: mysql_tz_check
   ignore_errors: yes
+  when: mysql_socket_stat.stat.exists | default(false)
 
 - name: Log timezone data status
   ansible.builtin.debug:
