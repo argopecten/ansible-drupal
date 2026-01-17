@@ -30,7 +30,13 @@
             'name': platform_identifier,
             'path': (
               platform_context_host_entry.path
-              | default(platform_base_dir.path | default('/var/www/drupal'))
+              | default(
+                  platform_base_dir.path
+                  | default(
+                      ((data_volume_root | default('') | length > 0)
+                        | ternary((data_volume_root | regex_replace('/+$', '')) ~ '/drupal', '/var/www/drupal'))
+                    )
+                )
               | regex_replace('\\/*$', '/')
             )
           })
