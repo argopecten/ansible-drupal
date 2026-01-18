@@ -78,8 +78,8 @@
     port: "{{ item }}"
     proto: tcp
   loop:
-    - "80"
-    - "443"
+    - "{{ apache_listen_http_port }}"
+    - "{{ apache_listen_https_port }}"
   when:
     - not (ufw_cloudflare_restrict_http | default(false))
   become: true
@@ -90,7 +90,7 @@
     from_ip: "{{ item.0 }}"
     port: "{{ item.1 }}"
     proto: tcp
-  loop: "{{ (ufw_cloudflare_cidrs | default([])) | product(['80', '443']) | list }}"
+  loop: "{{ (ufw_cloudflare_cidrs | default([])) | product(ufw_cloudflare_tcp_ports | default([])) | list }}"
   when:
     - ufw_cloudflare_restrict_http | default(false)
     - (ufw_cloudflare_cidrs | default([])) | length > 0

@@ -28,7 +28,7 @@ Group {{ apache_group }}
 HostnameLookups Off
 
 # The location of the error log file.
-ErrorLog /proc/self/fd/2
+ErrorLog /var/log/apache2/error.log
 
 # Control the severity of messages logged to the error_log.
 LogLevel {{ apache_log_level }}

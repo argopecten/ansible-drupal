@@ -114,9 +114,3 @@
     update_cache: true
   when: secured_packages is defined
   become: true
-
-# === Apply logging configuration ===
-
-- name: Apply logging configuration
-  ansible.builtin.import_role:
-    name: os_logging

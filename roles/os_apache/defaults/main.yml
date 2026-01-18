@@ -2,6 +2,9 @@
 apache_conf_dir: "/etc/apache2"
 apache_main_conf_file: "{{ apache_conf_dir }}/apache2.conf"
 apache_sites_enabled: "{{ apache_conf_dir }}/sites-enabled"
+apache_ports_conf_file: "{{ apache_conf_dir }}/ports.conf"
+apache_listen_ipv4: true
+apache_listen_ipv6: true
 apache_required_modules:
   - headers
   - ssl

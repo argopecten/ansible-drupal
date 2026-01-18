@@ -1,11 +1,5 @@
 ---
 # Development logging configuration.
-logging_journald_system_max_use: "512M"
-logging_journald_system_keep_free: "250M"
-logging_journald_max_retention_sec: "1week"
-logging_journald_max_file_sec: "1week"
-logging_journald_rate_limit_interval_sec: "10s"
-logging_journald_rate_limit_burst: 20000
 php_fpm_log_level: "debug"
 fail2ban_loglevel: INFO
 fail2ban_socket: /var/run/fail2ban/fail2ban.sock

@@ -17,28 +17,22 @@ fail2ban_bantime: 1h
 fail2ban_findtime: 10m
 fail2ban_maxretry: 5
 fail2ban_usedns: "no"
-fail2ban_logtarget: "STDOUT"
 fail2ban_action: "%(banaction)s[port=\"%(port)s\", protocol=\"%(protocol)s\"]"
 fail2ban_action_mw: "action_mw"
 fail2ban_nftables_priority: 10
 fail2ban_banaction: "nftables-multiport[priority={{ fail2ban_nftables_priority }}]"
-fail2ban_backend: systemd
 fail2ban_destemail: "{{ ansible_user }}@localhost"
 fail2ban_sender: "{{ ansible_user }}@{{ ansible_fqdn }}"
 
-fail2ban_apache_journalmatch: "_SYSTEMD_UNIT=apache2.service"
 
 fail2ban_sshd_maxretry: 3
 fail2ban_sshd_action: "nftables-multiport[port={{ ssh_port }}, protocol=tcp, priority={{ fail2ban_nftables_priority }}]"
-fail2ban_sshd_journalmatch: "_SYSTEMD_UNIT=sshd.service"
 
 fail2ban_php_fpm_enabled: true
 
 fail2ban_mysql_enabled: true
-fail2ban_mysql_journalmatch: "_SYSTEMD_UNIT=mysql.service"
 
 fail2ban_drupal_enabled: true
-fail2ban_drupal_journalmatch: "SYSLOG_IDENTIFIER=drupal"
 fail2ban_drupal_maxretry: 6
 fail2ban_drupal_findtime: 30m
 fail2ban_drupal_bantime: 2h

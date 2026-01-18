@@ -12,7 +12,7 @@
 {% set allowed_pattern = allowed_hosts | map('regex_escape') | join('|') %}
 {% set error_doc = '/error/' %}
 
-<VirtualHost *:80>
+<VirtualHost *:{{ apache_listen_http_port }}>
     ServerName {{ error_hostname }}
     DocumentRoot {{ error_root }}
 
@@ -37,11 +37,11 @@
     RewriteCond %{REQUEST_URI} !^/error/
     RewriteRule ^ - [R=421,L]
 
-    ErrorLog /proc/self/fd/2
-    CustomLog /proc/self/fd/1 vhost_journal
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log vhost_combined
 </VirtualHost>
 
-<VirtualHost *:443>
+<VirtualHost *:{{ apache_listen_https_port }}>
     ServerName _
     DocumentRoot {{ error_root }}
 
@@ -62,6 +62,6 @@
     ErrorDocument 500 {{ error_doc }}500.html
     ErrorDocument 421 {{ error_doc }}421.html
 
-    ErrorLog /proc/self/fd/2
-    CustomLog /proc/self/fd/1 vhost_journal
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log vhost_combined
 </VirtualHost>

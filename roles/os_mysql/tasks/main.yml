@@ -77,17 +77,32 @@
       when:
         - not mysql_system_db_opt_stat.stat.exists
 
-    - name: Update AppArmor for MySQL custom data directory
-      ansible.builtin.blockinfile:
-        path: /etc/apparmor.d/usr.sbin.mysqld
-        marker: "# {mark} ANSIBLE MANAGED BLOCK - Custom MySQL Datadir"
-        block: "{{ lookup('template', 'apparmor-mysql-custom-datadir.j2') }}"
-        insertbefore: '^\}'
-      notify: Reload AppArmor
-
   when: mysql_data_dir != "/var/lib/mysql"
 
 # --------------------------------------------
+
+- name: Ensure local AppArmor include is enabled for MySQL
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/usr.sbin.mysqld
+    regexp: '^\\s*#?\\s*include\\s+<local/usr\\.sbin\\.mysqld>'
+    line: '#include <local/usr.sbin.mysqld>'
+    state: present
+  notify: Reload AppArmor
+  become: true
+
+- name: Install MySQL AppArmor overrides
+  ansible.builtin.template:
+    src: "apparmor-mysql-custom-datadir.j2"
+    dest: /etc/apparmor.d/local/usr.sbin.mysqld
+    owner: root
+    group: root
+    mode: "0644"
+    force: true
+  notify: Reload AppArmor
+  become: true
+
+- name: Apply AppArmor updates before starting MySQL
+  meta: flush_handlers
 
 - name: Ensure MySQL is running
   ansible.builtin.service:

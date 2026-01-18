@@ -16,6 +16,7 @@
     mode: '0644'
   loop:
     - { src: "apache-main.conf.j2", dest: "{{ apache_main_conf_file }}" }
+    - { src: "apache-ports.conf.j2", dest: "{{ apache_ports_conf_file }}" }
     - { src: "apache-drupal.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/drupal.conf" }
     - { src: "apache-php-fpm.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/php{{ apache_php_version }}-fpm.conf" }
     - { src: "apache-security.conf.j2", dest: "{{ apache_conf_dir }}/conf-available/security.conf" }

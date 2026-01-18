@@ -3,15 +3,21 @@
 
 - import_tasks: scripts.yml
 
+- name: Ensure data volume root exists and is traversable
+  ansible.builtin.file:
+    path: "{{ data_volume_root | regex_replace('/+$', '') }}"
+    state: directory
+    owner: "{{ ansible_user | default('ansible') }}"
+    group: "{{ ansible_user | default('ansible') }}"
+    mode: "0755"
+  become: true
+  when: data_volume_root | default('') | length > 0
+
 - name: Apply security hardening for secured hosts
   ansible.builtin.import_role:
     name: server_secure
   when:
     - host_secured | default(false)
-
-- name: Apply logging configuration
-  ansible.builtin.import_role:
-    name: os_logging
 
 - name: Apply MySQL configuration
   ansible.builtin.import_role:

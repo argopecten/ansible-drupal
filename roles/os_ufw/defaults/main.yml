@@ -1,4 +1,9 @@
 ---
 ufw_cloudflare_restrict_http: "{{ cloudflare_enabled | default(false) }}"
-ufw_cloudflare_tcp_ports: [80, 443]
-ufw_cloudflare_udp_ports: [443]
+ufw_web_tcp_ports:
+  - "{{ apache_listen_http_port }}"
+  - "{{ apache_listen_https_port }}"
+ufw_web_udp_ports:
+  - "{{ apache_listen_https_port }}"
+ufw_cloudflare_tcp_ports: "{{ ufw_web_tcp_ports }}"
+ufw_cloudflare_udp_ports: "{{ ufw_web_udp_ports }}"

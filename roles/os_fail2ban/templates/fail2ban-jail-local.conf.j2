@@ -10,7 +10,7 @@ action  = {{ fail2ban_default_action | default('nftables-multiport[port=\"%(port
 enabled  = true
 filter   = sshd
 port     = {{ ssh_port }}
-journalmatch = {{ fail2ban_sshd_journalmatch | default('_SYSTEMD_UNIT=sshd.service') }}
+logpath  = /var/log/auth.log
 
 maxretry = {{ fail2ban_sshd_maxretry | default('3') }}
 findtime = {{ fail2ban_sshd_findtime | default(fail2ban_findtime | default('10m')) }}
@@ -26,7 +26,7 @@ action = {{ fail2ban_sshd_action | default("nftables-multiport[port=\"" ~ (ssh_p
 enabled  = true
 filter   = apache-auth
 port     = http,https
-journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+logpath  = /var/log/apache2/error.log
 
 maxretry = {{ fail2ban_apache_maxretry | default(fail2ban_maxretry | default('5')) }}
 findtime = {{ fail2ban_apache_findtime | default(fail2ban_findtime | default('10m')) }}
@@ -40,7 +40,7 @@ bantime  = {{ fail2ban_apache_bantime | default(fail2ban_bantime | default('1h')
 enabled  = {{ (fail2ban_php_fpm_enabled | default(true)) | ternary('true', 'false') }}
 filter   = php-fpm
 port     = http,https
-journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+logpath  = /var/log/apache2/error.log
 
 maxretry = {{ fail2ban_php_fpm_maxretry | default(fail2ban_maxretry | default('5')) }}
 findtime = {{ fail2ban_php_fpm_findtime | default(fail2ban_findtime | default('10m')) }}
@@ -54,7 +54,7 @@ bantime  = {{ fail2ban_php_fpm_bantime | default(fail2ban_bantime | default('1h'
 enabled  = {{ (fail2ban_mysql_enabled | default(true)) | ternary('true', 'false') }}
 filter   = mysqld-auth
 port     = {{ mysql_port | default('3306') }}
-journalmatch = {{ fail2ban_mysql_journalmatch | default('_SYSTEMD_UNIT=mysql.service') }}
+logpath  = /var/log/mysql/error.log
 
 maxretry = {{ fail2ban_mysql_maxretry | default(fail2ban_maxretry | default('5')) }}
 findtime = {{ fail2ban_mysql_findtime | default(fail2ban_findtime | default('10m')) }}
@@ -71,7 +71,7 @@ action = {{ fail2ban_mysql_action | default('nftables-multiport[port=3306, proto
 enabled  = {{ (fail2ban_drupal_enabled | default(true)) | ternary('true', 'false') }}
 filter   = drupal-auth
 port     = http,https
-journalmatch = {{ fail2ban_drupal_journalmatch | default('SYSLOG_IDENTIFIER=drupal') }}
+logpath  = /var/log/syslog
 
 maxretry = {{ fail2ban_drupal_maxretry | default('5') }}
 findtime = {{ fail2ban_drupal_findtime | default(fail2ban_findtime | default('10m')) }}
@@ -86,7 +86,7 @@ action = {{ fail2ban_drupal_action | default('nftables-multiport[port=\"http,htt
 [recidive]
 enabled  = {{ (fail2ban_recidive_enabled | default(true)) | ternary('true', 'false') }}
 filter   = recidive
-journalmatch = _SYSTEMD_UNIT=fail2ban.service
+logpath  = /var/log/fail2ban.log
 
 findtime = {{ fail2ban_recidive_findtime | default('24h') }}
 bantime  = {{ fail2ban_recidive_bantime | default('7d') }}

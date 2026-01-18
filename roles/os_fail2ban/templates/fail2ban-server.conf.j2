@@ -1,13 +1,13 @@
 [Definition]
 loglevel = {{ fail2ban_loglevel | default('INFO') }}
-logtarget = {{ fail2ban_logtarget | default('STDOUT') }}
+logtarget = {{ fail2ban_logtarget | default('/var/log/fail2ban.log') }}
 socket = {{ fail2ban_socket | default('/var/run/fail2ban/fail2ban.sock') }}
 
 [DEFAULT]
 # --- Networking ---
 allowipv6 = auto
 usedns = {{ fail2ban_usedns | default('no') }}
-backend = {{ fail2ban_backend | default('systemd') }}
+backend = {{ fail2ban_backend | default('auto') }}
 
 # --- Ban logic ---
 bantime = {{ fail2ban_bantime | default('1h') }}

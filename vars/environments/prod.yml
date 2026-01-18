@@ -1,11 +1,5 @@
 ---
 # Production logging configuration.
-logging_journald_system_max_use: "2G"
-logging_journald_system_keep_free: "1G"
-logging_journald_max_retention_sec: "1month"
-logging_journald_max_file_sec: "1month"
-logging_journald_rate_limit_interval_sec: "30s"
-logging_journald_rate_limit_burst: 5000
 php_fpm_log_level: "warning"
 fail2ban_loglevel: WARNING
 fail2ban_socket: /var/run/fail2ban/fail2ban.sock

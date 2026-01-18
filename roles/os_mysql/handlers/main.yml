@@ -1,10 +1,10 @@
 ---
 # Handlers responsible for MySQL/MariaDB lifecycle actions.
 
+- name: Reload AppArmor
+  ansible.builtin.command: apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld
+
 - name: "Restart MySQL"
   ansible.builtin.service:
     name: "{{ mysql_service_name | default('mysql') }}"
     state: restarted
-
-- name: Reload AppArmor
-  ansible.builtin.command: apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld

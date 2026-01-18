@@ -4,7 +4,7 @@
 
 {% set site_apex = site_name.split('.')[-2:] | join('.') %}
 
-<VirtualHost *:80>
+<VirtualHost *:{{ apache_listen_http_port }}>
     ServerName {{ site_name }}
     
     # Redirect all HTTP traffic to HTTPS
@@ -12,7 +12,7 @@
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </VirtualHost>
 
-<VirtualHost *:443>
+<VirtualHost *:{{ apache_listen_https_port }}>
     ServerName {{ site_name }}
     DocumentRoot {{ platform_path }}/web
 
@@ -26,6 +26,6 @@
     SSLCertificateFile /etc/ssl/certs/{{ site_apex }}.pem
     SSLCertificateKeyFile /etc/ssl/private/{{ site_apex }}.key
 
-    ErrorLog /proc/self/fd/2
-    CustomLog /proc/self/fd/1 vhost_journal
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log vhost_combined
 </VirtualHost>

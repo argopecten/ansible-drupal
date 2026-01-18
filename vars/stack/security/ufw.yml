@@ -10,12 +10,12 @@ ufw_rules:
   - port: "{{ ssh_port }}"
     proto: tcp
     comment: "### tuple ### allow tcp {{ ssh_port }} 0.0.0.0/0 any 0.0.0.0/0 in"
-  - port: 80
+  - port: "{{ apache_listen_http_port }}"
     proto: tcp
-    comment: "### tuple ### allow tcp 80 0.0.0.0/0 any 0.0.0.0/0 in"
-  - port: 443
+    comment: "### tuple ### allow tcp {{ apache_listen_http_port }} 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: "{{ apache_listen_https_port }}"
     proto: tcp
-    comment: "### tuple ### allow tcp 443 0.0.0.0/0 any 0.0.0.0/0 in"
-  - port: 443
+    comment: "### tuple ### allow tcp {{ apache_listen_https_port }} 0.0.0.0/0 any 0.0.0.0/0 in"
+  - port: "{{ apache_listen_https_port }}"
     proto: udp
-    comment: "### tuple ### allow udp 443 0.0.0.0/0 any 0.0.0.0/0 in"
+    comment: "### tuple ### allow udp {{ apache_listen_https_port }} 0.0.0.0/0 any 0.0.0.0/0 in"

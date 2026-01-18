@@ -1,0 +1,32 @@
+# {{ apache_ports_conf_file }}
+# {{ ansible_managed }} at {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+# Listen on HTTP
+{% if apache_listen_ipv4 and apache_listen_ipv6 %}
+Listen {{ apache_listen_http_port }}
+{% elif apache_listen_ipv4 %}
+Listen 0.0.0.0:{{ apache_listen_http_port }}
+{% elif apache_listen_ipv6 %}
+Listen [::]:{{ apache_listen_http_port }}
+{% endif %}
+
+# Listen on HTTPS
+<IfModule ssl_module>
+{% if apache_listen_ipv4 and apache_listen_ipv6 %}
+Listen {{ apache_listen_https_port }}
+{% elif apache_listen_ipv4 %}
+Listen 0.0.0.0:{{ apache_listen_https_port }}
+{% elif apache_listen_ipv6 %}
+Listen [::]:{{ apache_listen_https_port }}
+{% endif %}
+</IfModule>
+
+<IfModule mod_gnutls.c>
+{% if apache_listen_ipv4 and apache_listen_ipv6 %}
+Listen {{ apache_listen_https_port }}
+{% elif apache_listen_ipv4 %}
+Listen 0.0.0.0:{{ apache_listen_https_port }}
+{% elif apache_listen_ipv6 %}
+Listen [::]:{{ apache_listen_https_port }}
+{% endif %}
+</IfModule>

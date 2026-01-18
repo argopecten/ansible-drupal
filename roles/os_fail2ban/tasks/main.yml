@@ -113,9 +113,9 @@
       failed_when: false
       become: true
 
-    - name: Collect fail2ban journal
-      ansible.builtin.command: journalctl -u fail2ban --no-pager -n 100
-      register: fail2ban_journal
+    - name: Collect fail2ban log file
+      ansible.builtin.command: tail -n 100 /var/log/fail2ban.log
+      register: fail2ban_log
       changed_when: false
       failed_when: false
       become: true
@@ -125,7 +125,7 @@
         msg:
           - "fail2ban socket not created; service diagnostics:"
           - "{{ fail2ban_service_status.stdout_lines | default([]) }}"
-          - "{{ fail2ban_journal.stdout_lines | default([]) }}"
+          - "{{ fail2ban_log.stdout_lines | default([]) }}"
 
     - name: Fail when fail2ban socket is missing
       ansible.builtin.fail:

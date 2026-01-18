@@ -19,6 +19,8 @@ apache_main_conf_file: "{{ apache_conf_dir }}/apache2.conf"
 apache_runtime_dir: "/run/apache2"
 apache_pid_file: "{{ apache_runtime_dir }}/apache2.pid"
 apache_site_specific_logging: true
+apache_listen_http_port: 80
+apache_listen_https_port: 443
 
 apache_timeout: 300
 apache_keepalive: "On"

@@ -2,8 +2,7 @@
 enabled = {{ (fail2ban_drupal_access_enabled | default(true)) | ternary('true', 'false') }}
 filter = drupal-auth-access
 port = http,https
-backend = {{ fail2ban_backend | default('systemd') }}
-journalmatch = {{ fail2ban_apache_journalmatch | default('_SYSTEMD_UNIT=apache2.service') }}
+logpath = /var/log/apache2/access.log
 maxretry = {{ fail2ban_drupal_maxretry | default(fail2ban_maxretry | default('5')) }}
 findtime = {{ fail2ban_drupal_findtime | default(fail2ban_findtime | default('10m')) }}
 bantime = {{ fail2ban_drupal_bantime | default(fail2ban_bantime | default('1h')) }}

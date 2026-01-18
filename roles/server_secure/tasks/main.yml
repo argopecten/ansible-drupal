@@ -6,10 +6,6 @@
     name: os_cloudflare
   when: cloudflare_enabled | default(false) | bool
 
-- name: Apply logging configuration
-  ansible.builtin.import_role:
-    name: os_logging
-
 - name: Apply SSH hardening
   ansible.builtin.import_role:
     name: os_ssh

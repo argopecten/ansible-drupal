@@ -10,6 +10,3 @@ LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combine
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
-
-# Journald-friendly format (key=value) including vhost for site-specific logging.
-LogFormat "vhost=%v ip=%a ident=%l user=%u time=\"%t\" request=\"%r\" status=%>s bytes=%O referer=\"%{Referer}i\" agent=\"%{User-agent}i\"" vhost_journal

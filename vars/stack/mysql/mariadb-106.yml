@@ -18,7 +18,7 @@ mysql_data_dir: >-
   {{ (data_volume_root | default('') | length > 0)
     | ternary((data_volume_root | regex_replace('/+$', '')) ~ '/mysql', '/var/lib/mysql') }}
 mysql_unix_socket: /run/mysqld/mysqld.sock
-mysql_error_log: "stderr"
+mysql_error_log: "/var/log/mysql/error.log"
 mysql_service_name: "mariadb"
 
 mysql_custom_settings:
