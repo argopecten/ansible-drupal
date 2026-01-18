@@ -1,2 +1,4 @@
 ---
-# defaults file for $role
+ssh_users_default:
+  - ubuntu
+  - "{{ ansible_user | default('ansible') }}"

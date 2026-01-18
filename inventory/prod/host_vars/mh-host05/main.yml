@@ -10,6 +10,11 @@ cloudflare_enabled: true
 host_secured: true
 data_volume_root: "/var/data"
 
+# host-specific SSH users
+ssh_users:
+  - "{{ vault_mh_host05.ssh_users.dev | default('') }}"
+  - "{{ vault_mh_host05.ssh_users.os  | default('') }}"
+
 # Client info
 env: prod               # environment for playbooks
 client_name: clientMH   # client name for playbooks

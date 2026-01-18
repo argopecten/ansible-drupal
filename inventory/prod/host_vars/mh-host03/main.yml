@@ -7,6 +7,11 @@ hardware: "{{ vault_mh_host03.hardware }}"
 cloudflare_enabled: true
 host_secured: true
 
+# host-specific SSH users
+ssh_users:
+  - "{{ vault_mh_host03.ssh_users.dev | default('') }}"
+  - "{{ vault_mh_host03.ssh_users.os  | default('') }}"
+
 # Client info
 env: prod               # environment for playbooks
 client_name: clientMH   # client name for playbooks

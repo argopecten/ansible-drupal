@@ -7,6 +7,11 @@ hardware: "{{ vault_mh_host04.hardware }}"
 cloudflare_enabled: true
 host_secured: true
 
+# host-specific SSH users
+ssh_users:
+  - "{{ vault_mh_host04.ssh_users.dev | default('') }}"
+  - "{{ vault_mh_host04.ssh_users.os  | default('') }}"
+
 # Client info
 env: prod               # environment for playbooks
 client_name: clientMH   # client name for playbooks
@@ -18,6 +23,9 @@ stack:
   mysql: mysql-80
   apache: apache-24
   drupal: drupal11.3
+
+# override Composer version
+composer_version: "2.8.12"
 
 # Supported platforms for this host
 platforms:

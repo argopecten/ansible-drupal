@@ -6,7 +6,7 @@ listed below.
 ## Precedence and sources
 Approximate order (lowest to highest):
 1. Role defaults: `roles/<role>/defaults/main.yml`
-2. Stack and environment vars loaded by playbooks:
+2. Stack and environment vars loaded by playbooks (play-level vars override inventory):
    - `vars/environments/<env>.yml`
    - `vars/stack/os/<stack.os>.yml`
    - `vars/stack/php/<stack.php>.yml`
@@ -28,6 +28,7 @@ Common patterns you will see in `host_vars/<host>/main.yml`:
 - `platforms`: map of platform IDs to Unix user/group ownership.
 - `cloudflare_enabled`, `host_secured`, `data_volume_root`: host settings.
 - `apache_catch_all_cf`, `apache_catch_all_ssl`: default SSL settings.
+- `ssh_users`: extra SSH users allowed by `os_ssh` (merged with defaults).
 
 Site variables under `sites.d/*.yml` are keyed by site id:
 - `name`: public FQDN for the site.
@@ -44,7 +45,7 @@ Stack variables describe the OS and service versions in use.
 Examples:
 - `vars/stack/php/php-83.yml`
   - `php_version`, `php_extensions`, `php_fpm_*` settings
-  - `composer_version`, `composer_project_options`
+  - `composer_version_default`, `composer_project_options` (override per host with `composer_version`)
 - `vars/stack/apache/apache-24.yml`
   - `apache_packages`, `apache_required_modules`, `apache_log_level`
 - `vars/stack/mysql/mysql-80.yml` and `vars/stack/mysql/mariadb-106.yml`

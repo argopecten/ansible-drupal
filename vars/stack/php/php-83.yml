@@ -2,7 +2,7 @@
 # PHP 8.3 and Composer variables for webservers
 
 composer_project_options: "--prefer-dist --no-interaction --stability stable"
-composer_version: "2.9.2"
+composer_version_default: "2.9.2"
 composer_path: "/usr/bin/composer"
 
 php_version: "8.3"

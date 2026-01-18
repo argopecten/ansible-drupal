@@ -13,7 +13,7 @@ owning role.
 - `os_apache` - Apache install/config, vhosts templates, error pages.
 - `os_mysql` - MySQL or MariaDB installation and config.
 - `os_php` - PHP-FPM setup, extensions, and overrides.
-- `os_ssh` - SSHD configuration and hardening templates.
+- `os_ssh` - SSHD configuration and hardening templates (use `ssh_users` to add users).
 - `os_ufw` - firewall defaults and rules.
 - `os_fail2ban` - fail2ban configuration and jails.
 - `os_cloudflare` - Cloudflare integration helpers.

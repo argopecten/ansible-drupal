@@ -13,6 +13,15 @@
   become: true
   when: data_volume_root | default('') | length > 0
 
+- name: Ensure SSH users exist
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    state: present
+    create_home: true
+  loop: "{{ ssh_users | default([]) | reject('equalto', '') | unique | list }}"
+  when: ssh_users | default([]) | length > 0
+
 - name: Apply security hardening for secured hosts
   ansible.builtin.import_role:
     name: server_secure

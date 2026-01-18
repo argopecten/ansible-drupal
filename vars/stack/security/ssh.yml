@@ -2,8 +2,11 @@
 sshd_main_config_file: "/etc/ssh/sshd_config"
 sshd_hardened_config_file: "/etc/ssh/sshd_config.d/60-ansible_hardened-sshd.conf"
 
-ssh_users:
-  - "{{ ansible_user | default('ansible') }}"
+# Merge host/group-defined ssh_users with defaults and drop empty entries.
+ssh_users_all: >-
+  {{ (ssh_users | default([]))
+     + (ssh_users_default | default(['ubuntu', ansible_user | default('ansible')]))
+     | reject('equalto', '') | unique | list }}
 ssh_port: "{{ ansible_port }}"
 ssh_permit_root_login: "no"
 ssh_password_authentication: "no"

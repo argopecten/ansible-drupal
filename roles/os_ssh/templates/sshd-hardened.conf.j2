@@ -11,7 +11,7 @@ KbdInteractiveAuthentication {{ ssh_kbdinteractive_authentication }}
 ChallengeResponseAuthentication no
 UsePAM {{ ssh_use_pam }}
 PubkeyAuthentication {{ ssh_pubkey_authentication }}
-AllowUsers {{ ssh_users | join(' ') }}
+AllowUsers {{ ssh_users_all | join(' ') }}
 
 # Disable unneeded forwarding features
 X11Forwarding {{ ssh_x11_forwarding }}

@@ -5,7 +5,11 @@
     - name: Find APT source list files
       ansible.builtin.find:
         paths: /etc/apt/sources.list.d
-        patterns: "*.list"
+        patterns:
+          - "*.list"
+          - "*.sources"
+        excludes:
+          - "ubuntu.sources"
         file_type: file
       register: apt_list_files
       become: true
@@ -15,9 +19,6 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ apt_list_files.files }}"
-      when: >
-        ('ubuntu' not in item.path and
-         'canonical' not in item.path)
       become: true
 
 - name: Clean non-Ubuntu APT keyrings
