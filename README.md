@@ -1,6 +1,14 @@
 # ansible-drupal
 Infrastructure-as-code for building and running Drupal platforms on Ubuntu hosts.
 
+## Documentation
+- Overview and quick start: `docs/README.md`
+- Playbooks: `docs/playbooks.md`
+- Roles: `docs/roles.md`
+- Inventories: `docs/inventories.md`
+- Variables: `docs/variables.md`
+- Planned work: `TODO.md`
+
 ## Repository Layout
 - `inventory/` – per-environment inventories (`dev/`, `prod/`) each with `hosts.yml`, `group_vars/`, `host_vars/`, and vaults.
 - `playbooks/` – task-specific entry points: `server.yml`, the consolidated `platform.yml` (installs, updates, verifies, or deletes platforms via tags), the `site-*.yml` lifecycle playbooks, and the legacy aggregators (`servers.yml`, `platforms.yml`, `sites.yml`). Backwards-compatibility wrappers (`platform-install.yml`, etc.) simply import `platform.yml`.
