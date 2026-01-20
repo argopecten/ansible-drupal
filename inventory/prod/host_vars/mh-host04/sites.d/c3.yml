@@ -3,7 +3,7 @@ sites:
   c3:
     host: "mh-host04"
     name: "{{ vault_mh_host04.c3.name }}"
-    platform: "drupal11.2"
+    platform: "crm-2601"
     profile: "standard"
     admin_user: "admin"
     modules_enable:

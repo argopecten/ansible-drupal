@@ -2,7 +2,7 @@
 # Harden SSH Configuration
 # This playbook configures SSH settings to enhance security on the server.
 
-# disable password login, instead of lock. 
+# disable password login, instead of lock.
 # Workaround for https://arlimus.github.io/articles/usepam/
 - name: Disable password login
   ansible.builtin.command: usermod -p "*" "{{ item }}"

@@ -3,7 +3,7 @@ sites:
   d1:
     host: "mh-host05"
     name: "{{ vault_mh_host05.d1.name }}"
-    platform: "drupal11.3"
+    platform: "mh-2601"
     profile: "standard"
     admin_user: "admin"
     modules_enable:

@@ -17,10 +17,27 @@
   ansible.builtin.user:
     name: "{{ item }}"
     shell: /bin/bash
+    groups: sudo
+    append: true
     state: present
     create_home: true
   loop: "{{ ssh_users | default([]) | reject('equalto', '') | unique | list }}"
   when: ssh_users | default([]) | length > 0
+  become: true
+
+- name: Allow passwordless sudo for SSH users
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/90-ssh-users
+    owner: root
+    group: root
+    mode: "0440"
+    content: |
+      {% for user in ssh_users | default([]) | reject('equalto', '') | unique | list %}
+      {{ user }} ALL=(ALL) NOPASSWD:ALL
+      {% endfor %}
+    validate: "visudo -cf %s"
+  when: ssh_users | default([]) | length > 0
+  become: true
 
 - name: Apply security hardening for secured hosts
   ansible.builtin.import_role:
