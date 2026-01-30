@@ -50,7 +50,7 @@
             marker: "// {mark} ANSIBLE MANAGED BLOCK - Drupal Settings"
             block: |
               // Private file system path
-              $settings['file_private_path'] = 'sites/' . basename(__DIR__) . '/private';
+              $settings['file_private_path'] = 'sites/{{ site_subdir }}/private';
               
               // Trusted host patterns
               $settings['trusted_host_patterns'] = [
@@ -61,7 +61,7 @@
 
         - name: Restore strict permissions on settings.php
           ansible.builtin.file:
-            path: "{{ platform_path }}/web/sites/{{ site_name }}/settings.php"
+            path: "{{ platform_path }}/web/sites/{{ site_subdir }}/settings.php"
             mode: "0440"
   when:
     - site_context_should_process | default(false)
