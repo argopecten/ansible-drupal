@@ -1,0 +1,16 @@
+---
+sites:
+  d2:
+    host: "mh-host05"
+    name: "{{ vault_mh_host05.d2.name }}"
+    platform: "mh-2601"
+    profile: "standard"
+    admin_user: "admin"
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_mh_host05.d2.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_mh_host05.d2.cf.api_key | default('dummy') }}"
+    state: present
