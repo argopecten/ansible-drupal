@@ -4,7 +4,8 @@ ansible_host: "{{ vault_mh_host04.ip }}"
 ansible_port: "{{ vault_mh_host04.port }}"
 fqdn: "{{ vault_mh_host04.fqdn }}"
 hardware: "{{ vault_mh_host04.hardware }}"
-cloudflare_enabled: true
+cloudflare_enabled: 
+vscode_enabled: true
 host_secured: true
 
 # host-specific SSH users

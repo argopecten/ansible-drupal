@@ -7,6 +7,7 @@ ansible_port: "{{ vault_mh_host05.port }}"
 fqdn: "{{ vault_mh_host05.fqdn }}"
 hardware: "{{ vault_mh_host05.hardware }}"
 cloudflare_enabled: true
+vscode_enabled: true
 host_secured: true
 data_volume_root: "/var/data"
 

@@ -16,6 +16,9 @@ AllowUsers {{ ssh_users_all | join(' ') }}
 # Disable unneeded forwarding features
 X11Forwarding {{ ssh_x11_forwarding }}
 AllowTcpForwarding {{ ssh_allow_tcp_forwarding }}
+{% if ssh_allow_tcp_forwarding == 'yes' %}
+PermitOpen any
+{% endif %}
 AllowAgentForwarding {{ ssh_allow_agent_forwarding }}
 GatewayPorts {{ ssh_gateway_ports }}
 PermitTunnel {{ ssh_permit_tunnel }}
