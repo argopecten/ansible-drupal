@@ -73,6 +73,7 @@ code_file_perms='0640'         # Code files:          rw-r-----
 vendor_code_other_mask='0007'  # Vendor files:        detect permissions granted to others
 vendor_code_other_mode='o-rwx' # Vendor files:        remove permissions for others, do not use numeric mode here!
 web_sites_dir_perms='2750'     # web/sites directory: rwxr-s--- (with setgid for group inheritance)
+default_site_settings_perm='0440' # web/sites/default settings files
 
 cd "${PLATFORM_ROOT}"
 
@@ -88,6 +89,20 @@ find ./vendor -type f -perm "/${vendor_code_other_mask}" -exec chmod "${vendor_c
 if [ -d "./web/sites" ]; then
   printf "Setting permissions on ./web/sites directory (not contents) to ${web_sites_dir_perms} with setgid for group inheritance...\n"
   chmod "${web_sites_dir_perms}" "./web/sites"
+fi
+
+if [ -d "./web/sites/default" ]; then
+  printf "Setting permissions on ./web/sites/default and top-level site template files ...\n"
+  find ./web/sites/default -type d ! -perm "${code_dir_perms}" -exec chmod "${code_dir_perms}" '{}' \+
+  find ./web/sites/default -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+  find ./web/sites -maxdepth 1 -type f ! -perm "${code_file_perms}" -exec chmod "${code_file_perms}" '{}' \+
+
+  SETTINGS_FILES=("settings.php" "settings.local.php" "civicrm.settings.php" "services.yml")
+  for file in "${SETTINGS_FILES[@]}"; do
+    if [ -f "./web/sites/default/${file}" ]; then
+      chmod "${default_site_settings_perm}" "./web/sites/default/${file}"
+    fi
+  done
 fi
 
 echo "Done ensuring permissions for Drupal platform at ${PLATFORM_ROOT}."

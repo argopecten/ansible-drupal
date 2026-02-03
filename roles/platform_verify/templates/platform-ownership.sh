@@ -80,4 +80,10 @@ if [ -d "./web/sites" ]; then
   chown "${USER}:${GROUP}" "./web/sites"
 fi
 
+if [ -d "./web/sites/default" ]; then
+  printf "Setting ownership on ./web/sites/default and top-level site template files to ${USER}:${GROUP}...\n"
+  find ./web/sites -maxdepth 1 -type f \( ! -user "${USER}" -o ! -group "${GROUP}" \) -exec chown "${USER}:${GROUP}" '{}' \+
+  find ./web/sites/default \( -type f -o -type d \) \( ! -user "${USER}" -o ! -group "${GROUP}" \) -exec chown "${USER}:${GROUP}" '{}' \+
+fi
+
 echo "Done ensuring ownership for Drupal platform at ${PLATFORM_ROOT}."
