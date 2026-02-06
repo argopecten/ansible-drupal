@@ -1,0 +1,17 @@
+---
+sites:
+  c4:
+    host: "mh-host04"
+    name: "{{ vault_mh_host04.c4.name }}"
+    platform: "crm-2601"
+    profile: "standard"
+    admin_user: "admin"
+    civicrm_install: true
+    modules_enable:
+      - syslog
+    modules_disable:
+      - dblog
+    cf:
+      zone_id: "{{ vault_mh_host04.c4.cf.zone_id | default('dummy') }}"
+      api_key: "{{ vault_mh_host04.c4.cf.api_key | default('dummy') }}"
+    state: present
