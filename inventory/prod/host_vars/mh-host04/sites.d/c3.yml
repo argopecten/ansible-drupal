@@ -6,6 +6,7 @@ sites:
     platform: "crm-2601"
     profile: "standard"
     admin_user: "admin"
+    civicrm_install: true
     modules_enable:
       - syslog
     modules_disable:
