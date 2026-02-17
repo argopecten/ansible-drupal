@@ -95,6 +95,23 @@ for dir in "${DIRECTORIES[@]}"; do
   fi
 done
 
+printf "Ensuring CiviCRM templates_c keeps group write defaults for new locale directories ...\n"
+TEMPLATES_C_DIRS=("./files/civicrm/templates_c" "./private/civicrm/templates_c")
+for templates_c_dir in "${TEMPLATES_C_DIRS[@]}"; do
+  if [ -d "${templates_c_dir}" ]; then
+    echo "Processing directory: ${templates_c_dir}"
+    # Keep setgid so new directories inherit the site group.
+    find "${templates_c_dir}" -type d ! -perm -2000 -exec chmod g+s '{}' \+
+    if command -v setfacl >/dev/null 2>&1; then
+      # Force rwx for owner/group and set default ACLs for future files/dirs.
+      setfacl -m u::rwx,g::rwx,o::---,m::rwx "${templates_c_dir}"
+      setfacl -d -m u::rwx,g::rwx,o::---,m::rwx "${templates_c_dir}"
+    else
+      echo "   Warning: setfacl not found; unable to enforce default ACLs for ${templates_c_dir}."
+    fi
+  fi
+done
+
 printf "Setting strict permissions on settings files under ${SITE_ROOT} ...\n"
 SETTINGS_FILES=("settings.php" "settings.local.php" "civicrm.settings.php" "services.yml")
 for file in "${SETTINGS_FILES[@]}"; do
