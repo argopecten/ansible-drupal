@@ -9,4 +9,12 @@ sites:
       - syslog
     modules_disable:
       - dblog
+    modules_disable:
+      - dblog
+    themes_enable:
+      - eldir
+      - claro
+    theme_default: "eldir"
+    theme_admin: "claro"
     state: present
+ 

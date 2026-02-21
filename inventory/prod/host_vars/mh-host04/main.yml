@@ -42,6 +42,9 @@ platforms:
   crm-2601:
     user: crm
     group: crm
+  crm-2602:
+    user: crm
+    group: crm
 
 # Catch-all Apache/SSL settings for this host
 # CF is defined for the fqdn apex domain only.

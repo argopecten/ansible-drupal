@@ -6,18 +6,26 @@ ansible_port: "{{ vault_local_aegir.port }}"
 fqdn: "{{ vault_local_aegir.fqdn }}"
 hardware: "{{ vault_local_aegir.hardware }}"
 cloudflare_enabled: false
-host_secured: false
+vscode_enabled: true
+host_secured: true
+data_volume_root: "/var/aegir"
 
 # Client info
 env: dev               # environment for playbooks
-client_name: clientAP  # client name for playbooks
+client_name: aegir     # client name for playbooks
 
+# host-specific SSH users
+ssh_users:
+  - "{{ vault_local_aegir.ssh_users.dev | default('') }}"
+  - "{{ vault_local_aegir.ssh_users.os  | default('') }}"
+
+# LAMP stack
 stack:
   os: ubuntu-24
   php: php-83
   mysql: mysql-80
   apache: apache-24
-  drupal: drupal11
+  drupal: drupal11.3
 
 platforms:
   drupal11.3:

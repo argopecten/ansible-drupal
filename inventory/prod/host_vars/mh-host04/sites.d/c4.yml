@@ -3,14 +3,93 @@ sites:
   c4:
     host: "mh-host04"
     name: "{{ vault_mh_host04.c4.name }}"
-    platform: "crm-2601"
-    profile: "standard"
+    platform: "crm-2602"
+    profile: "minimal"
     admin_user: "admin"
     civicrm_install: true
     modules_enable:
+      - big_pipe
+      - block
+      - breakpoint
+      - ckeditor5
+      - config
+      - datetime
+      - dynamic_page_cache
+      - editor
+      - field
+      - field_ui
+      - file
+      - filter
+      - image
+      - language
+      - link
+      - media
+      - menu_link_content
+      - menu_ui
+      - mysql
+      - node
+      - options
+      - page_cache
+      - path
+      - path_alias
+      - responsive_image
+      - search
       - syslog
+      - system
+      - taxonomy
+      - text
+      - toolbar
+      - update
+      - user
+      - views
+      - views_ui
+      - address
+      - block_visibility_groups
+      - civicrm
+      - civicrmtheme
+      - civicrm_entity
+      - commerce
+      - commerce_cart
+      - commerce_checkout
+      - commerce_number_pattern
+      - commerce_order
+      - commerce_payment
+      - commerce_price
+      - commerce_product
+      - commerce_promotion
+      - commerce_store
+      - commerce_tax
+      - commerce_barion_payment
+      - commerce_email
+      - commerce_paypal
+      - commerce_shipping
+      - entity
+      - entity_reference_revisions
+      - element_class_formatter
+      - inline_entity_form
+      - profile
+      - physical
+      - menu_link_attributes
+      - menu_per_role
+      - pathauto
+      - route_condition
+      - smart_trim
+      - state_machine
+      - terms_of_use
+      - token
+      - taxonomy_menu
+      - commerce_barion_token
+      - drupaldev_order
+      - invoice_agent
+      - magyar_hang
     modules_disable:
       - dblog
+    themes_enable:
+      - hanghu
+      - bootstrap5
+      - claro
+    theme_default: "hanghu"
+    theme_admin: "claro"
     cf:
       zone_id: "{{ vault_mh_host04.c4.cf.zone_id | default('dummy') }}"
       api_key: "{{ vault_mh_host04.c4.cf.api_key | default('dummy') }}"

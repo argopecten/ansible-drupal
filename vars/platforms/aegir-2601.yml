@@ -3,7 +3,7 @@
 
 aegir-2601:
   name: "aegir-2601"
-  composer_project: "https://github.com/argopecten/drupal-project.git"
-  version: "d11.2"              # Specific branch or tag in the git repository
+  composer_project: "https://github.com/argopecten/aegir-hostmaster"
+  version: "dev/d11-new"        # Specific branch or tag in the git repository
   dependencies: []              # No additional dependencies to composer.json
   state: present
