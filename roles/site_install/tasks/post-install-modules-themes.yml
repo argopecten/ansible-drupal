@@ -1,0 +1,52 @@
+---
+# Apply module/theme changes after base install and optional CiviCRM bootstrap.
+
+- name: Disable selected Drupal modules
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} pm-uninstall -y {{ site_install_modules_disable | join(' ') }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_modules_disable | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Enable selected Drupal modules
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} pm-enable -y {{ site_install_modules_enable | join(' ') }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_modules_enable | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Enable selected Drupal themes
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} theme:enable -y {{ site_install_themes_to_enable | join(' ') }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_themes_to_enable | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Set Drupal default frontend theme
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} cset -y system.theme default {{ site_install_theme_default }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_theme_default | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"
+
+- name: Set Drupal admin theme
+  ansible.builtin.command: >
+    {{ site_install_drush_path }} cset -y system.theme admin {{ site_install_theme_admin }}
+    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
+  args:
+    chdir: "{{ site_install_platform_path }}"
+  when: site_install_theme_admin | length > 0
+  become: true
+  become_user: "{{ site_install_platform_user }}"

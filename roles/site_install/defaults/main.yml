@@ -3,3 +3,14 @@
 # Override per platform via site_install_modules in the platform definition,
 # or per site via modules under sites.d/*.yml.
 site_install_default_modules: []
+
+# Themes to enable on every site install unless overridden by the site entry.
+# Override per platform via site_install_themes_enable in the platform definition,
+# or per site via themes_enable under sites.d/*.yml.
+site_install_default_themes: []
+
+# Optionally set Drupal's frontend/admin themes during install.
+# Override per platform via site_install_theme_default/site_install_theme_admin,
+# or per site via theme_default/theme_admin under sites.d/*.yml.
+site_install_theme_default: ""
+site_install_theme_admin: ""

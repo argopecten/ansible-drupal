@@ -16,10 +16,13 @@
     site_install_db_backend: "{{ site_context_site_definition.db_backend | default('mysql') }}"
     site_install_modules_enable: "{{ site_context_modules_enable | default([]) }}"
     site_install_modules_disable: "{{ site_context_modules_disable | default([]) }}"
+    site_install_themes_enable_raw: "{{ site_context_site_definition.themes_enable | default(site_context_platform_entry.site_install_themes_enable | default(site_install_default_themes | default([]))) }}"
+    site_install_theme_default_raw: "{{ site_context_site_definition.theme_default | default(site_context_platform_entry.site_install_theme_default | default(site_install_theme_default | default(''))) }}"
+    site_install_theme_admin_raw: "{{ site_context_site_definition.theme_admin | default(site_context_platform_entry.site_install_theme_admin | default(site_install_theme_admin | default(''))) }}"
     site_install_extra_args_raw: "{{ site_context_site_definition.site_install_extra_args | default(site_context_platform_entry.drupal_site_install_extra_args | default(drupal_site_install_extra_args | default([]))) }}"
     site_install_drush_path: "{{ site_context_platform_root }}/vendor/bin/drush"
 
-- name: Normalize extra arguments list
+- name: Normalize extra arguments and theme settings
   ansible.builtin.set_fact:
     site_install_extra_args: >-
       {{
@@ -29,6 +32,30 @@
           if site_install_extra_args_raw is iterable and site_install_extra_args_raw is not string
           else [site_install_extra_args_raw]
         )
+      }}
+    site_install_themes_enable: >-
+      {{
+        [] if site_install_themes_enable_raw in ('', none)
+        else (
+          site_install_themes_enable_raw
+          if site_install_themes_enable_raw is iterable and site_install_themes_enable_raw is not string
+          else [site_install_themes_enable_raw]
+        )
+      }}
+    site_install_theme_default: "{{ ('' if site_install_theme_default_raw in ('', none) else site_install_theme_default_raw) | string }}"
+    site_install_theme_admin: "{{ ('' if site_install_theme_admin_raw in ('', none) else site_install_theme_admin_raw) | string }}"
+
+- name: Build final install theme list
+  ansible.builtin.set_fact:
+    site_install_themes_to_enable: >-
+      {{
+        (
+          site_install_themes_enable
+          + [site_install_theme_default, site_install_theme_admin]
+        )
+        | reject('equalto', '')
+        | unique
+        | list
       }}
 
 - name: Ensure database exists for site
@@ -65,26 +92,6 @@
     {{ site_install_extra_args | join(' ') }}
   args:
     chdir: "{{ site_install_platform_path }}"
-  become: true
-  become_user: "{{ site_install_platform_user }}"
-
-- name: Disable selected Drupal modules
-  ansible.builtin.command: >
-    {{ site_install_drush_path }} pm-uninstall -y {{ site_install_modules_disable | join(' ') }}
-    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
-  args:
-    chdir: "{{ site_install_platform_path }}"
-  when: site_install_modules_disable | length > 0
-  become: true
-  become_user: "{{ site_install_platform_user }}"
-
-- name: Enable selected Drupal modules
-  ansible.builtin.command: >
-    {{ site_install_drush_path }} pm-enable -y {{ site_install_modules_enable | join(' ') }}
-    --uri={{ site_install_site_name }} --root={{ site_install_platform_path }}
-  args:
-    chdir: "{{ site_install_platform_path }}"
-  when: site_install_modules_enable | length > 0
   become: true
   become_user: "{{ site_install_platform_user }}"
 

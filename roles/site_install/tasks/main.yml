@@ -21,6 +21,10 @@
             - not site_install_site_exists
             - site_context_civicrm_install | default(false)
 
+        - name: Apply post-install Drupal modules and themes
+          ansible.builtin.include_tasks: post-install-modules-themes.yml
+          when: not site_install_site_exists
+
         - name: Update site context after installation
           ansible.builtin.set_fact:
             site_context_site_exists: true
