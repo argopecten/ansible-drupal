@@ -1,14 +1,21 @@
 ---
 sites:
   aegir:
-    host: "local-aegir"
+    host: "aegir"
     name: "{{ vault_local_aegir.aegir.name }}"
     platform: aegir-2601
     profile: standard
     modules_enable:
       - syslog
-    modules_disable:
-      - dblog
+      - hosting
+      - hosting_client
+      - hosting_db_server
+      - hosting_package
+      - hosting_platform
+      - hosting_server
+      - hosting_site
+      - hosting_task
+      - hosting_web_server
     modules_disable:
       - dblog
     themes_enable:
